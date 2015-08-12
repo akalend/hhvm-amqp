@@ -3,11 +3,16 @@
 
 namespace HPHP {
 
+const StaticString
+  s_AMQPConnection("AMQPConnection"),
+  s_host("host"),
+  s_port("port");
 
 
 	bool HHVM_METHOD(AMQPConnection, connect) {
-	  // this_->o_get(s_name, false, Hello);
-	  return true;
+	  
+	  printf( "connect to %s:%ld\n", this_->o_get(s_host, false, s_AMQPConnection).toString().c_str(), this_->o_get(s_port, false, s_AMQPConnection).toInt64() );
+		return true;
 	}
 
 
