@@ -5,9 +5,13 @@ class AMQPConnection {
 	/* internal */
 	private $host = 'localhost';
 	private $port = 5672;
-	private $login = 'quest';
+	private $login = 'guest';
 	private $vhost = '/';
-	private $password = '';
+	private $password = 'guest';
+
+	private $timeout = 15;
+	private $connect_timeout = 1;	
+	private $is_persisten = 1;
 
 
 	/* Methods */
@@ -26,6 +30,16 @@ class AMQPConnection {
 		
 		if (isset($parms['password']))
 			$this->password = $parms['password'];
+
+		if (isset($parms['is_persisten']))
+			$this->is_persisten = $parms['is_persisten'];
+
+		if (isset($parms['timeout']))
+			$this->timeout = $parms['timeout'];
+
+		if (isset($parms['connect_timeout']))
+			$this->connect_timeout = $parms['connect_timeout'];
+
 	}
 
 	public function  setHost ( string $host ){
@@ -47,8 +61,6 @@ class AMQPConnection {
 	public function  setVhost ( string $vhost ){
 		$this->vhost = $vhost;
 	}
-
-	public function  connect ( ){}
 
 	public function  disconnect ( ){}
 	
@@ -74,5 +86,9 @@ class AMQPConnection {
 
 	public function  isConnected ( ){}
 	public function  reconnect ( ){}
+
+	  <<__Native>>
+	public function  connect (): bool;
+
 	
 }
