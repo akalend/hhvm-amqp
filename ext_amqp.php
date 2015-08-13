@@ -92,3 +92,16 @@ class AMQPConnection {
 
 	
 }
+
+
+ AMQPChannel {
+	/* Methods */	
+	function __construct ( $amqp_connection ) {}
+	public function commitTransaction () {}
+	public function isConnected ( void ): void
+	public function qos ( int $size , int $count ) {}
+	public function rollbackTransaction ( void ) {}
+	public function setPrefetchCount ( int $count ) {}
+	public function setPrefetchSize ( int $size ) {}
+	public function startTransaction ( void ) {}
+}
