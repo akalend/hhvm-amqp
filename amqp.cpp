@@ -6,6 +6,12 @@ namespace HPHP {
 const StaticString
   s_AMQPConnection("AMQPConnection"),
   s_host("host"),
+  s_host("vhost"),
+  s_host("login"),
+  s_host("password"),
+  s_host("timeout"),
+  s_host("connect_timeout"),
+  s_host("is_persisten"),
   s_port("port");
 
 
