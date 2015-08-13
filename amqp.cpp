@@ -60,6 +60,5 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 
 
-
 HHVM_GET_MODULE(amqp);
 } // namespace
