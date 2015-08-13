@@ -1,5 +1,9 @@
 <?hh
 
+const int AMQP_NOPARAM = 0;
+const int AMQP_NOACK = 1;
+
+
 class AMQPConnection {
 	
 	/* internal */
@@ -105,9 +109,6 @@ class AMQPConnection {
 	public function setPrefetchSize ( int $size ) {}
 	public function startTransaction ( void ) {}
 }
-
-const int AMQP_NOPARAM = 0;
-const int AMQP_NOACK = 1;
 
  AMQPQueue {
 	/* Methods */
