@@ -11,19 +11,33 @@ namespace HPHP {
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
 
+
+class AmqpData{
+public:
+		amqp_socket_t *socket;
+		amqp_connection_state_t conn;
+		bool is_connected ;
+
+		AmqpData(){
+			socket = NULL;
+			conn = NULL;
+			is_connected = NULL;
+		}
+
+};
+
 class AmqpExtension : public Extension {
 
 	public:
-		static amqp_socket_t *socket;
-		static amqp_connection_state_t conn;
-		static bool is_connected ;
-
-
-		AmqpExtension(): Extension("amqp", "0.1.0") {}
+		AmqpExtension(): Extension("amqp", "0.1.0"){
+			m_data = AmqpData();
+		}
 	
 		void moduleInit() override;
 		void moduleShutdown() override;
 
+	private:
+		AmqpData m_data;
 };
 
 } // end namespace

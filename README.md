@@ -1,5 +1,5 @@
 # HHVM AMQP bindings 
-### Build Status (in the devepolment)
+### Build Status: in the devepolment
 
 Object-oriented PHP bindings for the AMQP C library (https://github.com/alanxz/rabbitmq-c)
 
