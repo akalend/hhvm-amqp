@@ -52,6 +52,15 @@ void AmqpExtension::moduleShutdown() {
 static AmqpExtension  s_amqp_extension;
 
 
+bool amqpConnect( ObjectData* this_) {
+	// conn = amqp_new_connection();
+
+	// data->is_connected = true;
+
+
+	return true;
+}
+
 bool HHVM_METHOD(AMQPConnection, isConnected) {
 	
 	auto *data = Native::data<AmqpData>(this_);
@@ -62,8 +71,6 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 bool HHVM_METHOD(AMQPConnection, connect) {
   
 	auto *data = Native::data<AmqpData>(this_);
-  	printf( "connect to %s:%ld\n", this_->o_get(s_host, false, s_AMQPConnection).
-  					toString().c_str(), this_->o_get(s_port, false, s_AMQPConnection).toInt64() );
 
 
   	bool is_persisten = this_->o_get(s_is_persisten, false, s_AMQPConnection).toBoolean();
@@ -85,9 +92,16 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	}
 
 
+	if (this_->o_get(s_timeout,false,s_AMQPConnection).toDouble() > 0) {
+		/* not implement */	
+	}
 
-	data->is_connected = true;
-	return true;
+	
+  	printf( "connect to %s:%ld\n", this_->o_get(s_host, false, s_AMQPConnection).
+  					toString().c_str(), this_->o_get(s_port, false, s_AMQPConnection).toInt64() );
+
+
+	return amqpConnect(this_);
 }
 
 
