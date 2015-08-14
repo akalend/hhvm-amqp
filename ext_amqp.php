@@ -87,12 +87,15 @@ class AMQPConnection {
 	public function  getVhost (){
 		return $this->vhost;
 	}
-
-	public function  isConnected ( ){}
+	
 	public function  reconnect ( ){}
+	
+	<<__Native>>
+	public function  isConnected(): bool;
+	
 
 	  <<__Native>>
-	public function  connect (): bool;
+	public function  connect(): bool;
 
 	
 }
