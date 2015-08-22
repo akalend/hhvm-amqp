@@ -93,8 +93,7 @@ class AMQPConnection {
 	public function  reconnect(): bool;
 	
 	<<__Native>>
-	public function  isConnected(): bool;
-	
+	public function  isConnected(): bool;	
 
 	  <<__Native>>
 	public function  connect(): bool;
@@ -102,20 +101,6 @@ class AMQPConnection {
 }
 
 
-//  AMQPChannel {
-// 	 /* Methods 	*/
-// 	public function __construct ( $amqp_connection ) {
-// 		$this->cnn = $amqp_connection;
-// 	}
-
-// 	public function commitTransaction () {}
-// 	public function isConnected ( void ){}
-// 	public function qos ( int $size , int $count ) {}
-// 	public function rollbackTransaction ( void ) {}
-// 	public function setPrefetchCount ( int $count ) {}
-// 	public function setPrefetchSize ( int $size ) {}
-// 	public function startTransaction ( void ) {}
-// }
 
 //  AMQPQueue {
 // 	/* Methods */

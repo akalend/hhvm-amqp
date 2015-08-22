@@ -15,6 +15,10 @@ bool HHVM_METHOD(AMQPConnection, reconnect);
 bool HHVM_METHOD(AMQPConnection, disconnect);
 
 
+bool HHVM_METHOD(AMQPChannel, isConnected);
+
+
+
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
 	AMQP_ERR_CANNOT_OPEN_SOCKET,
@@ -22,7 +26,7 @@ enum amqp_error_code {
 	AMQP_ERROR_LOGIN
 };
 
-class AmqpData{
+class AmqpData {
 public:
 		amqp_socket_t *socket = NULL;
 		amqp_connection_state_t conn = NULL;
@@ -48,5 +52,6 @@ class AmqpExtension : public Extension {
 	private:
 		AmqpData m_data;
 };
+
 
 } // end namespace
