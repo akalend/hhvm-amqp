@@ -100,6 +100,36 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 	return data->is_connected;
 }
 
+bool HHVM_METHOD(AMQPConnection, reconnect) {
+	auto *data = Native::data<AmqpData>(this_);
+
+	if (data->is_connected) {
+		data->is_connected = false;
+		amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+		
+		// close connection
+	}
+
+	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
+	data->port = static_cast<short>(this_->o_get(s_port, false, s_AMQPConnection).toInt64());
+	data->vhost = const_cast<char* >(this_->o_get(s_vhost, false, s_AMQPConnection).toString().c_str());
+	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
+	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
+
+
+	if (!amqpConnect(this_)) {
+
+		if (data->err == AMQP_ERR_CANNOT_OPEN_SOCKET) { 
+				raise_warning("Can'not open socket");}
+
+		if (data->err == AMQP_ERR_CANNOT_CREATE_SOCKET) { 
+				raise_warning("Can'not create socket");}
+
+		return false;
+	}
+
+	return true;
+}
 
 bool HHVM_METHOD(AMQPConnection, connect) {
   
@@ -145,6 +175,8 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 		return false;
 	}
+
+	return true;
 }
 
 

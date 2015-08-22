@@ -65,8 +65,6 @@ class AMQPConnection {
 	public function  setVhost ( string $vhost ){
 		$this->vhost = $vhost;
 	}
-
-	public function  disconnect ( ){}
 	
 	public function  getHost (){
 		return $this->host;
@@ -87,8 +85,12 @@ class AMQPConnection {
 	public function  getVhost (){
 		return $this->vhost;
 	}
+
+	public function  disconnect ( ){}
+
 	
-	public function  reconnect ( ){}
+	<<__Native>>
+	public function  reconnect(): bool;
 	
 	<<__Native>>
 	public function  isConnected(): bool;
