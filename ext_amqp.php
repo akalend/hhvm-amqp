@@ -86,8 +86,8 @@ class AMQPConnection {
 		return $this->vhost;
 	}
 
-	public function  disconnect ( ){}
-
+	<<__Native>>
+	public function  disconnect(): bool;
 	
 	<<__Native>>
 	public function  reconnect(): bool;

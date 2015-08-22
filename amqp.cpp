@@ -100,13 +100,21 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 	return data->is_connected;
 }
 
+bool HHVM_METHOD(AMQPConnection, disconnect) {
+	auto *data = Native::data<AmqpData>(this_);
+	int res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	if (!res) return true;
+	
+	raise_warning("Failing to send the ack to the broker");
+	return false;
+}
+
 bool HHVM_METHOD(AMQPConnection, reconnect) {
 	auto *data = Native::data<AmqpData>(this_);
 
 	if (data->is_connected) {
 		data->is_connected = false;
 		amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-		
 		// close connection
 	}
 

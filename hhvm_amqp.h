@@ -12,6 +12,7 @@ namespace HPHP {
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
 bool HHVM_METHOD(AMQPConnection, reconnect);
+bool HHVM_METHOD(AMQPConnection, disconnect);
 
 
 enum amqp_error_code {
