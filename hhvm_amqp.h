@@ -15,8 +15,7 @@ bool HHVM_METHOD(AMQPConnection, reconnect);
 bool HHVM_METHOD(AMQPConnection, disconnect);
 
 
-bool HHVM_METHOD(AMQPChannel, isConnected);
-
+// bool HHVM_METHOD(AMQPChannel, isConnected);
 
 
 enum amqp_error_code {

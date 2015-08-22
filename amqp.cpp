@@ -33,7 +33,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPConnection, connect);
 	HHVM_ME(AMQPConnection, isConnected);
 
-	HHVM_ME(AMQPChannel, isConnected);
+	// HHVM_ME(AMQPChannel, isConnected);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),

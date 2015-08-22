@@ -1,9 +1,9 @@
 
 include_directories(include)
 
+HHVM_SYSTEMLIB(amqp ext_amqp.php)
 HHVM_EXTENSION(amqp amqp.cpp)
-HHVM_SYSTEMLIB(amqp ext_amqp_connect.php)
-HHVM_SYSTEMLIB(amqp ext_amqp_channel.php)
+
 
 link_directories(  /usr/local/lib/x86_64-linux-gnu/)
 

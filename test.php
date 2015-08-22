@@ -3,7 +3,10 @@
 	$cnn = new AMQPConnection(['host'=>'localhost']);
 	$ret = $cnn->connect();
 	var_dump($ret);
-var_dump($cnn->disconnect());
+
+	// $ch = new AMQPChannel(1);
+
+	var_dump($cnn->disconnect());
 
 	// var_dump($cnn->isConnected());
 
