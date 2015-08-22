@@ -7,23 +7,30 @@
 
 namespace HPHP {
 
+#define AMQP_PORT  5672
 
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
 
 
+enum amqp_error_code {
+	AMQP_ERR_NONE = 0,
+	AMQP_ERR_CANNOT_OPEN_SOCKET,
+	AMQP_ERR_CANNOT_CREATE_SOCKET,
+	AMQP_ERROR_LOGIN
+};
+
 class AmqpData{
 public:
-		amqp_socket_t *socket;
-		amqp_connection_state_t conn;
-		bool is_connected ;
-
-		AmqpData(){
-			socket = NULL;
-			conn = NULL;
-			is_connected = NULL;
-		}
-
+		amqp_socket_t *socket = NULL;
+		amqp_connection_state_t conn = NULL;
+		bool is_connected = false;
+		char* host = NULL;
+		char* vhost = NULL;
+		char* password = NULL;
+		char* login = NULL;
+		short port = AMQP_PORT;
+		short err = 0;
 };
 
 class AmqpExtension : public Extension {

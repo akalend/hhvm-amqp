@@ -5,7 +5,7 @@
 #include <amqp_tcp_socket.h>
 #include <amqp.h>
 #include <amqp_framing.h>
-
+#include <amqp_ssl_socket.h>
 #include "hhvm_amqp.h"
 
 namespace HPHP {
@@ -38,27 +38,60 @@ void AmqpExtension::moduleInit() {
 }
 
 void AmqpExtension::moduleShutdown() {
-
+	
+	// auto *data = Native::data<AmqpData>(this_);
+	// if (data->conn) {
+	// 	amqp_connection_close(conn->conn);
+	// 	amqp_destroy_connection(data->conn);
+	// 	data->conn = NULL;
+	// }
 }
 
 	
-
-
 //////////////////    static    /////////////////////////
-// bool AmqpExtension::is_connected = false;
-// amqp_socket_t* AmqpExtension::socket = NULL;
-// amqp_connection_state_t AmqpExtension::conn = NULL;
-
 static AmqpExtension  s_amqp_extension;
 
 
+
+
 bool amqpConnect( ObjectData* this_) {
+	
 	// conn = amqp_new_connection();
+	
+	auto *data = Native::data<AmqpData>(this_);
 
-	// data->is_connected = true;
+
+  	printf( "connect to %s:%d\n", data->host, data->port);
+
+	data->conn = amqp_new_connection();
+	int channel_MAX = 0;
+	int frame_MAX = 131072;
+	int heartbeat = 0;
+
+	amqp_socket_t *socket =  amqp_tcp_socket_new(data->conn);
+	if (!socket) {
+		data->err = AMQP_ERR_CANNOT_CREATE_SOCKET;
+		return false;
+	}
+  
+	int status = amqp_socket_open(socket, data->host, data->port);
+	if (status) {
+		data->err = AMQP_ERR_CANNOT_OPEN_SOCKET;
+		return false;
+	}
 
 
-	return true;
+	amqp_rpc_reply_t res = amqp_login(data->conn, data->vhost, channel_MAX, frame_MAX,
+							heartbeat, AMQP_SASL_METHOD_PLAIN, data->login, data->password);
+
+
+	if ( res.reply_type == AMQP_RESPONSE_NORMAL) {
+
+		return data->is_connected = true;
+	}
+
+	data->err = AMQP_ERROR_LOGIN;	
+	return data->is_connected = false;
 }
 
 bool HHVM_METHOD(AMQPConnection, isConnected) {
@@ -78,7 +111,7 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 		assert(data->conn != NULL);
 		if (is_persisten) {
-			raise_warning("Attempt to start transient connection while persistent transient one already established. Continue.");
+			//raise_warning("Attempt to start transient connection while persistent transient one already established. Continue.");
 		}
 
 		return true;
@@ -97,11 +130,25 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	}
 
 	
-  	printf( "connect to %s:%ld\n", this_->o_get(s_host, false, s_AMQPConnection).
-  					toString().c_str(), this_->o_get(s_port, false, s_AMQPConnection).toInt64() );
+	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
+	data->port = static_cast<short>(this_->o_get(s_port, false, s_AMQPConnection).toInt64());
+	data->vhost = const_cast<char* >(this_->o_get(s_vhost, false, s_AMQPConnection).toString().c_str());
+	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
+	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
+
+	// data->is_connected = true;
 
 
-	return amqpConnect(this_);
+	if (!amqpConnect(this_)) {
+
+		if (data->err == AMQP_ERR_CANNOT_OPEN_SOCKET) { 
+				raise_warning("Can'not open socket");}
+
+		if (data->err == AMQP_ERR_CANNOT_CREATE_SOCKET) { 
+				raise_warning("Can'not create socket");}
+
+		return false;
+	}
 }
 
 

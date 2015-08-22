@@ -8,7 +8,7 @@ class AMQPConnection {
 	
 	/* internal */
 	private $host = 'localhost';
-	private $port = 5672;
+	private $port = 5672; // AMQP_PORT
 	private $login = 'guest';
 	private $vhost = '/';
 	private $password = 'guest';
