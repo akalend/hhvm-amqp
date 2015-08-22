@@ -120,23 +120,19 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	assert(data->conn == NULL);
 	assert(!data->is_connected);
 
-	if (is_persisten){
 		/* not implement */
-	}
+	// if (is_persisten){
+	// }
 
-
-	if (this_->o_get(s_timeout,false,s_AMQPConnection).toDouble() > 0) {
 		/* not implement */	
-	}
-
+	// if (this_->o_get(s_timeout,false,s_AMQPConnection).toDouble() > 0) {
+	// }
 	
 	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
 	data->port = static_cast<short>(this_->o_get(s_port, false, s_AMQPConnection).toInt64());
 	data->vhost = const_cast<char* >(this_->o_get(s_vhost, false, s_AMQPConnection).toString().c_str());
 	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
 	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
-
-	// data->is_connected = true;
 
 
 	if (!amqpConnect(this_)) {
