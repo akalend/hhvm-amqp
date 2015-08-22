@@ -99,7 +99,6 @@ class AMQPConnection {
 	  <<__Native>>
 	public function  connect(): bool;
 
-	
 }
 
 

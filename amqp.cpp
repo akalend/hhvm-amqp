@@ -26,9 +26,10 @@ const StaticString
 //////////////////    module   /////////////////////////
 
 
-
 void AmqpExtension::moduleInit() {
-		
+	
+	HHVM_ME(AMQPConnection, reconnect);
+	HHVM_ME(AMQPConnection, disconnect);	
 	HHVM_ME(AMQPConnection, connect);
 	HHVM_ME(AMQPConnection, isConnected);
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -50,7 +51,6 @@ void AmqpExtension::moduleShutdown() {
 	
 //////////////////    static    /////////////////////////
 static AmqpExtension  s_amqp_extension;
-
 
 
 
@@ -102,8 +102,8 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 
 bool HHVM_METHOD(AMQPConnection, disconnect) {
 	auto *data = Native::data<AmqpData>(this_);
-	int res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-	if (!res) return true;
+	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	if ( AMQP_RESPONSE_NORMAL == res.reply_type) return true;
 	
 	raise_warning("Failing to send the ack to the broker");
 	return false;
