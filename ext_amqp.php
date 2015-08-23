@@ -87,7 +87,7 @@ class AMQPConnection {
 	}
 
 	<<__Native>>
-	public function  disconnect(): bool;
+	public function  disconnect(int $parm = 0 ): bool;
 	
 	<<__Native>>
 	public function  reconnect(): bool;

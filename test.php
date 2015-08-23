@@ -1,13 +1,13 @@
 <?php
 	// print_r( get_loaded_extensions() );
-	$cnn = new AMQPConnection();
+	$cnn = new AMQPConnection(['port'=>  PORT]);
 	$ret = $cnn->connect();
 	var_dump($ret);
 
 	// $ch = new AMQPChannel(1);
 	var_dump($cnn->isConnected());
 
-	var_dump($cnn->disconnect());
+	var_dump($cnn->disconnect(NOACK));
 
 
 	// $cnn2 = new AMQPConnection(['host'=>'sasa']);
