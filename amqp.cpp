@@ -19,7 +19,11 @@ const StaticString
   s_timeout("timeout"),
   s_connect_timeout("connect_timeout"),
   s_is_persisten("is_persisten"),
-  s_port("port");
+  s_port("port"),
+  s_PORT("PORT"),
+  s_NOPARM("NOPARM"),
+  s_NOACK("NOACK")
+  ;
 
 
 
@@ -31,12 +35,17 @@ void AmqpExtension::moduleInit() {
 		
 	HHVM_ME(AMQPConnection, connect);
 	HHVM_ME(AMQPConnection, isConnected);
+	HHVM_ME(AMQPConnection, disconnect);
 
 	// HHVM_ME(AMQPChannel, isConnected);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
-                                            Native::NDIFlags::NO_SWEEP);
+													 Native::NDIFlags::NO_SWEEP);
+
+    Native::registerConstant<KindOfInt64>(s_PORT.get(), 5672);
+    Native::registerConstant<KindOfInt64>(s_NOPARM.get(), 0);
+    Native::registerConstant<KindOfInt64>(s_NOACK.get(), 1);
 
 	loadSystemlib();
 }
@@ -106,8 +115,11 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 
 bool HHVM_METHOD(AMQPConnection, disconnect) {
 	auto *data = Native::data<AmqpData>(this_);
-	int res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-	if (!res) return true;
+
+		//TODO amqp_close_channel
+
+	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	if (!res.reply_type) return true;
 	
 	raise_warning("Failing to send the ack to the broker");
 	return false;
