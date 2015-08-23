@@ -20,9 +20,9 @@ const StaticString
   s_connect_timeout("connect_timeout"),
   s_is_persisten("is_persisten"),
   s_port("port"),
-  s_PORT("PORT"),
-  s_NOPARM("NOPARM"),
-  s_NOACK("NOACK")
+  s_PORT("AMQP_PORT"),
+  s_NOPARM("AMQP_NOPARAM"),
+  s_NOACK("AMQP_NOACK")
   ;
 
 
@@ -44,8 +44,8 @@ void AmqpExtension::moduleInit() {
 													 Native::NDIFlags::NO_SWEEP);
 
     Native::registerConstant<KindOfInt64>(s_PORT.get(), 5672);
-    Native::registerConstant<KindOfInt64>(s_NOPARM.get(), 0);
-    Native::registerConstant<KindOfInt64>(s_NOACK.get(), 1);
+    Native::registerConstant<KindOfInt64>(s_NOPARM.get(), AMQP_NOPARAM);
+    Native::registerConstant<KindOfInt64>(s_NOACK.get(), AMQP_NOACK);
 
 	loadSystemlib();
 }
@@ -118,12 +118,10 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
 		//TODO amqp_close_channel
 
-	printf("parm=%ld\n", parm);
-
 	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-	if ( parm && !res.reply_type) return true;
-	
-	raise_warning("Failing to send the ack to the broker");
+	if (res.reply_type) return true;
+	if (parm == AMQP_NOACK)
+		raise_warning("Failing to send the ack to the broker");
 	return false;
 }
 

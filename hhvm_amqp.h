@@ -25,6 +25,12 @@ enum amqp_error_code {
 	AMQP_ERROR_LOGIN
 };
 
+enum amqp_param {
+	AMQP_NOPARAM = 0,
+	AMQP_NOACK
+};
+
+
 class AmqpData {
 public:
 		amqp_socket_t *socket = NULL;

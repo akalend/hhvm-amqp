@@ -1,14 +1,24 @@
 <?hh
 
-const int AMQP_NOPARAM = 0;
-const int AMQP_NOACK = 1;
 
 
+/**
+* 
+*/
+final class AMQP {
+
+
+}
+
+/**
+*	AMQPConnection class
+*
+*/
 class AMQPConnection {
 	
 	/* internal */
 	private $host = 'localhost';
-	private $port = 5672; // AMQP_PORT
+	private $port = 5672; // `
 	private $login = 'guest';
 	private $vhost = '/';
 	private $password = 'guest';
