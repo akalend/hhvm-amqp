@@ -116,13 +116,11 @@ class AMQPConnection {
  class AMQPChannel {
 
  	/* Properties  */
- 	private $cnn = NULL;
 
 
 	 /* Methods 	*/
-	public  function __construct ( AMQPConnection $amqp_connection ) {
-		$this->cnn = $amqp_connection;
-	}
+	<<__Native>>
+	public  function __construct ( AMQPConnection $amqp_connection ) : void;
 	
 	<<__Native>>
 	public function isConnected (): bool;
@@ -162,3 +160,8 @@ class AMQPConnection {
 // 	public function setName ( string $queue_name ){}
 // 	public function unbind ( string $exchange_name , string $routing_key ){}
 //}
+
+
+
+class AMQPException extends Exception {
+}

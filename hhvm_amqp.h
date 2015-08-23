@@ -15,6 +15,7 @@ bool HHVM_METHOD(AMQPConnection, reconnect);
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm);
 
 
+void HHVM_METHOD(AMQPChannel, __construct, ObjectData* amqpConnect);
 bool HHVM_METHOD(AMQPChannel, isConnected);
 
 
@@ -42,6 +43,13 @@ public:
 		char* login = NULL;
 		short port = AMQP_PORT;
 		short err = 0;
+
+};
+
+
+class AmqpChannelData {
+public:
+		AmqpData cnn;				
 };
 
 class AmqpExtension : public Extension {
@@ -49,6 +57,7 @@ class AmqpExtension : public Extension {
 	public:
 		AmqpExtension(): Extension("amqp", "0.1.0"){
 			m_data = AmqpData();
+			m_channel_data = AmqpChannelData();
 		}
 	
 		void moduleInit() override;
@@ -56,6 +65,7 @@ class AmqpExtension : public Extension {
 
 	private:
 		AmqpData m_data;
+		AmqpChannelData m_channel_data;
 };
 
 

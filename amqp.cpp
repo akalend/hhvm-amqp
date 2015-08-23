@@ -22,7 +22,9 @@ const StaticString
   s_port("port"),
   s_PORT("AMQP_PORT"),
   s_NOPARM("AMQP_NOPARAM"),
-  s_NOACK("AMQP_NOACK")
+  s_NOACK("AMQP_NOACK"),
+  s_AMQPChannel("AMQPChannel"),
+  s_amqp_connection("amqp_connection")
   ;
 
 
@@ -37,6 +39,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPConnection, isConnected);
 	HHVM_ME(AMQPConnection, disconnect);
 
+	HHVM_ME(AMQPChannel, __construct);
 	HHVM_ME(AMQPChannel, isConnected);
 
 
@@ -191,7 +194,6 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
 	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
 
-
 	if (!amqpConnect(this_)) {
 
 		if (data->err == AMQP_ERR_CANNOT_OPEN_SOCKET) { 
@@ -208,10 +210,18 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 
 
+void HHVM_METHOD(AMQPChannel, __construct, ObjectData* amqpConnect) {
+	auto *src_data = Native::data<AmqpData>(amqpConnect);
+	auto *dst_data = Native::data<AmqpChannelData>(this_);
+	// dst_data->cnn = dynamic_cast<AmqpData*>(src_data);
+}
+
 
 bool HHVM_METHOD(AMQPChannel, isConnected) {
 	
-	// auto *data = Native::data<AmqpData>(this_); data->is_connected
+	// Variant ob = this_->o_get(s_amqp_connection, false, s_AMQPChannel);
+	// ob.get
+	//auto *data = Native::data<AmqpData>(this_);// data->is_connected
 	return true;
 }
 
