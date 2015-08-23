@@ -3,10 +3,12 @@
 
 
 /**
-* 
+*  class of AMQP constants
 */
 final class AMQP {
-
+	const  PORT = 5672;
+	const  NOACK = 1;
+	const  NOPARAM = 0;
 
 }
 
