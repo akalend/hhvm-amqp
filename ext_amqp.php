@@ -113,11 +113,16 @@ class AMQPConnection {
 }
 
 
- // AMQPChannel {
-	//  /* Methods 	*/
-	// public  function __construct ( $amqp_connection ) {
-	// 	$this->cnn = $amqp_connection;
-	// }
+ class AMQPChannel {
+
+ 	/* Properties  */
+ 	private $cnn = NULL;
+
+
+	 /* Methods 	*/
+	public  function __construct ( AMQPConnection $amqp_connection ) {
+		$this->cnn = $amqp_connection;
+	}
 	
 	// <<__Native>>
 	// public function isConnected (): bool;
@@ -129,9 +134,9 @@ class AMQPConnection {
 	// public function setPrefetchCount ( int $count ) {}
 	// public function setPrefetchSize ( int $size ) {}
 	// public function startTransaction ( void ) {}
-//}
+}
 
-//  AMQPQueue {
+//  class AMQPQueue {
 // 	/* Methods */
 // 	public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
 // 	public function bind ( string $exchange_name , string $routing_key ){}
