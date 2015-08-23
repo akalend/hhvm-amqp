@@ -37,7 +37,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPConnection, isConnected);
 	HHVM_ME(AMQPConnection, disconnect);
 
-	// HHVM_ME(AMQPChannel, isConnected);
+	HHVM_ME(AMQPChannel, isConnected);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -211,9 +211,10 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 bool HHVM_METHOD(AMQPChannel, isConnected) {
 	
-	auto *data = Native::data<AmqpData>(this_);
-	return data->is_connected;
+	// auto *data = Native::data<AmqpData>(this_); data->is_connected
+	return true;
 }
+
 
 
 

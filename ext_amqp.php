@@ -124,8 +124,8 @@ class AMQPConnection {
 		$this->cnn = $amqp_connection;
 	}
 	
-	// <<__Native>>
-	// public function isConnected (): bool;
+	<<__Native>>
+	public function isConnected (): bool;
 
 	// public function commitTransaction () {}
 	

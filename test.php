@@ -4,16 +4,12 @@
 	$ret = $cnn->connect();
 	var_dump($ret);
 
-	$ch = new AMQPChannel(1);
+	$ch = new AMQPChannel($cnn);
+
+
 	var_dump($cnn->isConnected());
+
+	var_dump($ch->isConnected());
 
 	var_dump($cnn->disconnect(AMQP_NOPARAM));
 
-	var_dump(AMQP::PORT);
-
-	// $cnn2 = new AMQPConnection(['host'=>'sasa']);
-	// $cnn2->connect();
-	// var_dump($cnn2->isConnected());
-
-	// var_dump($cnn->isConnected());
-	// var_dump($cnn->getHost());
