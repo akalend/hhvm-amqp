@@ -113,8 +113,8 @@ class AMQPConnection {
 
 }
 
-
- class AMQPChannel {
+<<__NativeData("AMQPConnection")>>
+class AMQPChannel {
 
  	/* Properties  */
 

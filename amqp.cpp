@@ -76,8 +76,7 @@ bool amqpConnect( ObjectData* this_) {
 	
 	auto *data = Native::data<AMQPConnection>(this_);
 
-
-  	printf( "connect to %s:%d\n", data->host, data->port);
+  	// printf( "connect to %s:%d\n", data->host, data->port);
 
 	data->conn = amqp_new_connection();
 	int channel_MAX = 0;
@@ -123,10 +122,11 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
 		//TODO amqp_close_channel
 		// printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
-	// amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-	// if (res.reply_type) return true;
-	// if (parm == AMQP_NOACK)
-	// 	raise_warning("Failing to send the ack to the broker");
+	data->is_connected = false;
+	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	if (res.reply_type) return true;
+	if (parm == AMQP_NOACK)
+		raise_warning("Failing to send the ack to the broker");
 	return false;
 }
 
@@ -215,17 +215,14 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 void HHVM_METHOD(AMQPChannel, __construct, ObjectData* amqpConnect) {
 	
-	// Array ar = amqpConnect->toArray();
+	 auto data = Native::data<AMQPConnection>(amqpConnect);
 
-	// auto data = Native::data<AMQPConnection>(amqpConnect);
+	
 
+	// Variant* login =  amqpConnect->o_realProp(s_login, 1, s_AMQPConnection);
 
-	 // const char* xx = amqpConnect->o_get(s_login, false, s_AMQPConnection).toString().c_str() ;
-	 // Variant* xx = amqpConnect->o_realProp(s_login, false, s_AMQPConnection);
-	// auto data = Native::data<AmqpChannelData>(this_);
-	// dst_data->cnn = src_data;// dynamic_cast<AMQPConnection*>();
-
-	// printf("login %s\n",  xx  );
+	// Variant ob = amqpConnect->o_get(s_AMQPConnection, false);
+	printf("%s : %s\n", __FUNCTION__, data->login  );
 
 }
 

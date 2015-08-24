@@ -59,6 +59,27 @@ class AMQPConnection {
 
 };
 
+
+class AMQPChannel {
+ public:
+
+	AMQPChannel() { /* new AMQPChannel */ }
+	AMQPChannel(const AMQPChannel&) = delete;
+	AMQPChannel& operator=(const AMQPChannel& src) {
+    /* clone $instanceOfAMQPConnection */
+	    throw Object(SystemLib::AllocExceptionObject(
+    		  "Cloning AMQPConnection is not allowed"
+    ));
+  }
+
+  ~AMQPChannel() {};
+
+ private:
+	AMQPConnection* amqpCnn = NULL;
+
+};
+
+
 class AmqpExtension : public Extension {
 
 	public:
