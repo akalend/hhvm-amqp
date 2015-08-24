@@ -8,8 +8,8 @@
 
 
 	var_dump($cnn->isConnected());
-
 	var_dump($ch->isConnected());
+	var_dump($cnn->isConnected());
 
 	var_dump($cnn->disconnect(AMQP_NOPARAM));
-
+// $cnn->disconnect(AMQP_NOPARAM);

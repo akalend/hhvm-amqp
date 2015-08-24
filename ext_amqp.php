@@ -16,6 +16,7 @@ final class AMQP {
 *	AMQPConnection class
 *
 */
+<<__NativeData("AMQPConnection")>>
 class AMQPConnection {
 	
 	/* internal */

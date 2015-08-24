@@ -32,40 +32,41 @@ enum amqp_param {
 };
 
 
-class AmqpData {
-public:
-		amqp_socket_t *socket = NULL;
-		amqp_connection_state_t conn = NULL;
-		bool is_connected = false;
-		char* host = NULL;
-		char* vhost = NULL;
-		char* password = NULL;
-		char* login = NULL;
-		short port = AMQP_PORT;
-		short err = 0;
+class AMQPConnection {
+ public:
 
-};
+	amqp_socket_t *socket = NULL;
+	amqp_connection_state_t conn = NULL;
+	bool is_connected = false;
+	char* host = NULL;
+	char* vhost = NULL;
+	char* password = NULL;
+	char* login = NULL;
+	short port = AMQP_PORT;
+	short err = 0;
 
 
-class AmqpChannelData {
-public:
-		AmqpData cnn;				
+	AMQPConnection() { /* new AMQPConnection */ }
+	AMQPConnection(const AMQPConnection&) = delete;
+	AMQPConnection& operator=(const AMQPConnection& src) {
+    /* clone $instanceOfAMQPConnection */
+	    throw Object(SystemLib::AllocExceptionObject(
+    		  "Cloning AMQPConnection is not allowed"
+    ));
+  }
+
+  ~AMQPConnection();
+
 };
 
 class AmqpExtension : public Extension {
 
 	public:
-		AmqpExtension(): Extension("amqp", "0.1.0"){
-			m_data = AmqpData();
-			m_channel_data = AmqpChannelData();
-		}
+		AmqpExtension(): Extension("amqp", "0.1.0"){}
 	
 		void moduleInit() override;
 		void moduleShutdown() override;
 
-	private:
-		AmqpData m_data;
-		AmqpChannelData m_channel_data;
 };
 
 

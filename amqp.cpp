@@ -55,7 +55,7 @@ void AmqpExtension::moduleInit() {
 
 void AmqpExtension::moduleShutdown() {
 	
-	// auto *data = Native::data<AmqpData>(this_);
+	// auto *data = Native::data<AMQPConnection>(this_);
 	// if (data->conn) {
 	// 	amqp_connection_close(conn->conn);
 	// 	amqp_destroy_connection(data->conn);
@@ -74,7 +74,7 @@ bool amqpConnect( ObjectData* this_) {
 	
 	// conn = amqp_new_connection();
 	
-	auto *data = Native::data<AmqpData>(this_);
+	auto *data = Native::data<AMQPConnection>(this_);
 
 
   	printf( "connect to %s:%d\n", data->host, data->port);
@@ -103,6 +103,8 @@ bool amqpConnect( ObjectData* this_) {
 
 	if ( res.reply_type == AMQP_RESPONSE_NORMAL) {
 
+		printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
+
 		return data->is_connected = true;
 	}
 
@@ -112,24 +114,24 @@ bool amqpConnect( ObjectData* this_) {
 
 bool HHVM_METHOD(AMQPConnection, isConnected) {
 	
-	auto *data = Native::data<AmqpData>(this_);
+	auto *data = Native::data<AMQPConnection>(this_);
 	return data->is_connected;
 }
 
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
-	auto *data = Native::data<AmqpData>(this_);
+	auto *data = Native::data<AMQPConnection>(this_);
 
 		//TODO amqp_close_channel
-
-	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-	if (res.reply_type) return true;
-	if (parm == AMQP_NOACK)
-		raise_warning("Failing to send the ack to the broker");
+		printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
+	// amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	// if (res.reply_type) return true;
+	// if (parm == AMQP_NOACK)
+	// 	raise_warning("Failing to send the ack to the broker");
 	return false;
 }
 
 bool HHVM_METHOD(AMQPConnection, reconnect) {
-	auto *data = Native::data<AmqpData>(this_);
+	auto *data = Native::data<AMQPConnection>(this_);
 
 	if (data->is_connected) {
 		data->is_connected = false;
@@ -163,19 +165,20 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 
 bool HHVM_METHOD(AMQPConnection, connect) {
   
-	auto *data = Native::data<AmqpData>(this_);
+	auto *data = Native::data<AMQPConnection>(this_);
 
+	/* not implement */
+  	// bool is_persisten = this_->o_get(s_is_persisten, false, s_AMQPConnection).toBoolean();
 
-  	bool is_persisten = this_->o_get(s_is_persisten, false, s_AMQPConnection).toBoolean();
-	if (data->is_connected) {
+	// if (data->is_connected) {
 
-		assert(data->conn != NULL);
-		if (is_persisten) {
-			//raise_warning("Attempt to start transient connection while persistent transient one already established. Continue.");
-		}
+	// 	assert(data->conn != NULL);
+	// 	if (is_persisten) {
+	// 		raise_warning("Attempt to start transient connection while persistent transient one already established. Continue.");
+	// 	}
 
-		return true;
-	}
+	// 	return true;
+	// }
 
 	assert(data->conn == NULL);
 	assert(!data->is_connected);
@@ -211,18 +214,33 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 
 void HHVM_METHOD(AMQPChannel, __construct, ObjectData* amqpConnect) {
-	auto *src_data = Native::data<AmqpData>(amqpConnect);
-	auto *dst_data = Native::data<AmqpChannelData>(this_);
-	// dst_data->cnn = dynamic_cast<AmqpData*>(src_data);
+	
+	// Array ar = amqpConnect->toArray();
+
+	// auto data = Native::data<AMQPConnection>(amqpConnect);
+
+
+	 // const char* xx = amqpConnect->o_get(s_login, false, s_AMQPConnection).toString().c_str() ;
+	 // Variant* xx = amqpConnect->o_realProp(s_login, false, s_AMQPConnection);
+	// auto data = Native::data<AmqpChannelData>(this_);
+	// dst_data->cnn = src_data;// dynamic_cast<AMQPConnection*>();
+
+	// printf("login %s\n",  xx  );
+
 }
 
 
 bool HHVM_METHOD(AMQPChannel, isConnected) {
 	
-	// Variant ob = this_->o_get(s_amqp_connection, false, s_AMQPChannel);
-	// ob.get
-	//auto *data = Native::data<AmqpData>(this_);// data->is_connected
-	return true;
+	// auto *data = Native::data<AmqpChannelData>(this_);
+
+
+	// if (!data->cnn)
+	// 	raise_warning("The AMQPConnection class is`nt binding");
+	// 	// 
+
+	// printf("login %s\n",  data->cnn->login ? data->cnn->login : "***"  );
+	return true; //data->cnn->is_connected;
 }
 
 
