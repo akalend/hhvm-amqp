@@ -103,7 +103,7 @@ bool amqpConnect( ObjectData* this_) {
 
 	if ( res.reply_type == AMQP_RESPONSE_NORMAL) {
 
-		printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
+		// printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
 
 		return data->is_connected = true;
 	}
@@ -122,7 +122,7 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 	auto *data = Native::data<AMQPConnection>(this_);
 
 		//TODO amqp_close_channel
-		printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
+		// printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
 	// amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 	// if (res.reply_type) return true;
 	// if (parm == AMQP_NOACK)

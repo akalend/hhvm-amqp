@@ -55,7 +55,7 @@ class AMQPConnection {
     ));
   }
 
-  ~AMQPConnection();
+  ~AMQPConnection() {};
 
 };
 
