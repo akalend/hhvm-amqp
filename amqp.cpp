@@ -216,29 +216,20 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
 
-	 auto data = Native::data<AMQPConnection>(amqpConnect.toObject());
-
-	
-
-	// Variant* login =  amqpConnect->o_realProp(s_login, 1, s_AMQPConnection);
-
-	// Variant ob = amqpConnect->o_get(s_AMQPConnection, false);
-	printf("%s : %s\n", __FUNCTION__, data->login  );
-
+	 auto src_data = Native::data<AMQPConnection>(amqpConnect.toObject());
+	 auto *data = Native::data<AMQPChannel>(this_);
+	 data->amqpCnn = src_data;		
 }
 
 
 bool HHVM_METHOD(AMQPChannel, isConnected) {
 	
-	// auto *data = Native::data<AmqpChannelData>(this_);
 
+	auto *data = Native::data<AMQPChannel>(this_);
+	if (!data->amqpCnn)
+		raise_warning("The AMQPConnection class is`nt binding");
 
-	// if (!data->cnn)
-	// 	raise_warning("The AMQPConnection class is`nt binding");
-	// 	// 
-
-	// printf("login %s\n",  data->cnn->login ? data->cnn->login : "***"  );
-	return true; //data->cnn->is_connected;
+	return data->amqpCnn->is_connected;
 }
 
 

@@ -74,7 +74,6 @@ class AMQPChannel {
 
   ~AMQPChannel() {};
 
- private:
 	AMQPConnection* amqpCnn = NULL;
 
 };
