@@ -65,9 +65,8 @@ class AMQPConnection {
 class AMQPChannel {
  public:
 
-	AMQPChannel(){
-		printf("construct %s\n", __FUNCTION__);
-	};
+	AMQPChannel(){};	
+
 	AMQPChannel(const AMQPChannel&) = delete;	
 	AMQPChannel& operator=(const AMQPChannel& src) {
     /* clone $instanceOfAMQPConnection */

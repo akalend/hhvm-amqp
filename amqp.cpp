@@ -132,6 +132,10 @@ amqp_channel_t getChannelSlot(AMQPChannel *channel) {
 
 // ---------------------------------------------------------------------------------------------------
 
+
+
+// ------------------------------  AMQPConnect ------------------------------------------
+
 bool HHVM_METHOD(AMQPConnection, isConnected) {
 	
 	auto *data = Native::data<AMQPConnection>(this_);
@@ -232,7 +236,7 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	return true;
 }
 
-
+// ------------------------------  AMQPChannel ------------------------------------------
 
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
