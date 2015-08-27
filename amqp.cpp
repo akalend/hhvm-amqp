@@ -111,6 +111,25 @@ bool amqpConnect( ObjectData* this_) {
 	return data->is_connected = false;
 }
 
+
+amqp_channel_t getChannelSlot(AMQPChannel *channel) {
+	if (channel->used_slots >= AMQP_MAX_CHANNELS + 1) {
+		return 0;
+	}
+
+	amqp_channel_t slot;
+
+	for (slot = 1; slot < AMQP_MAX_CHANNELS + 1; slot++) {
+		if (channel->slots[slot] == 0) {
+			return slot;
+		}
+	}
+}
+
+
+
+// ---------------------------------------------------------------------------------------------------
+
 bool HHVM_METHOD(AMQPConnection, isConnected) {
 	
 	auto *data = Native::data<AMQPConnection>(this_);
@@ -215,10 +234,22 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
+	auto src_data = Native::data<AMQPConnection>(amqpConnect.toObject());
+	auto *data = Native::data<AMQPChannel>(this_);
+	data->amqpCnn = src_data;
 
-	 auto src_data = Native::data<AMQPConnection>(amqpConnect.toObject());
-	 auto *data = Native::data<AMQPChannel>(this_);
-	 data->amqpCnn = src_data;		
+
+	amqp_channel_t slot = getChannelSlot(data);	
+
+	/* Check that we got a valid channel */
+	if (!slot) {
+		raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
+		return;
+	}
+
+
+
+
 }
 
 

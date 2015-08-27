@@ -8,6 +8,8 @@
 namespace HPHP {
 
 #define AMQP_PORT  5672
+#define AMQP_MAX_CHANNELS 65535 
+
 
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
@@ -74,6 +76,10 @@ class AMQPChannel {
 
   ~AMQPChannel() {};
 
+	int channel_id = 0;
+	int used_slots = 0;
+  	int prefetch_count = 0;
+  	amqp_channel_t *slots;
 	AMQPConnection* amqpCnn = NULL;
 
 };
