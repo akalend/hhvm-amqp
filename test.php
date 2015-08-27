@@ -4,6 +4,7 @@
 	$ret = $cnn->connect();
 	var_dump($ret);
 
+
 	$ch = new AMQPChannel($cnn);
 
 

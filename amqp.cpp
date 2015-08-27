@@ -70,6 +70,8 @@ static AmqpExtension  s_amqp_extension;
 
 
 
+// ------------------------------------------------------
+
 bool amqpConnect( ObjectData* this_) {
 	
 	// conn = amqp_new_connection();
