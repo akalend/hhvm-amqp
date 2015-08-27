@@ -15,7 +15,7 @@ bool HHVM_METHOD(AMQPConnection, reconnect);
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm);
 
 
-void HHVM_METHOD(AMQPChannel, __construct, ObjectData* amqpConnect);
+void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect);
 bool HHVM_METHOD(AMQPChannel, isConnected);
 
 

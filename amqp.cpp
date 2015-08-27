@@ -213,9 +213,10 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 
 
 
-void HHVM_METHOD(AMQPChannel, __construct, ObjectData* amqpConnect) {
+void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
-	 auto data = Native::data<AMQPConnection>(amqpConnect);
+
+	 auto data = Native::data<AMQPConnection>(amqpConnect.toObject());
 
 	
 
