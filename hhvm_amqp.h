@@ -86,6 +86,7 @@ class AMQPConnection {
 	char* login = NULL;
 	short port = AMQP_PORT;
 	short err = 0;
+	short channel_id = 0;
 
 
 	AMQPConnection() { /* new AMQPConnection */ }

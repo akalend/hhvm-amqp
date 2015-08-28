@@ -184,7 +184,10 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 	auto *data = Native::data<AMQPConnection>(this_);
 
 		//TODO amqp_close_channel
-		// printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
+
+		 printf("%s channel_id=%d\n", __FUNCTION__, data->channel_id);
+	
+
 	data->is_connected = false;
 	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 	if (res.reply_type) return true;
@@ -284,12 +287,12 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 		raise_error( "Error input data");
 
 	data->amqpCnn = src_data;
-
+	src_data->channel_id = data->channel_id;
 	// if (!data->slots) {
 	// 	data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
 	// }
 
-//	amqp_channel_t slot = getChannelSlot(data);	
+	//	amqp_channel_t slot = getChannelSlot(data);	
 
 	/* Check that we got a valid channel */
 	// if (!slot) {
