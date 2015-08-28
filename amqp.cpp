@@ -244,21 +244,20 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	auto *data = Native::data<AMQPChannel>(this_);
 	data->amqpCnn = src_data;
 
-	if (!data->slots) {
-		data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
-	}
+	// if (!data->slots) {
+	// 	data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
+	// }
 
-	amqp_channel_t slot = getChannelSlot(data);	
+//	amqp_channel_t slot = getChannelSlot(data);	
 
 	/* Check that we got a valid channel */
-	if (!slot) {
-		raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
-		return;
-	}
+	// if (!slot) {
+	// 	raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
+	// 	return;
+	// }
 
-
-
-
+	// channel_id 
+	amqp_channel_open(src_data->conn, data->channel_id );
 }
 
 
