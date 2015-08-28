@@ -43,6 +43,10 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPChannel, isConnected);
 
 
+	HHVM_ME(AMQPQueue, __construct);
+	HHVM_ME(AMQPQueue, getName);
+
+
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
 													 Native::NDIFlags::NO_SWEEP);
 
@@ -242,6 +246,9 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
 	auto src_data = Native::data<AMQPConnection>(amqpConnect.toObject());
 	auto *data = Native::data<AMQPChannel>(this_);
+	if (!src_data)
+		raise_error( "Error input data");
+
 	data->amqpCnn = src_data;
 
 	// if (!data->slots) {
@@ -274,8 +281,23 @@ bool HHVM_METHOD(AMQPChannel, isConnected) {
 
 // ------------------------------  AMQPQueue ------------------------------------------
 
-void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue){};
+void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue) {
+	auto src_data = Native::data<AMQPChannel>(amqpQueue.toObject());
+	auto *data = Native::data<AMQPQueue>(this_);
 
+	if (!src_data)
+		raise_error( "Error input data");
+
+	data->amqpCh = src_data;
+
+};
+
+
+String HHVM_METHOD(AMQPQueue, getName) {
+
+	String ret = "**** noname *****";
+	return ret;
+}
 
 HHVM_GET_MODULE(amqp);
 } // namespace

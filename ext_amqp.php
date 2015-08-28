@@ -138,11 +138,13 @@ class AMQPChannel {
 
 <<__NativeData("AMQPQueue")>>
 class AMQPQueue {
+
 	/* Methods */
-	
-	public function __construct ( $amqp_channel ){
-		// return : AMQPChannel	
-	}
+	<<__Native>>
+	public function __construct (AMQPChannel $amqp_channel );
+
+	<<__Native>>
+ 	public function getName (): string;
 
 
 	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
@@ -157,7 +159,6 @@ class AMQPQueue {
 	// public function getArgument ( string $key ): mixed
 	// public function getArguments ( void ): array
 	// public function getFlags ( void ): int
-	// public function getName ( void ): string
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
 	// public function purge ( void ){}
 	// public function setArgument ( string $key , mixed $value ){}
