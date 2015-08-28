@@ -374,22 +374,24 @@ int HHVM_METHOD(AMQPQueue, declare){
 	amqp_queue_declare_ok_t *r = amqp_queue_declare(data->amqpCh->amqpCnn->conn,
 								data->amqpCh->channel_id,
 								amqp_cstring_bytes(queue), 	// queue name
-								flags & AMQP_PASSIVE,					// passive
-								flags & AMQP_DURABLE, 					// durable 
-								flags & AMQP_EXCLUSIVE,					// exclusive
-								flags & AMQP_AUTODELETE,				// autodelete
-								amqp_empty_table);	// arguments
+								(flags & AMQP_PASSIVE)    ? 1 : 0,				// passive
+								(flags & AMQP_DURABLE)    ? 1 : 0, 				// durable 
+								(flags & AMQP_EXCLUSIVE)  ? 1 : 0,				// exclusive
+								(flags & AMQP_AUTODELETE) ? 1 : 0,				// autodelete
+								amqp_empty_table);								// arguments
 								
 
-	if (r) {
-		data->message_count = r->message_count;
-		data->consumer_count = r->consumer_count;
+	if (!r) {
+		if  (AMQP_RESPONSE_NORMAL != (amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn)).reply_type)
+			raise_warning("The AMQPQueue class: declare error");
+
+		return 0;
 	} 
 
-	if  (AMQP_RESPONSE_NORMAL != (amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn)).reply_type)
-			raise_warning("The AMQPQueue class: declare error");
-	
 
+	data->message_count = r->message_count;
+	data->consumer_count = r->consumer_count;
+		
 	// data-queue_name = amqp_bytes_malloc_dup(r->queue);
 	// if (queue_name.bytes == NULL) {
 	//   fprintf(stderr, "The AMQPQueue class: Out of memory while copying queue name");
@@ -402,7 +404,36 @@ int HHVM_METHOD(AMQPQueue, declare){
 
 int HHVM_METHOD(AMQPQueue, delete) {
 
-	return 0;
+	auto *data = Native::data<AMQPQueue>(this_);
+	if (!data)
+		raise_error( "Error input data");
+
+	data->message_count=0;
+	
+	if (!data->amqpCh)
+		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
+
+	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
+	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
+
+
+    amqp_queue_delete_ok_t *r = amqp_queue_delete(data->amqpCh->amqpCnn->conn,
+    								data->amqpCh->channel_id,
+                                    amqp_cstring_bytes(queue),
+                                    (flags & AMQP_IFUNUSED) ? 1 : 0,
+                                    (flags & AMQP_IFEMPTY)  ? 1 : 0);
+
+
+	if (!r) {
+		amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
+		raise_warning("The AMQPQueue class: delete queue error");
+
+		return -1;
+	}
+
+	data->message_count = r->message_count;
+
+	return data->message_count;
 }
 
 

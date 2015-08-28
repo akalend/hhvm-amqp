@@ -69,7 +69,8 @@ enum amqp_param {
 	AMQP_DURABLE = 4,		// durable 
 	AMQP_EXCLUSIVE = 8,		// exclusive
 	AMQP_AUTODELETE = 16,	// autodelete
-
+	AMQP_IFUNUSED = 32,
+	AMQP_IFEMPTY = 64,
 };
 
 

@@ -13,6 +13,12 @@
 
 	// $queue->declare();
 	
+
+	echo "------  delete  --------\n";
+	
+	$res = $queue->setFlags(AMQP::IF_UNUSED);
+	var_dump($res);
+
 	echo "------  bind  --------\n";
 
 	$queue->bind("exxx", "kkk");	

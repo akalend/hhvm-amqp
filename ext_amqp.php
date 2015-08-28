@@ -40,6 +40,8 @@ final class AMQP {
 	const  DURABLE = 4;			// durable 
 	const  EXCLUSIVE = 8;		// exclusive
 	const  AUTODELETE = 16;		// autodelete
+	const  IF_UNUSED = 32;
+	const  IF_EMPTY = 64;
 }
 
 /**
