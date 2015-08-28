@@ -72,6 +72,7 @@ enum amqp_param {
 	AMQP_AUTODELETE = 16,	// autodelete
 	AMQP_IFUNUSED = 32,
 	AMQP_IFEMPTY = 64,
+	AMQP_AUTOACK = 128,
 };
 
 

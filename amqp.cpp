@@ -444,7 +444,62 @@ int HHVM_METHOD(AMQPQueue, delete) {
 
 
 Variant HHVM_METHOD(AMQPQueue, get) {
+
+	auto *data = Native::data<AMQPQueue>(this_);
+	if (!data)
+		raise_error( "Error input data");
 	
+	if (!data->amqpCh)
+		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
+
+	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
+	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
+
+
+	amqp_rpc_reply_t res = amqp_basic_get(
+		data->amqpCh->amqpCnn->conn,
+		data->amqpCh->channel_id,
+		amqp_cstring_bytes(queue),
+		(AMQP_AUTOACK & flags) ? 1 : 0
+	);
+
+
+	if (res.reply_type != AMQP_RESPONSE_NORMAL ) {
+		raise_warning("The AMQPQueue error");
+		return Variant(false);
+	}
+
+	if (AMQP_BASIC_GET_EMPTY_METHOD == res.reply.id) {
+		return Variant(false);
+	}
+
+	assert(AMQP_BASIC_GET_OK_METHOD == res.reply.id);
+
+	/* Fill the envelope from response */
+	amqp_basic_get_ok_t *get_ok_method = static_cast<amqp_basic_get_ok_t*>(res.reply.decoded);
+
+	amqp_envelope_t envelope;
+
+	envelope.channel      = data->amqpCh->channel_id;
+	envelope.consumer_tag = amqp_empty_bytes;
+	envelope.delivery_tag = get_ok_method->delivery_tag;
+	envelope.redelivered  = get_ok_method->redelivered;
+	envelope.exchange     = amqp_bytes_malloc_dup(get_ok_method->exchange);
+	envelope.routing_key  = amqp_bytes_malloc_dup(get_ok_method->routing_key);
+
+  	res = amqp_read_message(
+		data->amqpCh->amqpCnn->conn,
+		data->amqpCh->channel_id,
+		&envelope.message,
+		0
+	);
+
+
+  	
+
+
+	amqp_destroy_envelope(&envelope);
+
 	return Variant(0);
 }
 
