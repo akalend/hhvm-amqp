@@ -155,8 +155,12 @@ class AMQPQueue {
 		$this->name	= $queue_name;
 	}
 
+
+	<<__Native>>
+	public function bind ( string $exchange_name , string $routing_key ) : void;
+
+
 	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
-	// public function bind ( string $exchange_name , string $routing_key ){}
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 	// public function declare ( void ): int

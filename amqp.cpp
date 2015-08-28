@@ -44,7 +44,7 @@ void AmqpExtension::moduleInit() {
 
 
 	HHVM_ME(AMQPQueue, __construct);
-	// HHVM_ME(AMQPQueue, getName);
+	HHVM_ME(AMQPQueue, bind);
 	// HHVM_ME(AMQPQueue, setName);
 
 
@@ -292,6 +292,11 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue) {
 	data->amqpCh = src_data;
 
 };
+
+void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey) {
+
+}
+
 
 
 
