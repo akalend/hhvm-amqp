@@ -53,7 +53,9 @@ const StaticString
   s_NOPARM("AMQP_NOPARAM"),
   s_NOACK("AMQP_NOACK"),
   s_AMQPChannel("AMQPChannel"),
-  s_amqp_connection("amqp_connection")
+  s_amqp_connection("amqp_connection"),
+  s_name("name"),
+  s_AMQPQueue("AMQPQueue")
   ;
 
 
@@ -295,6 +297,10 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 
 	// channel_id 
 	amqp_channel_open(src_data->conn, data->channel_id );
+	amqp_rpc_reply_t r = amqp_get_rpc_reply(src_data->conn);
+	if (r.reply_type != AMQP_RESPONSE_NORMAL)
+		raise_warning("The AMQPChannel class: open channel error");
+	
 }
 
 
@@ -303,7 +309,7 @@ bool HHVM_METHOD(AMQPChannel, isConnected) {
 
 	auto *data = Native::data<AMQPChannel>(this_);
 	if (!data->amqpCnn)
-		raise_warning("The AMQPConnection class is`nt binding");
+		raise_warning("The AMQPConnection class is`nt binding whith connection");
 
 	return data->amqpCnn->is_connected;
 }
@@ -323,6 +329,21 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue) {
 };
 
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey) {
+
+	auto *data = Native::data<AMQPQueue>(this_);
+	if (!data)
+		raise_error( "Error input data");
+
+	if (!data->amqpCh)
+		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
+
+	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
+	const char* exchange = const_cast<char* >(exchangeName.c_str());
+	const char* routing_key = const_cast<char* >(routingKey.c_str());
+
+	printf("name: %s\n", exchange);
+
+
 
 }
 

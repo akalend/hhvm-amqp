@@ -17,4 +17,4 @@
 
 	$queue->setName("mamamama");
 	var_dump($queue->getName());
-	$queue->bind("mamamama", "");
+	$queue->bind("xxxxxx", "kkk");
