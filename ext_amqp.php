@@ -36,7 +36,10 @@ final class AMQP {
 	const  PORT = 5672;
 	const  NOACK = 1;
 	const  NOPARAM = 0;
-
+	const  PASSIVE = 2;			// passive
+	const  DURABLE = 4;			// durable 
+	const  EXCLUSIVE = 8;		// exclusive
+	const  AUTODELETE = 16;		// autodelete
 }
 
 /**
@@ -168,6 +171,7 @@ class AMQPQueue {
 
 	/* internal */
 	private $name = '';
+	private $flags = 0;
 
 	/* Methods */
 	<<__Native>>
@@ -187,22 +191,36 @@ class AMQPQueue {
 	public function bind ( string $exchange_name , string $routing_key ) : void;
 
 
+	<<__Native>>
+	public function declare (): int;
+
+	<<__Native>>
+	public function delete (): int;
+
+	
+	public function getFlags () {
+		return $this->flags;
+	}
+
+	public function setFlags ( int $flags ){
+		$this->flags = $flags;
+	}
+
+
+
 	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
-	// public function declare ( void ): int
-	// publicfunction delete ( void ){}
+
 	// public function get ([ int $flags= AMQP_NOACK]){
 	// 	//: mixed
 	// }
 	// public function getArgument ( string $key ): mixed
 	// public function getArguments ( void ): array
-	// public function getFlags ( void ): int
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
 	// public function purge ( void ){}
 	// public function setArgument ( string $key , mixed $value ){}
 	// public function setArguments ( array $arguments ){}
-	// public function setFlags ( int $flags ){}
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
 

@@ -51,9 +51,8 @@ bool HHVM_METHOD(AMQPChannel, isConnected);
 
 void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey);
-
-// void HHVM_METHOD(AMQPQueue, setName, const String& name); 
-
+int HHVM_METHOD(AMQPQueue, declare);
+int HHVM_METHOD(AMQPQueue, delete);
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
@@ -62,9 +61,15 @@ enum amqp_error_code {
 	AMQP_ERROR_LOGIN
 };
 
+
 enum amqp_param {
 	AMQP_NOPARAM = 0,
-	AMQP_NOACK
+	AMQP_NOACK = 1,
+	AMQP_PASSIVE = 2,		// passive
+	AMQP_DURABLE = 4,		// durable 
+	AMQP_EXCLUSIVE = 8,		// exclusive
+	AMQP_AUTODELETE = 16,	// autodelete
+
 };
 
 
@@ -85,10 +90,10 @@ class AMQPConnection {
 	AMQPConnection() { /* new AMQPConnection */ }
 	AMQPConnection(const AMQPConnection&) = delete;
 	AMQPConnection& operator=(const AMQPConnection& src) {
-    /* clone $instanceOfAMQPConnection */
-	    throw Object(SystemLib::AllocExceptionObject(
-    		  "Cloning AMQPConnection is not allowed"
-    ));
+	/* clone $instanceOfAMQPConnection */
+		throw Object(SystemLib::AllocExceptionObject(
+			  "Cloning AMQPConnection is not allowed"
+	));
   }
 
   ~AMQPConnection() {};
@@ -103,22 +108,22 @@ class AMQPChannel {
 
 	AMQPChannel(const AMQPChannel&) = delete;	
 	AMQPChannel& operator=(const AMQPChannel& src) {
-    /* clone $instanceOfAMQPConnection */
-	    throw Object(SystemLib::AllocExceptionObject(
-    		  "Cloning AMQPConnection is not allowed"
-    ));
+	/* clone $instanceOfAMQPConnection */
+		throw Object(SystemLib::AllocExceptionObject(
+			  "Cloning AMQPConnection is not allowed"
+	));
   }
 
   ~AMQPChannel() {
 
-  	printf("destructor %s\n", __FUNCTION__ );
+	printf("destructor %s\n", __FUNCTION__ );
   };
 	
 	int used_slots = 0;
-  	int prefetch_count = 0;
+	int prefetch_count = 0;
 
-  	amqp_channel_t channel_id = 0;
-  	amqp_channel_t *slots;
+	amqp_channel_t channel_id = 1;
+	amqp_channel_t *slots;
 	AMQPConnection* amqpCnn = NULL;
 
 };
@@ -132,17 +137,20 @@ class AMQPQueue {
 
 	AMQPQueue(const AMQPQueue&) = delete;	
 	AMQPQueue& operator=(const AMQPQueue& src) {
-    /* clone $instanceOfAMQPConnection */
-	    throw Object(SystemLib::AllocExceptionObject(
-    		  "Cloning AMQPConnection is not allowed"
-    ));
+	/* clone $instanceOfAMQPConnection */
+		throw Object(SystemLib::AllocExceptionObject(
+			  "Cloning AMQPConnection is not allowed"
+	));
   }
 
   ~AMQPQueue() {
 
-  	printf("destructor %s\n", __FUNCTION__ );
+	printf("destructor %s\n", __FUNCTION__ );
   };
 	
+	int parms = AMQP_AUTODELETE;
+	int message_count = 0;
+	int consumer_count = 0;
 	AMQPChannel* amqpCh = NULL;
 	char* name = NULL;
 };

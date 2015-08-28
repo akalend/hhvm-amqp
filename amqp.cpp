@@ -40,22 +40,23 @@
 namespace HPHP {
 
 const StaticString
-  s_AMQPConnection("AMQPConnection"),
-  s_host("host"),
-  s_vhost("vhost"),
-  s_login("login"),
-  s_password("password"),
-  s_timeout("timeout"),
-  s_connect_timeout("connect_timeout"),
-  s_is_persisten("is_persisten"),
-  s_port("port"),
-  s_PORT("AMQP_PORT"),
-  s_NOPARM("AMQP_NOPARAM"),
-  s_NOACK("AMQP_NOACK"),
-  s_AMQPChannel("AMQPChannel"),
-  s_amqp_connection("amqp_connection"),
-  s_name("name"),
-  s_AMQPQueue("AMQPQueue")
+	s_AMQPConnection("AMQPConnection"),
+	s_host("host"),
+	s_vhost("vhost"),
+	s_login("login"),
+	s_password("password"),
+	s_timeout("timeout"),
+	s_connect_timeout("connect_timeout"),
+	s_is_persisten("is_persisten"),
+	s_port("port"),
+	s_PORT("AMQP_PORT"),
+	s_NOPARM("AMQP_NOPARAM"),
+	s_NOACK("AMQP_NOACK"),
+	s_AMQPChannel("AMQPChannel"),
+	s_amqp_connection("amqp_connection"),
+	s_name("name"),
+	s_flags("flags"),
+	s_AMQPQueue("AMQPQueue")
   ;
 
 
@@ -76,15 +77,16 @@ void AmqpExtension::moduleInit() {
 
 	HHVM_ME(AMQPQueue, __construct);
 	HHVM_ME(AMQPQueue, bind);
-	// HHVM_ME(AMQPQueue, setName);
+	HHVM_ME(AMQPQueue, declare);
+	HHVM_ME(AMQPQueue, delete);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
 													 Native::NDIFlags::NO_SWEEP);
 
-    Native::registerConstant<KindOfInt64>(s_PORT.get(), 5672);
-    Native::registerConstant<KindOfInt64>(s_NOPARM.get(), AMQP_NOPARAM);
-    Native::registerConstant<KindOfInt64>(s_NOACK.get(), AMQP_NOACK);
+	Native::registerConstant<KindOfInt64>(s_PORT.get(), AMQP_PORT);
+	Native::registerConstant<KindOfInt64>(s_NOPARM.get(), AMQP_NOPARAM);
+	Native::registerConstant<KindOfInt64>(s_NOACK.get(), AMQP_NOACK);
 
 	loadSystemlib();
 }
@@ -114,7 +116,7 @@ bool amqpConnect( ObjectData* this_) {
 	
 	auto *data = Native::data<AMQPConnection>(this_);
 
-  	// printf( "connect to %s:%d\n", data->host, data->port);
+	// printf( "connect to %s:%d\n", data->host, data->port);
 
 	data->conn = amqp_new_connection();
 	int channel_MAX = 0;
@@ -229,7 +231,7 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	auto *data = Native::data<AMQPConnection>(this_);
 
 	/* not implement */
-  	// bool is_persisten = this_->o_get(s_is_persisten, false, s_AMQPConnection).toBoolean();
+	// bool is_persisten = this_->o_get(s_is_persisten, false, s_AMQPConnection).toBoolean();
 
 	// if (data->is_connected) {
 
@@ -326,6 +328,8 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue) {
 
 	data->amqpCh = src_data;
 
+
+
 };
 
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey) {
@@ -339,16 +343,67 @@ void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& rout
 
 	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
 	const char* exchange = const_cast<char* >(exchangeName.c_str());
-	const char* routing_key = const_cast<char* >(routingKey.c_str());
+	const char* bindingkey = const_cast<char* >(routingKey.c_str());
 
-	printf("name: %s\n", exchange);
+	amqp_queue_bind(data->amqpCh->amqpCnn->conn , data->amqpCh->channel_id,
+				amqp_cstring_bytes(queue),
+				amqp_cstring_bytes(exchange),
+				amqp_cstring_bytes(bindingkey),
+				amqp_empty_table);
 
-
+	if( (amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn)).reply_type != AMQP_RESPONSE_NORMAL )
+		raise_warning("The AMQPQueue class: binding error");
 
 }
 
+int HHVM_METHOD(AMQPQueue, declare){
+
+	auto *data = Native::data<AMQPQueue>(this_);
+	if (!data)
+		raise_error( "Error input data");
+
+	data->message_count=0;
+	
+	if (!data->amqpCh)
+		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
+
+	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
+
+	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
+
+	amqp_queue_declare_ok_t *r = amqp_queue_declare(data->amqpCh->amqpCnn->conn,
+								data->amqpCh->channel_id,
+								amqp_cstring_bytes(queue), 	// queue name
+								flags & AMQP_PASSIVE,					// passive
+								flags & AMQP_DURABLE, 					// durable 
+								flags & AMQP_EXCLUSIVE,					// exclusive
+								flags & AMQP_AUTODELETE,				// autodelete
+								amqp_empty_table);	// arguments
+								
+
+	if (r) {
+		data->message_count = r->message_count;
+		data->consumer_count = r->consumer_count;
+	} 
+
+	if  (AMQP_RESPONSE_NORMAL != (amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn)).reply_type)
+			raise_warning("The AMQPQueue class: declare error");
+	
+
+	// data-queue_name = amqp_bytes_malloc_dup(r->queue);
+	// if (queue_name.bytes == NULL) {
+	//   fprintf(stderr, "The AMQPQueue class: Out of memory while copying queue name");
+	// }
+
+	return data->message_count;
+
+};
 
 
+int HHVM_METHOD(AMQPQueue, delete) {
+
+	return 0;
+}
 
 
 HHVM_GET_MODULE(amqp);
