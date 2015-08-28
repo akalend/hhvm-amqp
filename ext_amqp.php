@@ -139,13 +139,21 @@ class AMQPChannel {
 <<__NativeData("AMQPQueue")>>
 class AMQPQueue {
 
+	/* internal */
+	private $name = '';
+
 	/* Methods */
 	<<__Native>>
 	public function __construct (AMQPChannel $amqp_channel );
 
-	<<__Native>>
- 	public function getName (): string;
-
+	
+ 	public function getName (){
+ 		return $this->name;
+ 	}
+	
+	public function setName ( string $queue_name ){
+		$this->name	= $queue_name;
+	}
 
 	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
 	// public function bind ( string $exchange_name , string $routing_key ){}
@@ -164,7 +172,6 @@ class AMQPQueue {
 	// public function setArgument ( string $key , mixed $value ){}
 	// public function setArguments ( array $arguments ){}
 	// public function setFlags ( int $flags ){}
-	// public function setName ( string $queue_name ){}
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
 

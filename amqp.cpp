@@ -44,7 +44,8 @@ void AmqpExtension::moduleInit() {
 
 
 	HHVM_ME(AMQPQueue, __construct);
-	HHVM_ME(AMQPQueue, getName);
+	// HHVM_ME(AMQPQueue, getName);
+	// HHVM_ME(AMQPQueue, setName);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -293,11 +294,7 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue) {
 };
 
 
-String HHVM_METHOD(AMQPQueue, getName) {
 
-	String ret = "**** noname *****";
-	return ret;
-}
 
 HHVM_GET_MODULE(amqp);
 } // namespace

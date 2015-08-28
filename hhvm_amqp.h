@@ -21,7 +21,8 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect);
 bool HHVM_METHOD(AMQPChannel, isConnected);
 
 void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
-String HHVM_METHOD(AMQPQueue, getName); 
+// String HHVM_METHOD(AMQPQueue, getName); 
+// void HHVM_METHOD(AMQPQueue, setName, const String& name); 
 
 
 enum amqp_error_code {
@@ -114,7 +115,6 @@ class AMQPQueue {
 	
 	AMQPChannel* amqpCh = NULL;
 	char* name = NULL;
-
 };
 
 

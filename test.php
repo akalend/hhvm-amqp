@@ -15,4 +15,5 @@
 	var_dump($ch->isConnected());
 // $cnn->disconnect(AMQP_NOPARAM);
 
+	$queue->setName("mamamama");
 	var_dump($queue->getName());
