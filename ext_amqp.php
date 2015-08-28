@@ -135,32 +135,37 @@ class AMQPChannel {
 	// public function startTransaction ( void ) {}
 }
 
-//  class AMQPQueue {
-// 	/* Methods */
-// 	public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
-// 	public function bind ( string $exchange_name , string $routing_key ){}
-// 	public function cancel ([ string $consumer_tag = "" ] ){}
-// 	public function __construct ( $amqp_channel ){
-// 		// return : AMQPChannel	
-// 	}
-// 	public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
-// 	public function declare ( void ): int
-// 	publicfunction delete ( void ){}
-// 	public function get ([ int $flags= AMQP_NOACK]){
-// 		//: mixed
-// 	}
-// 	public function getArgument ( string $key ): mixed
-// 	public function getArguments ( void ): array
-// 	public function getFlags ( void ): int
-// 	public function getName ( void ): string
-// 	public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
-// 	public function purge ( void ){}
-// 	public function setArgument ( string $key , mixed $value ){}
-// 	public function setArguments ( array $arguments ){}
-// 	public function setFlags ( int $flags ){}
-// 	public function setName ( string $queue_name ){}
-// 	public function unbind ( string $exchange_name , string $routing_key ){}
-//}
+
+<<__NativeData("AMQPQueue")>>
+class AMQPQueue {
+	/* Methods */
+	
+	public function __construct ( $amqp_channel ){
+		// return : AMQPChannel	
+	}
+
+
+	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
+	// public function bind ( string $exchange_name , string $routing_key ){}
+	// public function cancel ([ string $consumer_tag = "" ] ){}
+	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
+	// public function declare ( void ): int
+	// publicfunction delete ( void ){}
+	// public function get ([ int $flags= AMQP_NOACK]){
+	// 	//: mixed
+	// }
+	// public function getArgument ( string $key ): mixed
+	// public function getArguments ( void ): array
+	// public function getFlags ( void ): int
+	// public function getName ( void ): string
+	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
+	// public function purge ( void ){}
+	// public function setArgument ( string $key , mixed $value ){}
+	// public function setArguments ( array $arguments ){}
+	// public function setFlags ( int $flags ){}
+	// public function setName ( string $queue_name ){}
+	// public function unbind ( string $exchange_name , string $routing_key ){}
+}
 
 
 

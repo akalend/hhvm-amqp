@@ -7,6 +7,8 @@
 
 	$ch = new AMQPChannel($cnn);
 
+	$queue = new AMQPQueue($ch);
+
 
 	var_dump($ch->isConnected());
 	var_dump($cnn->disconnect(AMQP_NOPARAM));

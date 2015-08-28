@@ -20,6 +20,9 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm);
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect);
 bool HHVM_METHOD(AMQPChannel, isConnected);
 
+void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
+
+
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
@@ -86,6 +89,29 @@ class AMQPChannel {
   	amqp_channel_t channel_id = 0;
   	amqp_channel_t *slots;
 	AMQPConnection* amqpCnn = NULL;
+
+};
+
+
+
+class AMQPQueue {
+ public:
+
+	AMQPQueue(){};	
+
+	AMQPQueue(const AMQPQueue&) = delete;	
+	AMQPQueue& operator=(const AMQPQueue& src) {
+    /* clone $instanceOfAMQPConnection */
+	    throw Object(SystemLib::AllocExceptionObject(
+    		  "Cloning AMQPConnection is not allowed"
+    ));
+  }
+
+  ~AMQPQueue() {
+
+  	printf("destructor %s\n", __FUNCTION__ );
+  };
+	
 
 };
 

@@ -272,6 +272,9 @@ bool HHVM_METHOD(AMQPChannel, isConnected) {
 }
 
 
+// ------------------------------  AMQPQueue ------------------------------------------
+
+void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue){};
 
 
 HHVM_GET_MODULE(amqp);
