@@ -53,6 +53,7 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey);
 int HHVM_METHOD(AMQPQueue, declare);
 int HHVM_METHOD(AMQPQueue, delete);
+Variant HHVM_METHOD(AMQPQueue, get);
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
@@ -106,20 +107,17 @@ class AMQPConnection {
 class AMQPChannel {
  public:
 
-	AMQPChannel(){};	
+	AMQPChannel(){};
 
 	AMQPChannel(const AMQPChannel&) = delete;	
 	AMQPChannel& operator=(const AMQPChannel& src) {
 	/* clone $instanceOfAMQPConnection */
 		throw Object(SystemLib::AllocExceptionObject(
-			  "Cloning AMQPConnection is not allowed"
+			  "Cloning AMQPChannel is not allowed"
 	));
   }
 
-  ~AMQPChannel() {
-
-	printf("destructor %s\n", __FUNCTION__ );
-  };
+  ~AMQPChannel() {};
 	
 	int used_slots = 0;
 	int prefetch_count = 0;

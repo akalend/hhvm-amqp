@@ -192,12 +192,14 @@ class AMQPQueue {
 	<<__Native>>
 	public function bind ( string $exchange_name , string $routing_key ) : void;
 
-
 	<<__Native>>
 	public function declare (): int;
 
 	<<__Native>>
 	public function delete (): int;
+
+	<<__Native>>
+	public function get (int $flags=AMQP_NOACK) : mixed;
 
 	
 	public function getFlags () {
@@ -208,15 +210,13 @@ class AMQPQueue {
 		$this->flags = $flags;
 	}
 
+	
 
 
 	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 
-	// public function get ([ int $flags= AMQP_NOACK]){
-	// 	//: mixed
-	// }
 	// public function getArgument ( string $key ): mixed
 	// public function getArguments ( void ): array
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}

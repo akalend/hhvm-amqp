@@ -11,14 +11,16 @@
 	$queue->setName("mamamama");
 	echo "--------------\n";
 
+	$queue->setFlags(AMQP::AUTODELETE);
+
 	// $queue->declare();
 	
 
-	echo "------  delete  --------\n";
-	
-	$res = $queue->setFlags(AMQP::IF_UNUSED);
+	// echo "------  delete  --------\n";	
+	$res = $queue->setFlags(0);
 	var_dump($res);
 
+exit();
 	echo "------  bind  --------\n";
 
 	$queue->bind("exxx", "kkk");	

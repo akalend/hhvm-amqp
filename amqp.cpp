@@ -79,6 +79,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPQueue, bind);
 	HHVM_ME(AMQPQueue, declare);
 	HHVM_ME(AMQPQueue, delete);
+	HHVM_ME(AMQPQueue, get);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -185,11 +186,11 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
 		//TODO amqp_close_channel
 
-		 printf("%s channel_id=%d\n", __FUNCTION__, data->channel_id);
-	
+
+	amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
 
 	data->is_connected = false;
-	amqp_rpc_reply_t res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 	if (res.reply_type) return true;
 	if (parm == AMQP_NOACK)
 		raise_warning("Failing to send the ack to the broker");
@@ -286,8 +287,10 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (!src_data)
 		raise_error( "Error input data");
 
+	data->channel_id = 1; // init first channel
 	data->amqpCnn = src_data;
-	src_data->channel_id = data->channel_id;
+	src_data->channel_id = static_cast<short>(data->channel_id);
+
 	// if (!data->slots) {
 	// 	data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
 	// }
@@ -439,6 +442,11 @@ int HHVM_METHOD(AMQPQueue, delete) {
 	return data->message_count;
 }
 
+
+Variant HHVM_METHOD(AMQPQueue, get) {
+	
+	return Variant(0);
+}
 
 HHVM_GET_MODULE(amqp);
 } // namespace
