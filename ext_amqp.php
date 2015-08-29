@@ -42,7 +42,7 @@ final class AMQP {
 	const  AUTODELETE = 16;		// autodelete
 	const  IF_UNUSED = 32;
 	const  IF_EMPTY = 64;
-	const AMQP_AUTOACK = 128;
+	const  AUTOACK = 128;
 }
 
 /**
