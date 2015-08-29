@@ -30,7 +30,8 @@
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/execution-context.h"  // g_context
 #include "hphp/runtime/vm/native-data.h"
-
+#include "hphp/runtime/base/request-local.h"
+#include "hphp/system/systemlib.h"
 #include <amqp_tcp_socket.h>
 #include <amqp.h>
 #include <amqp_framing.h>
@@ -500,6 +501,8 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 	amqp_destroy_envelope(&envelope);
 
+
+	req::make<AMQPChannel>(data->amqpCh);
 	return Variant(0);
 }
 

@@ -157,6 +157,12 @@ class AMQPQueue {
 };
 
 
+
+class AMQPEnvelope {
+
+};
+
+
 class AmqpExtension : public Extension {
 
 	public:

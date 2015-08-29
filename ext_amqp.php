@@ -213,7 +213,6 @@ class AMQPQueue {
 
 	
 
-
 	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
@@ -226,6 +225,50 @@ class AMQPQueue {
 	// public function setArguments ( array $arguments ){}
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
+
+<<__NativeData("AMQPConnection")>>
+class AMQPEnvelope {
+/* Metody */
+// public string getAppId ( void )
+// public string getBody ( void )
+// public string getContentEncoding ( void )
+// public string getContentType ( void )
+// public string getCorrelationId ( void )
+// public string getDeliveryTag ( void )
+// public string getExchange ( void )
+// public string getExpiration ( void )
+// public string getHeader ( string $header_key )
+// public array getHeaders ( void )
+// public string getMessageId ( void )
+// public string getPriority ( void )
+// public string getReplyTo ( void )
+// public string getRoutingKey ( void )
+// public string getTimeStamp ( void )
+// public string getType ( void )
+// public string getUserId ( void )
+// public bool isRedelivery ( void )
+}
+
+
+
+//  AMQPExchange {
+// /* Methods */
+// public bool bind ( string $destination_exchange_name , string $source_exchange_name , string $routing_key )
+// public __construct ( AMQPChannel $amqp_channel )
+// public int declare ( void )
+// public bool delete ([ int $flags = AMQP_NOPARAM ] )
+// public mixed getArgument ( string $key )
+// public array getArguments ( void )
+// public int getFlags ( void )
+// public string getName ( void )
+// public string getType ( void )
+// public bool publish ( string $message , string $routing_key [, int $flags = AMQP_NOPARAM [, array $attributes = array() ]] )
+// public void setArgument ( string $key , mixed $value )
+// public void setArguments ( array $arguments )
+// public void setFlags ( int $flags )
+// public void setName ( string $exchange_name )
+// public string setType ( string $exchange_type )
+// }
 
 
 

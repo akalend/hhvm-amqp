@@ -1,7 +1,15 @@
 <?php
 	// print_r( get_loaded_extensions() );
+
+		echo "--------------\n";
+
 	$cnn = new AMQPConnection();
+
+		echo "--------------\n";
+
 	$ret = $cnn->connect();
+	echo "-------- connect Ok ------\n";
+
 
 	$ch = new AMQPChannel($cnn);
 	$queue = new AMQPQueue($ch);
