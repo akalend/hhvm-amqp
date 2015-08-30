@@ -53,7 +53,7 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey);
 int HHVM_METHOD(AMQPQueue, declare);
 int HHVM_METHOD(AMQPQueue, delete);
-Variant HHVM_METHOD(AMQPQueue, get);
+Array HHVM_METHOD(AMQPQueue, get);
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,

@@ -200,7 +200,7 @@ class AMQPQueue {
 	public function delete (): int;
 
 	<<__Native>>
-	public function get (int $flags=AMQP_NOACK) : mixed;
+	public function get (int $flags=AMQP_NOACK) : array;
 
 	
 	public function getFlags () {

@@ -32,7 +32,7 @@
 #include "hphp/runtime/base/type-object.h"  // Object
 
 #include "hphp/runtime/vm/native-data.h"
-#include "hphp/runtime/base/request-local.h"
+
 #include "hphp/system/systemlib.h"
 #include <amqp_tcp_socket.h>
 #include <amqp.h>
@@ -427,11 +427,11 @@ int HHVM_METHOD(AMQPQueue, delete) {
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
 
 
-    amqp_queue_delete_ok_t *r = amqp_queue_delete(data->amqpCh->amqpCnn->conn,
-    								data->amqpCh->channel_id,
-                                    amqp_cstring_bytes(queue),
-                                    (flags & AMQP_IFUNUSED) ? 1 : 0,
-                                    (flags & AMQP_IFEMPTY)  ? 1 : 0);
+	amqp_queue_delete_ok_t *r = amqp_queue_delete(data->amqpCh->amqpCnn->conn,
+									data->amqpCh->channel_id,
+									amqp_cstring_bytes(queue),
+									(flags & AMQP_IFUNUSED) ? 1 : 0,
+									(flags & AMQP_IFEMPTY)  ? 1 : 0);
 
 
 	if (!r) {
@@ -446,22 +446,8 @@ int HHVM_METHOD(AMQPQueue, delete) {
 	return data->message_count;
 }
 
-	class xx  : public Class {
-	public:
-		int zz;
-		String ss;
 
-		xx(int zz, String ss ){
-			this->zz = zz;
-			this->ss(ss);
-
-			Class();
-		};
-
-	};  
-
-
-Variant HHVM_METHOD(AMQPQueue, get) {
+Array HHVM_METHOD(AMQPQueue, get) {
 
 	auto *data = Native::data<AMQPQueue>(this_);
 	if (!data)
@@ -482,19 +468,21 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	);
 
 
+
 	if (res.reply_type != AMQP_RESPONSE_NORMAL ) {
 		printf("The AMQPQueue response code: %d\n", res.reply_type);
 		// raise_warning("The AMQPQueue: response error");
-		// return Variant(false);
+		return Array();
 	}
 
 	if (AMQP_BASIC_GET_EMPTY_METHOD == res.reply.id) {
 		printf("The AMQPQueue: AMQP_BASIC_GET_EMPTY_METHOD\n");
 		
-		// return Variant(false);
+		return Array();
 	}
 
 	assert(AMQP_BASIC_GET_OK_METHOD == res.reply.id);
+
 
 	/* Fill the envelope from response */
 	amqp_basic_get_ok_t *get_ok_method = static_cast<amqp_basic_get_ok_t*>(res.reply.decoded);
@@ -508,21 +496,84 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	envelope.exchange     = amqp_bytes_malloc_dup(get_ok_method->exchange);
 	envelope.routing_key  = amqp_bytes_malloc_dup(get_ok_method->routing_key);
 
-  	res = amqp_read_message(
+	res = amqp_read_message(
 		data->amqpCh->amqpCnn->conn,
 		data->amqpCh->channel_id,
 		&envelope.message,
 		0
 	);
 
+// typedef struct amqp_message_t_ {
+//   amqp_basic_properties_t properties; /**< message properties */
+//   amqp_bytes_t body;                  /**< message body */
+//   amqp_pool_t pool;                   /**< pool used to allocate properties */
+// } amqp_message_t;
 
-  	
-	// AMQPEnvelope envelope_impl(envelope);
+	if (res.reply_type == AMQP_RESPONSE_NORMAL)
+		printf("read: AMQP_RESPONSE_NORMAL\n" );
+	else
+		return Array();	
 
+
+	amqp_bytes_t* message = &envelope.message.body;
+
+	// printf("routing_key len=%d\n",(int) envelope.routing_key.len );
+
+	Array output = Array::Create();
+
+	Variant v_null;
+	v_null.setNull();
+
+	output.add(
+		String("exchange"),
+		(envelope.exchange.len) ? Variant(static_cast<char*>(envelope.exchange.bytes)) : v_null,
+ 		true
+	);
+
+	output.add(
+		String("consumer_tag"),
+		(envelope.consumer_tag.len) ? Variant(static_cast<char*>(envelope.consumer_tag.bytes)) : v_null,
+ 		true
+	);
+
+	output.add(
+		String("routing_key"),
+		(envelope.routing_key.len) ? Variant(static_cast<char*>(envelope.routing_key.bytes)) : v_null,
+ 		true
+	);
+
+	output.add(
+		String("message"),
+		(message->len) ? Variant(static_cast<char*>(message->bytes)) : v_null,
+		true
+	);
+
+
+	output.add(
+		String("channel"),
+		Variant(static_cast<int64_t>(envelope.channel)),
+ 		true
+	);
+	output.add(
+		String("delivery_tag"),
+		Variant(envelope.delivery_tag),
+ 		true
+	);
+
+	output.add(
+		String("redelivered"),
+		Variant(envelope.redelivered),
+ 		true
+	);
+	envelope.delivery_tag = get_ok_method->delivery_tag;
+	envelope.redelivered  = get_ok_method->redelivered;
+
+
+
+	printf("message %s\n", static_cast<char*>(message->bytes));
 	amqp_destroy_envelope(&envelope);
 
-
-	return Variant(0);
+	return output;
 }
 
 HHVM_GET_MODULE(amqp);
