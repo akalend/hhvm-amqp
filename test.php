@@ -16,17 +16,18 @@
 
 // $cnn->disconnect(AMQP_NOPARAM);
 
-	$queue->setName("mamamama");
-	echo "--------------\n";
+	$queue->setName("direct_messages");
 
 	$queue->setFlags(AMQP::AUTODELETE);
 
-	// $queue->declare();
+	$queue->declare();
 	
+	echo "------- get  -------\n";
 
 	// echo "------  delete  --------\n";	
 	$res = $queue->setFlags(0);
-	var_dump($res);
+	
+	var_dump($queue->get());
 
 exit();
 	echo "------  bind  --------\n";

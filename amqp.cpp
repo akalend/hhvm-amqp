@@ -29,6 +29,8 @@
 
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/execution-context.h"  // g_context
+#include "hphp/runtime/base/type-object.h"  // Object
+
 #include "hphp/runtime/vm/native-data.h"
 #include "hphp/runtime/base/request-local.h"
 #include "hphp/system/systemlib.h"
@@ -57,7 +59,8 @@ const StaticString
 	s_amqp_connection("amqp_connection"),
 	s_name("name"),
 	s_flags("flags"),
-	s_AMQPQueue("AMQPQueue")
+	s_AMQPQueue("AMQPQueue"),
+	s_AMQPEnvelope("AMQPEnvelope")
   ;
 
 
@@ -443,6 +446,20 @@ int HHVM_METHOD(AMQPQueue, delete) {
 	return data->message_count;
 }
 
+	class xx  : public Class {
+	public:
+		int zz;
+		String ss;
+
+		xx(int zz, String ss ){
+			this->zz = zz;
+			this->ss(ss);
+
+			Class();
+		};
+
+	};  
+
 
 Variant HHVM_METHOD(AMQPQueue, get) {
 
@@ -466,12 +483,15 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
 	if (res.reply_type != AMQP_RESPONSE_NORMAL ) {
-		raise_warning("The AMQPQueue error");
-		return Variant(false);
+		printf("The AMQPQueue response code: %d\n", res.reply_type);
+		// raise_warning("The AMQPQueue: response error");
+		// return Variant(false);
 	}
 
 	if (AMQP_BASIC_GET_EMPTY_METHOD == res.reply.id) {
-		return Variant(false);
+		printf("The AMQPQueue: AMQP_BASIC_GET_EMPTY_METHOD\n");
+		
+		// return Variant(false);
 	}
 
 	assert(AMQP_BASIC_GET_OK_METHOD == res.reply.id);
@@ -497,12 +517,11 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
   	
-
+	// AMQPEnvelope envelope_impl(envelope);
 
 	amqp_destroy_envelope(&envelope);
 
 
-	req::make<AMQPChannel>(data->amqpCh);
 	return Variant(0);
 }
 
