@@ -43,6 +43,7 @@ final class AMQP {
 	const  IF_UNUSED = 32;
 	const  IF_EMPTY = 64;
 	const  AUTOACK = 128;
+	const  MULTIPLE = 256;
 	const  TYPE_DIRECT = 'direct';
 	const  TYPE_FANOUT = 'fanout';
 	const  TYPE_TOPIC  = 'topic';
@@ -205,7 +206,10 @@ class AMQPQueue {
 	<<__Native>>
 	public function get (int $flags=AMQP_NOACK) : array;
 
-	
+	<<__Native>>
+	public function ack (int $delivery_tag, int $flags = AMQP_NOPARAM) : bool;
+
+
 	public function getFlags () {
 		return $this->flags;
 	}
@@ -215,8 +219,9 @@ class AMQPQueue {
 	}
 
 	
+	
 
-	// public function ack ( int $delivery_tag , int $flags = AMQP_NOPARAM){}
+
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 

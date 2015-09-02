@@ -84,6 +84,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPQueue, declare);
 	HHVM_ME(AMQPQueue, delete);
 	HHVM_ME(AMQPQueue, get);
+	HHVM_ME(AMQPQueue, ack);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -387,7 +388,7 @@ void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& rout
 
 }
 
-int HHVM_METHOD(AMQPQueue, declare){
+int64_t HHVM_METHOD(AMQPQueue, declare){
 
 	auto *data = Native::data<AMQPQueue>(this_);
 	if (!data)
@@ -429,11 +430,10 @@ int HHVM_METHOD(AMQPQueue, declare){
 	// }
 
 	return data->message_count;
-
 };
 
 
-int HHVM_METHOD(AMQPQueue, delete) {
+int64_t HHVM_METHOD(AMQPQueue, delete) {
 
 	auto *data = Native::data<AMQPQueue>(this_);
 	if (!data)
@@ -465,6 +465,43 @@ int HHVM_METHOD(AMQPQueue, delete) {
 	data->message_count = r->message_count;
 
 	return data->message_count;
+}
+
+
+bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
+
+
+	auto *data = Native::data<AMQPQueue>(this_);
+	if (!data)
+		raise_error( "Error input data");
+
+	uint64_t _flags;
+	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
+
+	int status = amqp_basic_ack(data->amqpCh->amqpCnn->conn,
+					data->amqpCh->channel_id,
+					delivery_tag,
+                    flags & AMQP_MULTIPLE ? 1 : 0);
+
+
+	if (status != AMQP_STATUS_OK) {
+		/* Emulate library error */
+		amqp_rpc_reply_t res;
+		res.reply_type 	  = AMQP_RESPONSE_LIBRARY_EXCEPTION;
+		res.library_error = status;
+
+		raise_warning("The AMQPQueue class: ack error");
+
+		// php_amqp_error(res, PHP_AMQP_ERROR_MESSAGE_PTR, connection, channel TSRMLS_CC);
+
+		// php_amqp_zend_throw_exception(res, amqp_queue_exception_class_entry, PHP_AMQP_ERROR_MESSAGE, 0 TSRMLS_CC);
+		// php_amqp_maybe_release_buffers_on_channel(connection, channel);
+
+		// PHP_AMQP_DESTROY_ERROR_MESSAGE();
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -775,42 +812,11 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		}
 	}
 
-	// output.add(
-	// 	String("redelivered"),
-	// 	Variant(envelope.redelivered),
- // 		true
-	// );
-
-
-
-
-	// output.add(
-	// 	String("is_redelivery"),
-	// 	Variant(static_cast<int64_t>(envelope.is_redelivery)), // int64_t
- // 		true
-	// );
-
-
-	
-
-
-
-	// v_tmp.setNull();
-	// if (envelope.type.len) {
-	// 	v_tmp = Variant(std::string(static_cast<char*>(envelope.type.bytes), envelope.type.len));
-
-	// output.add(
-	// 	String("type"),
-	// 	Variant(v_tmp),
- // 		true
-	// );
-
-
-	// output.add(
-	// 	String("timestamp"),
-	// 	Variant(static_cast<int64_t>(envelope.timestamp)), // int64_t
- // 		true
-	// );
+	output.add(
+		String("redelivered"),
+		Variant(envelope.redelivered),
+		true
+	);
 
 
 	amqp_destroy_envelope(&envelope);

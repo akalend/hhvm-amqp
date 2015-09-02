@@ -51,9 +51,11 @@ bool HHVM_METHOD(AMQPChannel, isConnected);
 
 void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey);
-int HHVM_METHOD(AMQPQueue, declare);
-int HHVM_METHOD(AMQPQueue, delete);
+int64_t HHVM_METHOD(AMQPQueue, declare);
+int64_t HHVM_METHOD(AMQPQueue, delete);
 Array HHVM_METHOD(AMQPQueue, get);
+bool HHVM_METHOD(AMQPQueue, ack);
+
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
@@ -73,6 +75,7 @@ enum amqp_param {
 	AMQP_IFUNUSED = 32,
 	AMQP_IFEMPTY = 64,
 	AMQP_AUTOACK = 128,
+	AMQP_MULTIPLE = 256,
 };
 
 
