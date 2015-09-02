@@ -3,7 +3,7 @@
 
 		echo "--------------\n";
 
-	$cnn = new AMQPConnection();
+	$cnn = new AMQPConnection(['port'=>5677]);
 
 		echo "--------------\n";
 

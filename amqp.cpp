@@ -190,11 +190,13 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
 		//TODO amqp_close_channel
 
-
 	amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
 
 	data->is_connected = false;
 	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+
+	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+
 	if (res.reply_type) return true;
 	if (parm == AMQP_NOACK)
 		raise_warning("Failing to send the ack to the broker");
@@ -313,6 +315,22 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (r.reply_type != AMQP_RESPONSE_NORMAL)
 		raise_warning("The AMQPChannel class: open channel error");
 	
+	if (data->prefetch_count) {
+		amqp_basic_qos(
+			src_data->conn,
+			data->channel_id,
+			0,							/* prefetch window size */
+			data->prefetch_count,	    /* prefetch message count */
+			/* NOTE that RabbitMQ has reinterpreted global flag field. See https://www.rabbitmq.com/amqp-0-9-1-reference.html#basic.qos.global for details */
+			0							/* global flag */
+		);
+
+		amqp_rpc_reply_t res = amqp_get_rpc_reply(src_data->conn);
+
+		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+
+		}
+	}
 }
 
 
@@ -517,7 +535,8 @@ Array HHVM_METHOD(AMQPQueue, get) {
 
 	amqp_bytes_t* message = &envelope.message.body;
 
-	// printf("routing_key len=%d\n",(int) envelope.routing_key.len );
+	envelope.delivery_tag = get_ok_method->delivery_tag;
+	envelope.redelivered  = get_ok_method->redelivered;
 
 	Array output = Array::Create();
 
@@ -542,19 +561,24 @@ Array HHVM_METHOD(AMQPQueue, get) {
  		true
 	);
 
-
+	v_tmp.setNull();
 	if (envelope.routing_key.len) {
 		v_tmp = Variant(std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
-	}	
+	}
 	output.add(
 		String("routing_key"),
 		v_tmp,
  		true
 	);
 
+
+	v_tmp.setNull();
+	if (message->len) {
+		v_tmp = Variant(std::string(static_cast<char*>(message->bytes), message->len));
+	}
 	output.add(
 		String("message"),
-		(message->len) ? Variant(static_cast<char*>(message->bytes)) : v_null,
+		v_tmp,
 		true
 	);
 
@@ -567,17 +591,69 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	
 	output.add(
 		String("delivery_tag"),
-		Variant(envelope.delivery_tag),
+		Variant(envelope.delivery_tag), // int64_t
  		true
 	);
 
-	output.add(
-		String("redelivered"),
-		Variant(envelope.redelivered),
- 		true
-	);
-	envelope.delivery_tag = get_ok_method->delivery_tag;
-	envelope.redelivered  = get_ok_method->redelivered;
+	// output.add(
+	// 	String("redelivered"),
+	// 	Variant(envelope.redelivered),
+ // 		true
+	// );
+
+
+	// output.add(
+	// 	String("delivery_mode"),
+	// 	Variant(static_cast<int64_t>(envelope.delivery_mode)), // int64_t
+ // 		true
+	// );
+
+
+	// output.add(
+	// 	String("is_redelivery"),
+	// 	Variant(static_cast<int64_t>(envelope.is_redelivery)), // int64_t
+ // 		true
+	// );
+
+
+	// v_tmp.setNull();
+	// if (envelope.content_type.len) {
+	// 	v_tmp = Variant(std::string(static_cast<char*>(envelope.content_type.bytes), envelope.content_type.len));
+
+	// output.add(
+	// 	String("content_type"),
+	// 	Variant(v_tmp),
+ // 		true
+	// );
+
+
+	// v_tmp.setNull();
+	// if (envelope.content_encoding.len) {
+	// 	v_tmp = Variant(std::string(static_cast<char*>(envelope.content_encoding.bytes), envelope.content_encoding.len));
+
+	// output.add(
+	// 	String("content_encoding"),
+	// 	Variant(v_tmp),
+ // 		true
+	// );
+
+
+	// v_tmp.setNull();
+	// if (envelope.type.len) {
+	// 	v_tmp = Variant(std::string(static_cast<char*>(envelope.type.bytes), envelope.type.len));
+
+	// output.add(
+	// 	String("type"),
+	// 	Variant(v_tmp),
+ // 		true
+	// );
+
+
+	// output.add(
+	// 	String("timestamp"),
+	// 	Variant(static_cast<int64_t>(envelope.timestamp)), // int64_t
+ // 		true
+	// );
 
 
 	amqp_destroy_envelope(&envelope);
