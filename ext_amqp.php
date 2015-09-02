@@ -43,6 +43,9 @@ final class AMQP {
 	const  IF_UNUSED = 32;
 	const  IF_EMPTY = 64;
 	const  AUTOACK = 128;
+	const  TYPE_DIRECT = 'direct';
+	const  TYPE_FANOUT = 'fanout';
+	const  TYPE_TOPIC  = 'topic';
 }
 
 /**

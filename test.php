@@ -16,9 +16,10 @@
 
 // $cnn->disconnect(AMQP_NOPARAM);
 
-	$queue->setName("q_zzz");
+	$queue->setName("test_q");
 
 	$queue->setFlags(AMQP::AUTODELETE);
+	$queue->setFlags(AMQP::AUTOACK);
 
 	// $queue->declare();
 	

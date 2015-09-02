@@ -524,21 +524,31 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	Variant v_null;
 	v_null.setNull();
 
+	Variant v_tmp;
+
 	output.add(
 		String("exchange"),
 		(envelope.exchange.len) ? Variant(static_cast<char*>(envelope.exchange.bytes)) : v_null,
  		true
 	);
 
+	v_tmp.setNull();
+	if (envelope.consumer_tag.len) {
+		v_tmp = Variant( std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
+	}
 	output.add(
 		String("consumer_tag"),
-		(envelope.consumer_tag.len) ? Variant(static_cast<char*>(envelope.consumer_tag.bytes)) : v_null,
+		v_tmp,
  		true
 	);
 
+
+	if (envelope.routing_key.len) {
+		v_tmp = Variant(std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
+	}	
 	output.add(
 		String("routing_key"),
-		(envelope.routing_key.len) ? Variant(static_cast<char*>(envelope.routing_key.bytes)) : v_null,
+		v_tmp,
  		true
 	);
 
@@ -554,6 +564,7 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		Variant(static_cast<int64_t>(envelope.channel)),
  		true
 	);
+	
 	output.add(
 		String("delivery_tag"),
 		Variant(envelope.delivery_tag),
@@ -569,8 +580,6 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	envelope.redelivered  = get_ok_method->redelivered;
 
 
-
-	printf("message %s\n", static_cast<char*>(message->bytes));
 	amqp_destroy_envelope(&envelope);
 
 	return output;
