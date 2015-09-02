@@ -732,6 +732,49 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		}
 	}
 
+
+	if (envelope.message.properties._flags & AMQP_BASIC_USER_ID_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.user_id.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.user_id.bytes), envelope.message.properties.user_id.len));
+
+			output.add(
+				String("user_id"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+	if (envelope.message.properties._flags & AMQP_BASIC_APP_ID_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.app_id.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.app_id.bytes), envelope.message.properties.app_id.len));
+
+			output.add(
+				String("app_id"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+	if (envelope.message.properties._flags & AMQP_BASIC_CLUSTER_ID_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.cluster_id.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.cluster_id.bytes), envelope.message.properties.cluster_id.len));
+
+			output.add(
+				String("app_id"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
 	// output.add(
 	// 	String("redelivered"),
 	// 	Variant(envelope.redelivered),
