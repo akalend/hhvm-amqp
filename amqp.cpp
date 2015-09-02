@@ -717,6 +717,21 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		);
 	}
 
+
+	if (envelope.message.properties._flags & AMQP_BASIC_TYPE_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.type.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.type.bytes), envelope.message.properties.type.len));
+
+			output.add(
+				String("expiration"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
 	// output.add(
 	// 	String("redelivered"),
 	// 	Variant(envelope.redelivered),
