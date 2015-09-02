@@ -209,10 +209,13 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 	if (data->is_connected) {
 		data->is_connected = false;
 		
-		//TODO amqp_close_channel
+		amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
+		data->channel_id = 0;
 
 		amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 		// close connection
+
+		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
 	}
 
 	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
@@ -548,7 +551,7 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	output.add(
 		String("exchange"),
 		(envelope.exchange.len) ? Variant(static_cast<char*>(envelope.exchange.bytes)) : v_null,
- 		true
+		true
 	);
 
 	v_tmp.setNull();
@@ -558,7 +561,7 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	output.add(
 		String("consumer_tag"),
 		v_tmp,
- 		true
+		true
 	);
 
 	v_tmp.setNull();
@@ -568,7 +571,7 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	output.add(
 		String("routing_key"),
 		v_tmp,
- 		true
+		true
 	);
 
 
@@ -586,14 +589,133 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	output.add(
 		String("channel"),
 		Variant(static_cast<int64_t>(envelope.channel)),
- 		true
+		true
 	);
 	
 	output.add(
 		String("delivery_tag"),
 		Variant(envelope.delivery_tag), // int64_t
- 		true
+		true
 	);
+
+	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.content_type.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.content_type.bytes), envelope.message.properties.content_type.len));
+
+			output.add(
+				String("content_type"),
+				Variant(v_tmp),
+		 		true
+			);
+		}
+	}
+
+	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_ENCODING_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.content_encoding.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.content_encoding.bytes), envelope.message.properties.content_encoding.len));
+
+			output.add(
+				String("content_encoding"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+// TODO AMQP_BASIC_HEADERS_FLAG
+
+	if (envelope.message.properties._flags & AMQP_BASIC_DELIVERY_MODE_FLAG) {
+
+		output.add(
+			String("delivery_mode"),
+			Variant(static_cast<int64_t>(envelope.message.properties.delivery_mode)), // int64_t
+			true
+		);
+	}
+
+
+	if (envelope.message.properties._flags & AMQP_BASIC_PRIORITY_FLAG) {
+
+		output.add(
+			String("priority"),
+			Variant(static_cast<int64_t>(envelope.message.properties.priority)), // int64_t
+			true
+		);
+	}
+
+
+	if (envelope.message.properties._flags & AMQP_BASIC_CORRELATION_ID_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.reply_to.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.correlation_id.bytes), envelope.message.properties.correlation_id.len));
+
+			output.add(
+				String(".correlation_id"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+
+	if (envelope.message.properties._flags & AMQP_BASIC_REPLY_TO_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.reply_to.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.reply_to.bytes), envelope.message.properties.reply_to.len));
+
+			output.add(
+				String("reply_to"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+
+	if (envelope.message.properties._flags & AMQP_BASIC_EXPIRATION_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.expiration.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.expiration.bytes), envelope.message.properties.expiration.len));
+
+			output.add(
+				String("expiration"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+
+	if (envelope.message.properties._flags & AMQP_BASIC_MESSAGE_ID_FLAG) {
+
+		v_tmp.setNull();
+		if (envelope.message.properties.message_id.len) {
+			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.message_id.bytes), envelope.message.properties.message_id.len));
+
+			output.add(
+				String("expiration"),
+				Variant(v_tmp),
+				true
+			);
+		}
+	}
+
+
+	if (envelope.message.properties._flags & AMQP_BASIC_TIMESTAMP_FLAG) {
+
+		output.add(
+			String("timestamp"),
+			Variant(static_cast<int64_t>(envelope.message.properties.timestamp)), // int64_t
+			true
+		);
+	}
 
 	// output.add(
 	// 	String("redelivered"),
@@ -602,11 +724,6 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	// );
 
 
-	// output.add(
-	// 	String("delivery_mode"),
-	// 	Variant(static_cast<int64_t>(envelope.delivery_mode)), // int64_t
- // 		true
-	// );
 
 
 	// output.add(
@@ -616,26 +733,8 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	// );
 
 
-	// v_tmp.setNull();
-	// if (envelope.content_type.len) {
-	// 	v_tmp = Variant(std::string(static_cast<char*>(envelope.content_type.bytes), envelope.content_type.len));
+	
 
-	// output.add(
-	// 	String("content_type"),
-	// 	Variant(v_tmp),
- // 		true
-	// );
-
-
-	// v_tmp.setNull();
-	// if (envelope.content_encoding.len) {
-	// 	v_tmp = Variant(std::string(static_cast<char*>(envelope.content_encoding.bytes), envelope.content_encoding.len));
-
-	// output.add(
-	// 	String("content_encoding"),
-	// 	Variant(v_tmp),
- // 		true
-	// );
 
 
 	// v_tmp.setNull();

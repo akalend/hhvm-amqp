@@ -18,8 +18,7 @@
 
 	$queue->setName("test_q");
 
-	$queue->setFlags(AMQP::AUTODELETE);
-	$queue->setFlags(AMQP::AUTOACK);
+	$queue->setFlags(AMQP::AUTODELETE );//| AMQP::AUTOACK);
 
 	// $queue->declare();
 	
