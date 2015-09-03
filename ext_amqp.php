@@ -179,6 +179,7 @@ class AMQPQueue {
 	/* internal */
 	private $name = '';
 	private $flags = 0;
+	private $message = NULL;
 
 	/* Methods */
 	<<__Native>>
@@ -201,7 +202,7 @@ class AMQPQueue {
 	public function declare (): int;
 
 	<<__Native>>
-	public function ack (int $delivery_tag, int $flags = AMQP_NOPARAM) : bool;
+	public function ack (int $delivery_tag = -1, int $flags = AMQP_NOPARAM) : bool;
 
 	<<__Native>>
 	public function delete (): int;
@@ -210,6 +211,9 @@ class AMQPQueue {
 	public function get (int $flags=AMQP_NOACK) : array;
 
 
+	public function getMessage () {
+		return $this->message;
+	}
 
 	public function getFlags () {
 		return $this->flags;

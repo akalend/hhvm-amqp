@@ -60,6 +60,7 @@ const StaticString
 	s_name("name"),
 	s_flags("flags"),
 	s_AMQPQueue("AMQPQueue"),
+	s_message("message"),
 	s_AMQPEnvelope("AMQPEnvelope")
   ;
 
@@ -784,8 +785,11 @@ Array HHVM_METHOD(AMQPQueue, get) {
 
 
 	amqp_destroy_envelope(&envelope);
+	
+	this_->o_set(s_message, output, s_AMQPQueue);
 
 	return output;
+
 }
 
 
@@ -797,6 +801,11 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 
 	uint64_t _flags;
 	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
+	
+	if (delivery_tag == -1 ) {
+		const Array messages = this_->o_get(s_message, false, s_AMQPQueue).toArray();
+		delivery_tag = messages[String("delivery_tag")].toInt64() ;
+	}
 
 	int status = amqp_basic_ack(
 					data->amqpCh->amqpCnn->conn,

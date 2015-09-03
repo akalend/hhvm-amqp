@@ -1,3 +1,4 @@
+#!/usr/bin/hhvm
 <?php
 	// print_r( get_loaded_extensions() );
 
@@ -19,26 +20,10 @@
 	$queue->setName("test_q");
 
 	$queue->setFlags(AMQP::AUTODELETE );//| AMQP::AUTOACK);
+	$message = $queue->get();
 
-	// $queue->declare();
-	
-	echo "------- get  -------\n";
-
-	// echo "------  delete  --------\n";	
-	//$queue->setFlags(0);
-	
-	$ret = $queue->get();
+	var_dump($queue->getMessage());
+	$ret = $queue->ack();
 	var_dump($ret);
-
-	$ret = $queue->ack( $ret['delivery_tag'] );
-	var_dump($ret);
-
-exit();
-	echo "------  bind  --------\n";
-
-	$queue->bind("exxx", "kkk");	
-	echo "------  disconnect  --------\n";
-
-
 
 	var_dump($cnn->disconnect(AMQP::NOPARAM));

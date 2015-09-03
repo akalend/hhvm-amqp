@@ -146,10 +146,7 @@ class AMQPQueue {
 	));
   }
 
-  ~AMQPQueue() {
-
-	printf("destructor %s\n", __FUNCTION__ );
-  };
+  ~AMQPQueue() {};
 	
 	int parms = AMQP_AUTODELETE;
 	int message_count = 0;
