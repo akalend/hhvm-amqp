@@ -201,13 +201,14 @@ class AMQPQueue {
 	public function declare (): int;
 
 	<<__Native>>
+	public function ack (int $delivery_tag, int $flags = AMQP_NOPARAM) : bool;
+
+	<<__Native>>
 	public function delete (): int;
 
 	<<__Native>>
 	public function get (int $flags=AMQP_NOACK) : array;
 
-	<<__Native>>
-	public function ack (int $delivery_tag, int $flags = AMQP_NOPARAM) : bool;
 
 
 	public function getFlags () {
@@ -219,9 +220,6 @@ class AMQPQueue {
 	}
 
 	
-	
-
-
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 

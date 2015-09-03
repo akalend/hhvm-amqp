@@ -83,8 +83,8 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPQueue, bind);
 	HHVM_ME(AMQPQueue, declare);
 	HHVM_ME(AMQPQueue, delete);
-	HHVM_ME(AMQPQueue, get);
 	HHVM_ME(AMQPQueue, ack);
+	HHVM_ME(AMQPQueue, get);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -468,42 +468,6 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 }
 
 
-bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
-
-
-	auto *data = Native::data<AMQPQueue>(this_);
-	if (!data)
-		raise_error( "Error input data");
-
-	uint64_t _flags;
-	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
-
-	int status = amqp_basic_ack(data->amqpCh->amqpCnn->conn,
-					data->amqpCh->channel_id,
-					delivery_tag,
-                    flags & AMQP_MULTIPLE ? 1 : 0);
-
-
-	if (status != AMQP_STATUS_OK) {
-		/* Emulate library error */
-		amqp_rpc_reply_t res;
-		res.reply_type 	  = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-		res.library_error = status;
-
-		raise_warning("The AMQPQueue class: ack error");
-
-		// php_amqp_error(res, PHP_AMQP_ERROR_MESSAGE_PTR, connection, channel TSRMLS_CC);
-
-		// php_amqp_zend_throw_exception(res, amqp_queue_exception_class_entry, PHP_AMQP_ERROR_MESSAGE, 0 TSRMLS_CC);
-		// php_amqp_maybe_release_buffers_on_channel(connection, channel);
-
-		// PHP_AMQP_DESTROY_ERROR_MESSAGE();
-		return false;
-	}
-
-	return true;
-}
-
 
 Array HHVM_METHOD(AMQPQueue, get) {
 
@@ -823,6 +787,40 @@ Array HHVM_METHOD(AMQPQueue, get) {
 
 	return output;
 }
+
+
+bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
+
+	auto *data = Native::data<AMQPQueue>(this_);
+	if (!data)
+		raise_error( "Error input data");
+
+	uint64_t _flags;
+	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
+
+	int status = amqp_basic_ack(
+					data->amqpCh->amqpCnn->conn,
+					data->amqpCh->channel_id,
+					delivery_tag,
+                    _flags & AMQP_MULTIPLE ? 1 : 0);
+
+
+	if (status != AMQP_STATUS_OK) {
+		/* Emulate library error */
+		amqp_rpc_reply_t res;
+		res.reply_type 	  = AMQP_RESPONSE_LIBRARY_EXCEPTION;
+		res.library_error = status;
+
+		raise_warning("The AMQPQueue class: ack error");
+
+		amqp_maybe_release_buffers_on_channel(data->amqpCh->amqpCnn->conn, data->amqpCh->channel_id);
+
+		return false;
+	}
+
+	return true;
+}
+
 
 HHVM_GET_MODULE(amqp);
 } // namespace

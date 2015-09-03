@@ -3,7 +3,7 @@
 
 		echo "--------------\n";
 
-	$cnn = new AMQPConnection(['port'=>5677]);
+	$cnn = new AMQPConnection(['port'=>5672]);
 
 		echo "--------------\n";
 
@@ -28,6 +28,9 @@
 	//$queue->setFlags(0);
 	
 	$ret = $queue->get();
+	var_dump($ret);
+
+	$ret = $queue->ack( $ret['delivery_tag'] );
 	var_dump($ret);
 
 exit();

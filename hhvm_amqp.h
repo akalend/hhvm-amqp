@@ -54,7 +54,7 @@ void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& rout
 int64_t HHVM_METHOD(AMQPQueue, declare);
 int64_t HHVM_METHOD(AMQPQueue, delete);
 Array HHVM_METHOD(AMQPQueue, get);
-bool HHVM_METHOD(AMQPQueue, ack);
+bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags);
 
 
 enum amqp_error_code {
@@ -64,7 +64,7 @@ enum amqp_error_code {
 	AMQP_ERROR_LOGIN
 };
 
-
+ 
 enum amqp_param {
 	AMQP_NOPARAM = 0,
 	AMQP_NOACK = 1,
@@ -129,7 +129,6 @@ class AMQPChannel {
 	amqp_channel_t channel_id = 1;
 	amqp_channel_t *slots;
 	AMQPConnection* amqpCnn = NULL;
-
 };
 
 
