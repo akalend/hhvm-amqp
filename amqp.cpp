@@ -148,18 +148,17 @@ bool amqpConnect( ObjectData* this_) {
 
 
 	if ( res.reply_type == AMQP_RESPONSE_NORMAL) {
-
-		// printf("%s cnn 0x%lX\n", __FUNCTION__,data->conn);
-
 		return data->is_connected = true;
 	}
 
-	data->err = AMQP_ERROR_LOGIN;	
-	return data->is_connected = false;
+
+		data->err = AMQP_ERROR_LOGIN;
+		return data->is_connected = false;
 }
 
 
 amqp_channel_t getChannelSlot(AMQPChannel *channel) {
+
 	if (channel->used_slots >= AMQP_MAX_CHANNELS + 1) {
 		return 0;
 	}
@@ -172,8 +171,6 @@ amqp_channel_t getChannelSlot(AMQPChannel *channel) {
 		}
 	}
 }
-
-
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -188,20 +185,37 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 }
 
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
+
+	printf("%s:%d\n", __FUNCTION__,__LINE__);
+
 	auto *data = Native::data<AMQPConnection>(this_);
+	assert(data);
 
 		//TODO amqp_close_channel
 
+	printf("%s:%d\n", __FUNCTION__,__LINE__);
 	amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
+
+	printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	data->is_connected = false;
 	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 
+	printf("%s:%d\n", __FUNCTION__,__LINE__);
+
 	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+
+	data->channel_id = 0;
+
+	printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	if (res.reply_type) return true;
 	if (parm == AMQP_NOACK)
 		raise_warning("Failing to send the ack to the broker");
+
+	amqp_destroy_connection(data->conn);
+	data->conn = NULL;
+
 	return false;
 }
 
@@ -211,13 +225,13 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 	if (data->is_connected) {
 		data->is_connected = false;
 		
-		amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
-		data->channel_id = 0;
+		amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);		
 
 		amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 		// close connection
 
 		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+		data->channel_id = 0;
 	}
 
 	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
@@ -320,22 +334,23 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (r.reply_type != AMQP_RESPONSE_NORMAL)
 		raise_warning("The AMQPChannel class: open channel error");
 	
-	if (data->prefetch_count) {
-		amqp_basic_qos(
-			src_data->conn,
-			data->channel_id,
-			0,							/* prefetch window size */
-			data->prefetch_count,	    /* prefetch message count */
-			/* NOTE that RabbitMQ has reinterpreted global flag field. See https://www.rabbitmq.com/amqp-0-9-1-reference.html#basic.qos.global for details */
-			0							/* global flag */
-		);
 
-		amqp_rpc_reply_t res = amqp_get_rpc_reply(src_data->conn);
+	// if (data->prefetch_count) {
+	// 	amqp_basic_qos(
+	// 		src_data->conn,
+	// 		data->channel_id,
+	// 		0,							/* prefetch window size */
+	// 		data->prefetch_count,	    /* prefetch message count */
+	// 		 /* NOTE that RabbitMQ has reinterpreted global flag field. See https://www.rabbitmq.com/amqp-0-9-1-reference.html#basic.qos.global for details */
+	// 		0							/* global flag */
+	// 	);
 
-		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+	// 	amqp_rpc_reply_t res = amqp_get_rpc_reply(src_data->conn);
 
-		}
-	}
+	// 	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+
+	// 	}
+	// }
 }
 
 
@@ -611,8 +626,11 @@ Array HHVM_METHOD(AMQPQueue, get) {
 				Variant(v_tmp),
 		 		true
 			);
+
 		}
 	}
+
+
 
 	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_ENCODING_FLAG) {
 
@@ -657,7 +675,7 @@ Array HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.correlation_id.bytes), envelope.message.properties.correlation_id.len));
 
 			output.add(
-				String(".correlation_id"),
+				String("correlation_id"),
 				Variant(v_tmp),
 				true
 			);
@@ -702,7 +720,7 @@ Array HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.message_id.bytes), envelope.message.properties.message_id.len));
 
 			output.add(
-				String("expiration"),
+				String("message_id"),
 				Variant(v_tmp),
 				true
 			);
@@ -788,6 +806,15 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	
 	this_->o_set(s_message, output, s_AMQPQueue);
 
+
+	// Object amqp_envelope(this_->o_get(String("xx"), false, s_AMQPQueue).toObject());
+
+
+	Object ob{Unit::loadClass(s_AMQPEnvelope.get())};
+	ob.o_set(String("delivery_tag"), String("1"), s_AMQPEnvelope);
+
+	this_->o_set( String("xx"), Variant(ob), s_AMQPQueue );
+	
 	return output;
 
 }
@@ -799,13 +826,33 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 	if (!data)
 		raise_error( "Error input data");
 
+	if (!data->amqpCh)
+		raise_error( "Unbind AMQPChannel class");
+
+	if (!data->amqpCh->amqpCnn)
+		raise_error( "Unbind AMQPConnection class");
+
+	if (!data->amqpCh->amqpCnn->conn){
+		raise_error( "Error connection");	
+	}
+	
+	if (data->amqpCh->amqpCnn->is_connected == false) {
+		raise_warning("AMQP disconnect");
+		return false;
+	}
+
 	uint64_t _flags;
 	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
 	
-	if (delivery_tag == -1 ) {
-		const Array messages = this_->o_get(s_message, false, s_AMQPQueue).toArray();
-		delivery_tag = messages[String("delivery_tag")].toInt64() ;
-	}
+	// if (delivery_tag == -1 ) {
+	// 	const Array messages = this_->o_get(s_message, false, s_AMQPQueue).toArray();
+	// 	delivery_tag = messages[String("delivery_tag")].toInt64() ;
+	// }
+	
+	printf("flag=%d\n", _flags& AMQP_MULTIPLE ? 1 : 0);
+	printf("channel_id=%d\n", data->amqpCh->channel_id);
+
+	printf("%s:%d\n", __FUNCTION__, __LINE__);
 
 	int status = amqp_basic_ack(
 					data->amqpCh->amqpCnn->conn,
@@ -813,6 +860,7 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 					delivery_tag,
                     _flags & AMQP_MULTIPLE ? 1 : 0);
 
+	printf("%s:%d\n", __FUNCTION__, __LINE__);
 
 	if (status != AMQP_STATUS_OK) {
 		/* Emulate library error */
@@ -822,7 +870,9 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 
 		raise_warning("The AMQPQueue class: ack error");
 
-		amqp_maybe_release_buffers_on_channel(data->amqpCh->amqpCnn->conn, data->amqpCh->channel_id);
+		printf("%s:%d\n", __FUNCTION__, __LINE__);
+
+		// amqp_maybe_release_buffers_on_channel(data->amqpCh->amqpCnn->conn, data->amqpCh->channel_id);
 
 		return false;
 	}

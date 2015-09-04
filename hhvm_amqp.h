@@ -153,6 +153,7 @@ class AMQPQueue {
 	int consumer_count = 0;
 	AMQPChannel* amqpCh = NULL;
 	char* name = NULL;
+	Object envelope; 
 };
 
 
@@ -177,8 +178,8 @@ public:
 	/* clone $instanceOfAMQPConnection */
 		throw Object(SystemLib::AllocExceptionObject(
 			  "Cloning AMQPConnection is not allowed"
-	));
-  }
+		));
+  	}
 
   int incRefCount() {
   	return ++refCount;

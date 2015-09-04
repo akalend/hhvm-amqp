@@ -2,11 +2,11 @@
 <?php
 	// print_r( get_loaded_extensions() );
 
-		echo "--------------\n";
+printf("--------- %d  ---------\n", __LINE__);
 
-	$cnn = new AMQPConnection(['port'=>5672]);
+	$cnn = new AMQPConnection();
 
-		echo "--------------\n";
+printf("--------- %d  ---------\n", __LINE__);
 
 	$ret = $cnn->connect();
 	echo "-------- connect Ok ------\n";
@@ -19,11 +19,17 @@
 
 	$queue->setName("test_q");
 
-	$queue->setFlags(AMQP::AUTODELETE );//| AMQP::AUTOACK);
-	$message = $queue->get();
+	$queue->setFlags(AMQP::AUTOACK );//| AMQP::AUTOACK); AMQP::AUTODELETE
+	$message = $queue->get( );
 
-	var_dump($queue->getMessage());
-	$ret = $queue->ack();
+	var_dump($queue);
+
+printf("--------- %d  ---------\n", __LINE__);
+
+	// $ret = $queue->ack(1);
+// echo "---------  30 ---------\n";
+
 	var_dump($ret);
-
-	var_dump($cnn->disconnect(AMQP::NOPARAM));
+printf("--------- %d  ---------\n", __LINE__);
+// var_dump($cnn);
+	$cnn->disconnect();

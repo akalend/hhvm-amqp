@@ -173,6 +173,31 @@ class AMQPChannel {
 }
 
 
+class AMQPEnvelope  {
+
+	private $delivery_tag;
+/* Metody */
+// public string getAppId ( void )
+// public string getBody ( void )
+// public string getContentEncoding ( void )
+// public string getContentType ( void )
+// public string getCorrelationId ( void )
+// public string getDeliveryTag ( void )
+// public string getExchange ( void )
+// public string getExpiration ( void )
+// public string getHeader ( string $header_key )
+// public array getHeaders ( void )
+// public string getMessageId ( void )
+// public string getPriority ( void )
+// public string getReplyTo ( void )
+// public string getRoutingKey ( void )
+// public string getTimeStamp ( void )
+// public string getType ( void )
+// public string getUserId ( void )
+// public bool isRedelivery ( void )
+}
+
+
 <<__NativeData("AMQPQueue")>>
 class AMQPQueue {
 
@@ -180,6 +205,7 @@ class AMQPQueue {
 	private $name = '';
 	private $flags = 0;
 	private $message = NULL;
+	private $xx = NULL;
 
 	/* Methods */
 	<<__Native>>
@@ -235,30 +261,6 @@ class AMQPQueue {
 	// public function setArguments ( array $arguments ){}
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
-
-<<__NativeData("AMQPConnection")>>
-class AMQPEnvelope {
-/* Metody */
-// public string getAppId ( void )
-// public string getBody ( void )
-// public string getContentEncoding ( void )
-// public string getContentType ( void )
-// public string getCorrelationId ( void )
-// public string getDeliveryTag ( void )
-// public string getExchange ( void )
-// public string getExpiration ( void )
-// public string getHeader ( string $header_key )
-// public array getHeaders ( void )
-// public string getMessageId ( void )
-// public string getPriority ( void )
-// public string getReplyTo ( void )
-// public string getRoutingKey ( void )
-// public string getTimeStamp ( void )
-// public string getType ( void )
-// public string getUserId ( void )
-// public bool isRedelivery ( void )
-}
-
 
 
 //  AMQPExchange {
