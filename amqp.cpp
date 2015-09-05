@@ -90,6 +90,9 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPQueue, get);
 
 
+	HHVM_ME(AMQPExchange, __construct);
+
+
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
 													 Native::NDIFlags::NO_SWEEP);
 
@@ -372,17 +375,14 @@ bool HHVM_METHOD(AMQPChannel, isConnected) {
 
 // ------------------------------  AMQPQueue ------------------------------------------
 
-void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue) {
-	auto src_data = Native::data<AMQPChannel>(amqpQueue.toObject());
+void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpChannel) {
+	auto src_data = Native::data<AMQPChannel>(amqpChannel.toObject());
 	auto *data = Native::data<AMQPQueue>(this_);
 
 	if (!src_data)
 		raise_error( "Error input data");
 
 	data->amqpCh = src_data;
-
-
-
 };
 
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey) {
@@ -847,6 +847,22 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 	return true;
 }
 
+
+
+
+// ------------------------------  AMQPExchange ------------------------------------------
+
+void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpChannel) {
+	
+	auto src_data = Native::data<AMQPChannel>(amqpChannel.toObject());
+	auto *data = Native::data<AMQPExchange>(this_);
+
+	if (!src_data)
+		raise_error( "Error input data");
+
+	data->amqpCh = src_data;
+
+}
 
 HHVM_GET_MODULE(amqp);
 } // namespace

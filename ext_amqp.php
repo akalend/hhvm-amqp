@@ -333,25 +333,57 @@ class AMQPQueue {
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
 
+<<__NativeData("AMQPExchange")>>
+class AMQPExchange {
+	
+	private $name = NULL;
+	private $type = NULL;
+	private $flags = NULL;
 
-//  AMQPExchange {
-// /* Methods */
+
+	/* Methods */
+	<<__Native>>
+	public function __construct ( AMQPChannel $amqp_channel );
+
+
+	public function setName ( string $exchange_name ) {
+		$this->name = $exchange_name;
+	}
+
+	public function getName () {
+		return $this->name;
+	}
+
+	public function setType ( string $exchange_type ) {
+		$this->type = $exchange_type;
+	}
+
+	public function getType () {
+		return $this->type;
+	}
+
+	public function setFlags ( int $flags ) {
+		$this->flags = $flags;
+	}
+
+	public function getFlags () {
+		return $this->flags;
+	}
+
+
 // public bool bind ( string $destination_exchange_name , string $source_exchange_name , string $routing_key )
-// public __construct ( AMQPChannel $amqp_channel )
+
 // public int declare ( void )
 // public bool delete ([ int $flags = AMQP_NOPARAM ] )
 // public mixed getArgument ( string $key )
 // public array getArguments ( void )
-// public int getFlags ( void )
-// public string getName ( void )
-// public string getType ( void )
+
+
 // public bool publish ( string $message , string $routing_key [, int $flags = AMQP_NOPARAM [, array $attributes = array() ]] )
 // public void setArgument ( string $key , mixed $value )
 // public void setArguments ( array $arguments )
-// public void setFlags ( int $flags )
-// public void setName ( string $exchange_name )
-// public string setType ( string $exchange_type )
-// }
+
+}
 
 
 

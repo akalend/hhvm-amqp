@@ -57,6 +57,9 @@ Variant HHVM_METHOD(AMQPQueue, get);
 bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags);
 
 
+void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpQueue);
+
+
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
 	AMQP_ERR_CANNOT_OPEN_SOCKET,
@@ -157,42 +160,63 @@ class AMQPQueue {
 };
 
 
-class AMQPEnvelope {
-private:
-	amqp_envelope_t _envelope;
+// class AMQPEnvelope {
+// private:
+// 	amqp_envelope_t _envelope;
 
-public:
+// public:
 
-	int refCount=0;
+// 	int refCount=0;
 
-	AMQPEnvelope(){};	
+// 	AMQPEnvelope(){};	
 
-	AMQPEnvelope(const AMQPEnvelope&) = delete;	
+// 	AMQPEnvelope(const AMQPEnvelope&) = delete;	
 
-	AMQPEnvelope(const amqp_envelope_t envelope) {
-		refCount = 0;
-		_envelope = envelope;
-	}
+// 	AMQPEnvelope(const amqp_envelope_t envelope) {
+// 		refCount = 0;
+// 		_envelope = envelope;
+// 	}
 
-	AMQPEnvelope& operator=(const AMQPEnvelope& src) {
+// 	AMQPEnvelope& operator=(const AMQPEnvelope& src) {
+// 	 clone $instanceOfAMQPConnection 
+// 		throw Object(SystemLib::AllocExceptionObject(
+// 			  "Cloning AMQPConnection is not allowed"
+// 		));
+//   	}
+
+//   int incRefCount() {
+//   	return ++refCount;
+//   }
+
+//   int decRefAndRelease() {
+//   	--refCount;
+//   	if (refCount == 0) {
+//   		// release
+//   	}
+//   	return refCount;
+//   }
+// };
+
+class AMQPExchange {
+ public:
+
+	AMQPExchange(){};	
+
+	AMQPExchange(const AMQPExchange&) = delete;	
+	AMQPExchange& operator=(const AMQPExchange& src) {
 	/* clone $instanceOfAMQPConnection */
 		throw Object(SystemLib::AllocExceptionObject(
 			  "Cloning AMQPConnection is not allowed"
-		));
-  	}
-
-  int incRefCount() {
-  	return ++refCount;
+	));
   }
 
-  int decRefAndRelease() {
-  	--refCount;
-  	if (refCount == 0) {
-  		// release
-  	}
-  	return refCount;
-  }
+  ~AMQPExchange() {};
+	
+	int parms = AMQP_AUTODELETE;
+	AMQPChannel* amqpCh = NULL;
+	char* name = NULL;
 };
+
 
 
 class AmqpExtension : public Extension {
