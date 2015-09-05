@@ -53,7 +53,7 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey);
 int64_t HHVM_METHOD(AMQPQueue, declare);
 int64_t HHVM_METHOD(AMQPQueue, delete);
-Object HHVM_METHOD(AMQPQueue, get);
+Variant HHVM_METHOD(AMQPQueue, get);
 bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags);
 
 

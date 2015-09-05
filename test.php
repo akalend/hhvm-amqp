@@ -19,19 +19,21 @@ printf("--------- %d  ---------\n", __LINE__);
 
 	$queue->setName("test_q");
 
-	$queue->setFlags(AMQP::AUTOACK );//| AMQP::AUTOACK); AMQP::AUTODELETE
+	// $queue->setFlags();//| AMQP::AUTOACK); AMQP::AUTODELETE
 	$message = $queue->get( );
 
+printf("--------- %d  ---------\n", __LINE__);
 	var_dump($message);
-
 printf("--------- %d  ---------\n", __LINE__);
 	var_dump($queue);
 
 printf("--------- %d  ---------\n", __LINE__);
+	$msg = $queue->getMessage();
+	var_dump($message);
 
-	// $ret = $queue->ack(1);
-// echo "---------  30 ---------\n";
+printf("--------- %d  ---------\n", __LINE__);
 
+	$ret = $queue->ack( $msg->getDeliveryTag() );
 	var_dump($ret);
 printf("--------- %d  ---------\n", __LINE__);
 // var_dump($cnn);

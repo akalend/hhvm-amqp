@@ -487,7 +487,7 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 
 
 
-Object HHVM_METHOD(AMQPQueue, get) {
+Variant HHVM_METHOD(AMQPQueue, get) {
 
 	Object ob{Unit::loadClass(s_AMQPEnvelope.get())};
 	auto *data = Native::data<AMQPQueue>(this_);
@@ -556,8 +556,6 @@ Object HHVM_METHOD(AMQPQueue, get) {
 	envelope.delivery_tag = get_ok_method->delivery_tag;
 	envelope.redelivered  = get_ok_method->redelivered;
 
-	Array output = Array::Create();
-
 	Variant v_null;
 	v_null.setNull();
 
@@ -593,7 +591,7 @@ Object HHVM_METHOD(AMQPQueue, get) {
 		v_tmp = Variant(std::string(static_cast<char*>(message->bytes), message->len));
 	}
 	ob.o_set(
-		String("message"),
+		String("body"),
 		v_tmp,
 		s_AMQPEnvelope);
 
@@ -729,7 +727,7 @@ Object HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.type.bytes), envelope.message.properties.type.len));
 
 			ob.o_set(
-				String("expiration"),
+				String("type"),
 				Variant(v_tmp),
 				s_AMQPEnvelope);
 		}
@@ -769,7 +767,7 @@ Object HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.cluster_id.bytes), envelope.message.properties.cluster_id.len));
 
 			ob.o_set(
-				String("app_id"),
+				String("cluster_id"),
 				Variant(v_tmp),
 				s_AMQPEnvelope);
 		}

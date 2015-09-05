@@ -175,14 +175,53 @@ class AMQPChannel {
 
 class AMQPEnvelope  {
 
-	private $delivery_tag;
-/* Metody */
-// public string getAppId ( void )
-// public string getBody ( void )
-// public string getContentEncoding ( void )
-// public string getContentType ( void )
+	/* internal */
+	private $delivery_tag = NULL;
+	private $exchange = NULL;
+	private $consumer_tag = NULL;
+	private $routing_key = NULL;
+	private $message = NULL;
+	private $channel = NULL;
+	//private $content_type = NULL;
+	private $redelivered = NULL;
+	private $app_id = NULL;
+	private $cluster_id = NULL;
+	private $user_id = NULL;
+	private $expiration = NULL;
+	private $timestamp = NULL;
+	private $body = NULL;
+	private $type = NULL;
+	private $message_id = NULL;
+	private $reply_to = NULL;
+	private $correlation_id = NULL;
+	private $priority = NULL;
+	private $delivery_mode = NULL;
+	private $content_encoding = NULL;
+	private $content_type = NULL;
+
+	/* Metody */
+
+	public function getDeliveryTag(){
+		return $this->delivery_tag;
+	}
+
+	public function getAppId (){
+		return $this->app_id;
+	}
+
+	public function getBody ( ) {
+		$this->body;
+	}
+
+	public function getContentEncoding () {
+		return $this->content_encoding;
+	}
+
+	public function getContentType () {
+		return $this->content_type;
+	}
+
 // public string getCorrelationId ( void )
-// public string getDeliveryTag ( void )
 // public string getExchange ( void )
 // public string getExpiration ( void )
 // public string getHeader ( string $header_key )
