@@ -19,7 +19,7 @@ printf("--------- %d  ---------\n", __LINE__);
 
 	$queue->setName("test_q");
 
-	// $queue->setFlags();//| AMQP::AUTOACK); AMQP::AUTODELETE
+	$queue->setFlags(AMQP::AUTOACK);//| ); AMQP::AUTODELETE
 	$message = $queue->get( );
 
 printf("--------- %d  ---------\n", __LINE__);
@@ -33,8 +33,8 @@ printf("--------- %d  ---------\n", __LINE__);
 
 printf("--------- %d  ---------\n", __LINE__);
 
-	$ret = $queue->ack( $msg->getDeliveryTag() );
-	var_dump($ret);
-printf("--------- %d  ---------\n", __LINE__);
+	$ret = $queue->ack();
+// 	var_dump($ret);
+// printf("--------- %d  ---------\n", __LINE__);
 // var_dump($cnn);
 	$cnn->disconnect();

@@ -60,8 +60,10 @@ const StaticString
 	s_name("name"),
 	s_flags("flags"),
 	s_AMQPQueue("AMQPQueue"),
-	s_message("message"),
-	s_AMQPEnvelope("AMQPEnvelope")
+	s_delivery_tag("delivery_tag"),
+	s_AMQPEnvelope("AMQPEnvelope"),
+	s_body("body"),
+	s_message("message")
   ;
 
 
@@ -591,7 +593,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		v_tmp = Variant(std::string(static_cast<char*>(message->bytes), message->len));
 	}
 	ob.o_set(
-		String("body"),
+		s_body,
 		v_tmp,
 		s_AMQPEnvelope);
 
@@ -602,7 +604,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		s_AMQPEnvelope);
 	
 
-	ob.o_set(String("delivery_tag"), Variant(envelope.delivery_tag), s_AMQPEnvelope);
+	ob.o_set(s_delivery_tag, Variant(envelope.delivery_tag), s_AMQPEnvelope);
 
 
 	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
@@ -641,7 +643,6 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 			String("delivery_mode"),
 			Variant(static_cast<int64_t>(envelope.message.properties.delivery_mode)), // int64_t
 			s_AMQPEnvelope);
-
 	}
 
 
@@ -812,15 +813,16 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 	uint64_t _flags;
 	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
 	
-	// if (delivery_tag == -1 ) {
-	// 	const Array messages = this_->o_get(s_message, false, s_AMQPQueue).toArray();
-	// 	delivery_tag = messages[String("delivery_tag")].toInt64() ;
-	// }
+	if (delivery_tag == -1 ) {
 	
-	printf("flag=%d\n", _flags& AMQP_MULTIPLE ? 1 : 0);
-	printf("channel_id=%d\n", data->amqpCh->channel_id);
-
-	printf("%s:%d\n", __FUNCTION__, __LINE__);
+		const Object body = this_->o_get(s_message, false, s_AMQPQueue).toObject();
+		delivery_tag = body->o_get( s_delivery_tag, false, s_AMQPEnvelope ).toInt64() ;
+		if (!delivery_tag)
+			raise_warning("AMQP ACK: undefined delivery_tag");
+			return false;
+	}
+	
+	// printf("%s:%d\n", __FUNCTION__, __LINE__);
 
 	int status = amqp_basic_ack(
 					data->amqpCh->amqpCnn->conn,
@@ -828,7 +830,7 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 					delivery_tag,
                     _flags & AMQP_MULTIPLE ? 1 : 0);
 
-	printf("%s:%d\n", __FUNCTION__, __LINE__);
+	// printf("%s:%d\n", __FUNCTION__, __LINE__);
 
 	if (status != AMQP_STATUS_OK) {
 		/* Emulate library error */
@@ -838,10 +840,7 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 
 		raise_warning("The AMQPQueue class: ack error");
 
-		printf("%s:%d\n", __FUNCTION__, __LINE__);
-
-		// amqp_maybe_release_buffers_on_channel(data->amqpCh->amqpCnn->conn, data->amqpCh->channel_id);
-
+		amqp_maybe_release_buffers_on_channel(data->amqpCh->amqpCnn->conn, data->amqpCh->channel_id);
 		return false;
 	}
 
