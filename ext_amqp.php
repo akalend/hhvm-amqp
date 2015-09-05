@@ -221,19 +221,52 @@ class AMQPEnvelope  {
 		return $this->content_type;
 	}
 
-// public string getCorrelationId ( void )
-// public string getExchange ( void )
-// public string getExpiration ( void )
-// public string getHeader ( string $header_key )
-// public array getHeaders ( void )
-// public string getMessageId ( void )
-// public string getPriority ( void )
-// public string getReplyTo ( void )
-// public string getRoutingKey ( void )
-// public string getTimeStamp ( void )
-// public string getType ( void )
-// public string getUserId ( void )
-// public bool isRedelivery ( void )
+	public function getCorrelationId () {
+		return $this->correlation_id;
+	}
+
+	public function getExchange () {
+		return $this->exchange;
+	}
+
+	public function getExpiration () {
+		return $this->expiration;
+	}
+
+	public function getMessageId () {
+		return $this->message_id;
+	}
+
+	public function getPriority () {
+		return $this->priority;
+	}
+
+	public function getReplyTo () {
+		return $this->reply_to;
+	}
+
+	public function getRoutingKey () {
+		return $this->routing_key;
+	}
+
+	public function getTimeStamp () {
+		return $this->timestamp;
+	}
+
+	public function getType () {
+		return $this->type;
+	}
+
+	public function getUserId () {
+		return $this->user_id;
+	}
+
+	public function isRedelivery () {
+		return $this->redelivered;
+	}
+
+	// public function getHeader ( string $header_key )
+	//public array getHeaders ( void )
 }
 
 
