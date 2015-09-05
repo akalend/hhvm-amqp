@@ -22,6 +22,9 @@ printf("--------- %d  ---------\n", __LINE__);
 	$queue->setFlags(AMQP::AUTOACK );//| AMQP::AUTOACK); AMQP::AUTODELETE
 	$message = $queue->get( );
 
+	var_dump($message);
+
+printf("--------- %d  ---------\n", __LINE__);
 	var_dump($queue);
 
 printf("--------- %d  ---------\n", __LINE__);

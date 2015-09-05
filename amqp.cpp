@@ -190,16 +190,18 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
 	auto *data = Native::data<AMQPConnection>(this_);
 	assert(data);
-
+	assert(data->conn);
+	assert(data->channel_id);
 		//TODO amqp_close_channel
 
+	printf("channel_id=%d\n", data->channel_id);
 	printf("%s:%d\n", __FUNCTION__,__LINE__);
 	amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
 
 	printf("%s:%d\n", __FUNCTION__,__LINE__);
 
-	data->is_connected = false;
 	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	data->is_connected = false;
 
 	printf("%s:%d\n", __FUNCTION__,__LINE__);
 
@@ -210,8 +212,9 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 	printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	if (res.reply_type) return true;
-	if (parm == AMQP_NOACK)
-		raise_warning("Failing to send the ack to the broker");
+
+	// if (parm == AMQP_NOACK)
+	// 	raise_warning("Failing to send the ack to the broker");
 
 	amqp_destroy_connection(data->conn);
 	data->conn = NULL;
@@ -334,6 +337,7 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (r.reply_type != AMQP_RESPONSE_NORMAL)
 		raise_warning("The AMQPChannel class: open channel error");
 	
+	printf("channel_id=%d\n", data->channel_id);
 
 	// if (data->prefetch_count) {
 	// 	amqp_basic_qos(
@@ -355,7 +359,6 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 
 
 bool HHVM_METHOD(AMQPChannel, isConnected) {
-	
 
 	auto *data = Native::data<AMQPChannel>(this_);
 	if (!data->amqpCnn)
@@ -470,7 +473,6 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 									(flags & AMQP_IFUNUSED) ? 1 : 0,
 									(flags & AMQP_IFEMPTY)  ? 1 : 0);
 
-
 	if (!r) {
 		amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
 		raise_warning("The AMQPQueue class: delete queue error");
@@ -485,8 +487,9 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 
 
 
-Array HHVM_METHOD(AMQPQueue, get) {
+Object HHVM_METHOD(AMQPQueue, get) {
 
+	Object ob{Unit::loadClass(s_AMQPEnvelope.get())};
 	auto *data = Native::data<AMQPQueue>(this_);
 	if (!data)
 		raise_error( "Error input data");
@@ -510,13 +513,13 @@ Array HHVM_METHOD(AMQPQueue, get) {
 	if (res.reply_type != AMQP_RESPONSE_NORMAL ) {
 		printf("The AMQPQueue response code: %d\n", res.reply_type);
 		// raise_warning("The AMQPQueue: response error");
-		return Array();
+		return Object();
 	}
 
 	if (AMQP_BASIC_GET_EMPTY_METHOD == res.reply.id) {
 		printf("The AMQPQueue: AMQP_BASIC_GET_EMPTY_METHOD\n");
 		
-		return Array();
+		return Object();
 	}
 
 	assert(AMQP_BASIC_GET_OK_METHOD == res.reply.id);
@@ -541,16 +544,11 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		0
 	);
 
-// typedef struct amqp_message_t_ {
-//   amqp_basic_properties_t properties; /**< message properties */
-//   amqp_bytes_t body;                  /**< message body */
-//   amqp_pool_t pool;                   /**< pool used to allocate properties */
-// } amqp_message_t;
 
 	if (res.reply_type == AMQP_RESPONSE_NORMAL)
 		printf("read: AMQP_RESPONSE_NORMAL\n" );
 	else
-		return Array();	
+		return Object();	
 
 
 	amqp_bytes_t* message = &envelope.message.body;
@@ -565,55 +563,49 @@ Array HHVM_METHOD(AMQPQueue, get) {
 
 	Variant v_tmp;
 
-	output.add(
-		String("exchange"),
-		(envelope.exchange.len) ? Variant(static_cast<char*>(envelope.exchange.bytes)) : v_null,
-		true
-	);
+	ob.o_set(String("exchange"),
+			(envelope.exchange.len) ? Variant(static_cast<char*>(envelope.exchange.bytes)) : v_null,
+			s_AMQPEnvelope);
 
 	v_tmp.setNull();
 	if (envelope.consumer_tag.len) {
 		v_tmp = Variant( std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
 	}
-	output.add(
+
+	ob.o_set(
 		String("consumer_tag"),
 		v_tmp,
-		true
-	);
+		s_AMQPEnvelope);
+
 
 	v_tmp.setNull();
 	if (envelope.routing_key.len) {
 		v_tmp = Variant(std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
 	}
-	output.add(
+	ob.o_set(
 		String("routing_key"),
 		v_tmp,
-		true
-	);
+		s_AMQPEnvelope);
 
 
 	v_tmp.setNull();
 	if (message->len) {
 		v_tmp = Variant(std::string(static_cast<char*>(message->bytes), message->len));
 	}
-	output.add(
+	ob.o_set(
 		String("message"),
 		v_tmp,
-		true
-	);
+		s_AMQPEnvelope);
 
 
-	output.add(
+	ob.o_set(
 		String("channel"),
 		Variant(static_cast<int64_t>(envelope.channel)),
-		true
-	);
+		s_AMQPEnvelope);
 	
-	output.add(
-		String("delivery_tag"),
-		Variant(envelope.delivery_tag), // int64_t
-		true
-	);
+
+	ob.o_set(String("delivery_tag"), Variant(envelope.delivery_tag), s_AMQPEnvelope);
+
 
 	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
 
@@ -621,15 +613,13 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.content_type.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.content_type.bytes), envelope.message.properties.content_type.len));
 
-			output.add(
+			ob.o_set(
 				String("content_type"),
-				Variant(v_tmp),
-		 		true
-			);
+				v_tmp,
+				s_AMQPEnvelope);
 
 		}
 	}
-
 
 
 	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_ENCODING_FLAG) {
@@ -638,11 +628,10 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.content_encoding.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.content_encoding.bytes), envelope.message.properties.content_encoding.len));
 
-			output.add(
+			ob.o_set(
 				String("content_encoding"),
-				Variant(v_tmp),
-				true
-			);
+				v_tmp,
+				s_AMQPEnvelope);
 		}
 	}
 
@@ -650,21 +639,20 @@ Array HHVM_METHOD(AMQPQueue, get) {
 
 	if (envelope.message.properties._flags & AMQP_BASIC_DELIVERY_MODE_FLAG) {
 
-		output.add(
+		ob.o_set(
 			String("delivery_mode"),
 			Variant(static_cast<int64_t>(envelope.message.properties.delivery_mode)), // int64_t
-			true
-		);
+			s_AMQPEnvelope);
+
 	}
 
 
 	if (envelope.message.properties._flags & AMQP_BASIC_PRIORITY_FLAG) {
 
-		output.add(
+		ob.o_set(
 			String("priority"),
 			Variant(static_cast<int64_t>(envelope.message.properties.priority)), // int64_t
-			true
-		);
+			s_AMQPEnvelope);
 	}
 
 
@@ -674,11 +662,11 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.reply_to.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.correlation_id.bytes), envelope.message.properties.correlation_id.len));
 
-			output.add(
+			ob.o_set(
 				String("correlation_id"),
-				Variant(v_tmp),
-				true
-			);
+				v_tmp,
+				s_AMQPEnvelope);
+
 		}
 	}
 
@@ -689,11 +677,10 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.reply_to.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.reply_to.bytes), envelope.message.properties.reply_to.len));
 
-			output.add(
+			ob.o_set(
 				String("reply_to"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
@@ -704,11 +691,10 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.expiration.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.expiration.bytes), envelope.message.properties.expiration.len));
 
-			output.add(
+			ob.o_set(
 				String("expiration"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
@@ -719,22 +705,20 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.message_id.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.message_id.bytes), envelope.message.properties.message_id.len));
 
-			output.add(
+			ob.o_set(
 				String("message_id"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
 
 	if (envelope.message.properties._flags & AMQP_BASIC_TIMESTAMP_FLAG) {
 
-		output.add(
+		ob.o_set(
 			String("timestamp"),
 			Variant(static_cast<int64_t>(envelope.message.properties.timestamp)), // int64_t
-			true
-		);
+				s_AMQPEnvelope);
 	}
 
 
@@ -744,11 +728,10 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.type.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.type.bytes), envelope.message.properties.type.len));
 
-			output.add(
+			ob.o_set(
 				String("expiration"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
@@ -759,11 +742,10 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.user_id.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.user_id.bytes), envelope.message.properties.user_id.len));
 
-			output.add(
+			ob.o_set(
 				String("user_id"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
@@ -773,11 +755,10 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.app_id.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.app_id.bytes), envelope.message.properties.app_id.len));
 
-			output.add(
+			ob.o_set(
 				String("app_id"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
@@ -787,35 +768,24 @@ Array HHVM_METHOD(AMQPQueue, get) {
 		if (envelope.message.properties.cluster_id.len) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.cluster_id.bytes), envelope.message.properties.cluster_id.len));
 
-			output.add(
+			ob.o_set(
 				String("app_id"),
 				Variant(v_tmp),
-				true
-			);
+				s_AMQPEnvelope);
 		}
 	}
 
-	output.add(
+	ob.o_set(
 		String("redelivered"),
 		Variant(envelope.redelivered),
-		true
-	);
+		s_AMQPEnvelope);
 
 
 	amqp_destroy_envelope(&envelope);
 	
-	this_->o_set(s_message, output, s_AMQPQueue);
-
-
-	// Object amqp_envelope(this_->o_get(String("xx"), false, s_AMQPQueue).toObject());
-
-
-	Object ob{Unit::loadClass(s_AMQPEnvelope.get())};
-	ob.o_set(String("delivery_tag"), String("1"), s_AMQPEnvelope);
-
-	this_->o_set( String("xx"), Variant(ob), s_AMQPQueue );
+	this_->o_set( String("message"), Variant(ob), s_AMQPQueue );
 	
-	return output;
+	return ob;
 
 }
 

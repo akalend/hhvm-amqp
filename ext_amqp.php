@@ -205,7 +205,6 @@ class AMQPQueue {
 	private $name = '';
 	private $flags = 0;
 	private $message = NULL;
-	private $xx = NULL;
 
 	/* Methods */
 	<<__Native>>
@@ -234,7 +233,7 @@ class AMQPQueue {
 	public function delete (): int;
 
 	<<__Native>>
-	public function get (int $flags=AMQP_NOACK) : array;
+	public function get (int $flags=AMQP_NOACK) : mixed;
 
 
 	public function getMessage () {
