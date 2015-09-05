@@ -91,6 +91,7 @@ void AmqpExtension::moduleInit() {
 
 
 	HHVM_ME(AMQPExchange, __construct);
+	HHVM_ME(AMQPExchange, bind);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -864,5 +865,10 @@ void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpChannel) {
 
 }
 
+
+bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& routingKey) {
+
+	return true;
+}
 HHVM_GET_MODULE(amqp);
 } // namespace

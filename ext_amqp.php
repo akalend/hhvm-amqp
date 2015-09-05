@@ -370,8 +370,8 @@ class AMQPExchange {
 		return $this->flags;
 	}
 
-
-// public bool bind ( string $destination_exchange_name , string $source_exchange_name , string $routing_key )
+	<<__Native>>
+	public function bind ( string $destination_queue_name , string $routing_key ) : bool;
 
 // public int declare ( void )
 // public bool delete ([ int $flags = AMQP_NOPARAM ] )
