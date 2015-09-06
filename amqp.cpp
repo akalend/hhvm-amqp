@@ -43,8 +43,8 @@
 
 
 
-#define GET_CLASS_DATA_AND_CHECK( class_name ) 				\
-	auto *data = Native::data<class_name>(this_);			\
+#define GET_CLASS_DATA_AND_CHECK( class_name ) 			\
+	auto *data = Native::data<class_name>(this_);		\
 	if (!data)											\
 		raise_error( "Error input data");				\
 	if (!data->amqpCh)									\
@@ -59,6 +59,13 @@
 		return false;									\
 	}
 
+#define ANALYZE_RESPONSE_AND_RETURN()					\
+	amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);	\
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {		\
+		raise_warning("AMQP response error");			\
+		return false;									\
+	}													\
+	return true;
 
 
 
@@ -822,7 +829,7 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 					data->amqpCh->amqpCnn->conn,
 					data->amqpCh->channel_id,
 					delivery_tag,
-                    _flags & AMQP_MULTIPLE ? 1 : 0);
+					_flags & AMQP_MULTIPLE ? 1 : 0);
 
 	// printf("%s:%d\n", __FUNCTION__, __LINE__);
 
@@ -880,10 +887,7 @@ bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& rout
 				amqp_cstring_bytes(bindingkey),
 				amqp_empty_table);
 
-	if( (amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn)).reply_type != AMQP_RESPONSE_NORMAL )
-		raise_warning("The AMQPExchange class: binding error");
-
-	return true;
+	ANALYZE_RESPONSE_AND_RETURN();
 }
 
 bool HHVM_METHOD(AMQPExchange, declare){
@@ -907,16 +911,7 @@ bool HHVM_METHOD(AMQPExchange, declare){
 		amqp_empty_table); 					// arguments
 
 
-
-	amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
-
-	/* handle any errors that occured outside of signals */
-	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-		raise_warning("AMQP response error");
-		return false;
-	}
-	
-	return true;
+	ANALYZE_RESPONSE_AND_RETURN();
 }
 
 bool HHVM_METHOD(AMQPExchange, delete){
@@ -933,15 +928,7 @@ bool HHVM_METHOD(AMQPExchange, delete){
 		amqp_cstring_bytes(exchange), 
 		(flags & AMQP_IFUNUSED)  ? 1 : 0);
 
-	amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
-
-	/* handle any errors that occured outside of signals */
-	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-		raise_warning("AMQP response error");
-		return false;
-	}
-	
-	return true;
+	ANALYZE_RESPONSE_AND_RETURN();
 }
 
 // public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
@@ -950,7 +937,27 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 
 	GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
-	return true;
+	// TODO
+	amqp_basic_properties_t props;
+	props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
+	props.content_type = amqp_cstring_bytes("text/plain");
+	props.delivery_mode = 2; /* persistent delivery mode */
+
+	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
+
+
+	amqp_basic_publish(data->amqpCh->amqpCnn->conn,
+			data->amqpCh->channel_id,
+			amqp_cstring_bytes(exchange),
+			amqp_cstring_bytes(routing_key.c_str()),
+									0,
+									0,
+									&props,
+									amqp_cstring_bytes(message.c_str()));
+
+
+
+	ANALYZE_RESPONSE_AND_RETURN();
 }
 
 HHVM_GET_MODULE(amqp);
