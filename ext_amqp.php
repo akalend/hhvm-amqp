@@ -33,18 +33,18 @@
 *  class of AMQP constants
 */
 final class AMQP {
-	const  PORT = 5672;
-	const  NOACK = 1;
-	const  NOPARAM = 0;
-	const  PASSIVE = 2;			// passive
-	const  DURABLE = 4;			// durable 
-	const  EXCLUSIVE = 8;		// exclusive
-	const  AUTODELETE = 16;		// autodelete
-	const  IF_UNUSED = 32;
-	const  IF_EMPTY = 64;
-	const  AUTOACK = 128;
-	const  MULTIPLE = 256;
-	const  INTERNAL = 512;
+	const  PORT 		= 5672;
+	const  NOACK 		= 1;
+	const  NOPARAM 		= 0;
+	const  PASSIVE 		= 2;		// passive
+	const  DURABLE 		= 4;		// durable 
+	const  EXCLUSIVE 	= 8;		// exclusive
+	const  AUTODELETE 	= 16;		// autodelete
+	const  IF_UNUSED 	= 32;
+	const  IF_EMPTY 	= 64;
+	const  AUTOACK 		= 128;
+	const  MULTIPLE 	= 256;
+	const  INTERNAL 	= 512;
 	const  TYPE_DIRECT = 'direct';
 	const  TYPE_FANOUT = 'fanout';
 	const  TYPE_TOPIC  = 'topic';
@@ -376,9 +376,11 @@ class AMQPExchange {
 
 	<<__Native>>
 	public function declare(): bool;
-
 	
-// public bool delete ([ int $flags = AMQP_NOPARAM ] )
+	<<__Native>>
+	public function delete (int $flags = AMQP::NOPARAM ): bool;
+
+
 // public mixed getArgument ( string $key )
 // public array getArguments ( void )
 

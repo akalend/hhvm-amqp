@@ -95,6 +95,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPExchange, __construct);
 	HHVM_ME(AMQPExchange, bind);
 	HHVM_ME(AMQPExchange, declare);
+	HHVM_ME(AMQPExchange, delete);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -921,8 +922,6 @@ bool HHVM_METHOD(AMQPExchange, declare){
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 	const char* type = const_cast<char* >(this_->o_get(s_type, false, s_AMQPExchange).toString().c_str());
 
-
-
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
 
 	amqp_exchange_declare(
@@ -947,6 +946,50 @@ bool HHVM_METHOD(AMQPExchange, declare){
 	}
 	
 	return true;
+}
+
+bool HHVM_METHOD(AMQPExchange, delete){
+
+	auto *data = Native::data<AMQPExchange>(this_);
+	if (!data)
+		raise_error( "Error input data");
+	
+	if (!data->amqpCh)
+		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");
+
+	if (!data->amqpCh->amqpCnn)
+		raise_error( "Unbind AMQPConnection class");
+
+	if (!data->amqpCh->amqpCnn->conn){
+		raise_error( "Error connection");	
+	}
+	
+	if (data->amqpCh->amqpCnn->is_connected == false) {
+		raise_warning("AMQP disconnect");
+		return false;
+	}
+
+	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
+	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
+
+
+	amqp_exchange_delete(
+		data->amqpCh->amqpCnn->conn, 
+		data->amqpCh->channel_id, 
+		amqp_cstring_bytes(exchange), 
+		(flags & AMQP_IFUNUSED)  ? 1 : 0);
+/**
+ * amqp_exchange_delete
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] exchange exchange
+ * @param [in] if_unused if_unused
+ * @returns amqp_exchange_delete_ok_t
+*/
+
+ 	return true;
+
 }
 
 HHVM_GET_MODULE(amqp);
