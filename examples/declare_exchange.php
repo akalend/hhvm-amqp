@@ -14,7 +14,9 @@
 
 // $cnn->disconnect(AMQP_NOPARAM);
 	$ex->setName('test_e');
-	$ex->setType('direct');
+	$ex->setType(AMQP::TYPE_DIRECT);
 
 
-	// $ex->declare();
+	$ex->declare();
+
+	$cnn->disconnect();

@@ -896,7 +896,7 @@ bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& rout
 	return true;
 }
 
-int64_t HHVM_METHOD(AMQPExchange, declare){
+bool HHVM_METHOD(AMQPExchange, declare){
 
 	auto *data = Native::data<AMQPExchange>(this_);
 	if (!data)
@@ -906,6 +906,18 @@ int64_t HHVM_METHOD(AMQPExchange, declare){
 	if (!data->amqpCh)
 		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");
 
+	if (!data->amqpCh->amqpCnn)
+		raise_error( "Unbind AMQPConnection class");
+
+	if (!data->amqpCh->amqpCnn->conn){
+		raise_error( "Error connection");	
+	}
+	
+	if (data->amqpCh->amqpCnn->is_connected == false) {
+		raise_warning("AMQP disconnect");
+		return false;
+	}
+
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 	const char* type = const_cast<char* >(this_->o_get(s_type, false, s_AMQPExchange).toString().c_str());
 
@@ -913,19 +925,28 @@ int64_t HHVM_METHOD(AMQPExchange, declare){
 
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
 
-	amqp_exchange_declare_ok_t * res = amqp_exchange_declare(
-			data->amqpCh->amqpCnn->conn,	// state connection state
-			data->amqpCh->channel_id, 		// channel the channel to do the RPC on
-			amqp_cstring_bytes(exchange), 	// exchange name
-			amqp_cstring_bytes(type), 		// type
-			(flags & AMQP_PASSIVE)  ? 1 : 0, 	// passive flag
-			(flags & AMQP_DURABLE)  ? 1 : 0, 	// durable flag
-			(flags & AMQP_AUTODELETE)  ? 1 : 0, // autodelete flag
-			(flags & AMQP_INTERNAL)  ? 1 : 0, 	// internal flag
-			amqp_empty_table); 					// arguments
+	amqp_exchange_declare(
+		data->amqpCh->amqpCnn->conn,		// state connection state
+		data->amqpCh->channel_id, 			// channel the channel to do the RPC on
+		amqp_cstring_bytes(exchange), 		// exchange name
+		amqp_cstring_bytes(type), 			// type
+		(flags & AMQP_PASSIVE)  ? 1 : 0, 	// passive flag
+		(flags & AMQP_DURABLE)  ? 1 : 0, 	// durable flag
+		(flags & AMQP_AUTODELETE)  ? 1 : 0, // autodelete flag
+		(flags & AMQP_INTERNAL)  ? 1 : 0, 	// internal flag
+		amqp_empty_table); 					// arguments
 
 
-	return 0;
+
+	amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
+
+	/* handle any errors that occured outside of signals */
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		raise_warning("AMQP response error");
+		return false;
+	}
+	
+	return true;
 }
 
 HHVM_GET_MODULE(amqp);
