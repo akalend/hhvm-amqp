@@ -33,7 +33,7 @@ printf("--------- %d  ---------\n", __LINE__);
 
 printf("--------- %d  ---------\n", __LINE__);
 
-	$ret = $queue->ack();
+	// $ret = $queue->ack();
 // 	var_dump($ret);
 // printf("--------- %d  ---------\n", __LINE__);
 // var_dump($cnn);

@@ -941,6 +941,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 	amqp_basic_properties_t props;
 	props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG | AMQP_BASIC_DELIVERY_MODE_FLAG;
 	props.content_type = amqp_cstring_bytes("text/plain");
+	
 	props.delivery_mode = 2; /* persistent delivery mode */
 
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
