@@ -992,7 +992,7 @@ bool HHVM_METHOD(AMQPExchange, delete){
 
 // public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
 
-bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags = AMQP_NOPARAM) {
+bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags = AMQP_NOPARAM, const Array& arguments = Array{}) {
 
 	return true;
 }

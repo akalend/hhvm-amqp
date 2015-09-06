@@ -61,7 +61,7 @@ void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpQueue);
 bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& routingKey);
 bool HHVM_METHOD(AMQPExchange, declare);
 bool HHVM_METHOD(AMQPExchange, delete);
-bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags);
+bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags, const Array& arguments);
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,

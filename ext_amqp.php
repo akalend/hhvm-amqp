@@ -386,7 +386,7 @@ class AMQPExchange {
 	//  array $attributes NOT IMPLEMENT
 
 	<<__Native>>
-	public function publish(string $message, string $routing_key = '', int $flags = AMQP::NOPARAM) : bool;
+	public function publish(string $message, string $routing_key = '', int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
 
 // public void setArgument ( string $key , mixed $value )
 // public void setArguments ( array $arguments )
