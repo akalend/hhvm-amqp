@@ -40,6 +40,28 @@
 #include <amqp_ssl_socket.h>
 #include "hhvm_amqp.h"
 
+
+
+
+#define GET_CLASS_DATA_AND_CHECK( class_name ) 				\
+	auto *data = Native::data<class_name>(this_);			\
+	if (!data)											\
+		raise_error( "Error input data");				\
+	if (!data->amqpCh)									\
+		raise_warning("The ##class_name## class is`nt binding with AMQPChannel");	\
+	if (!data->amqpCh->amqpCnn)							\
+		raise_error( "Unbind AMQPConnection class");	\
+	if (!data->amqpCh->amqpCnn->conn){					\
+		raise_error( "Error connection");				\
+	}													\
+	if (data->amqpCh->amqpCnn->is_connected == false) {	\
+		raise_warning("AMQP disconnect");				\
+		return false;									\
+	}
+
+
+
+
 namespace HPHP {
 
 const StaticString
@@ -204,22 +226,16 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 	assert(data->channel_id);
 		//TODO amqp_close_channel
 
-	printf("channel_id=%d\n", data->channel_id);
-	printf("%s:%d\n", __FUNCTION__,__LINE__);
 	amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
 
-	printf("%s:%d\n", __FUNCTION__,__LINE__);
+	// printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 	data->is_connected = false;
 
-	printf("%s:%d\n", __FUNCTION__,__LINE__);
-
 	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
 
 	data->channel_id = 0;
-
-	printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	if (res.reply_type) return true;
 
@@ -399,6 +415,9 @@ void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& rout
 	if (!data->amqpCh)
 		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
 
+
+	// GET_CLASS_DATA_AND_CHECK( AMQPQueue );
+
 	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
 	const char* exchange = const_cast<char* >(exchangeName.c_str());
 	const char* bindingkey = const_cast<char* >(routingKey.c_str());
@@ -416,14 +435,9 @@ void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& rout
 
 int64_t HHVM_METHOD(AMQPQueue, declare){
 
-	auto *data = Native::data<AMQPQueue>(this_);
-	if (!data)
-		raise_error( "Error input data");
+	GET_CLASS_DATA_AND_CHECK( AMQPQueue );
 
 	data->message_count=0;
-	
-	if (!data->amqpCh)
-		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
 
 	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
 
@@ -461,15 +475,10 @@ int64_t HHVM_METHOD(AMQPQueue, declare){
 
 int64_t HHVM_METHOD(AMQPQueue, delete) {
 
-	auto *data = Native::data<AMQPQueue>(this_);
-	if (!data)
-		raise_error( "Error input data");
+	GET_CLASS_DATA_AND_CHECK( AMQPQueue );
 
 	data->message_count=0;
 	
-	if (!data->amqpCh)
-		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
-
 	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
 
@@ -497,12 +506,9 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 Variant HHVM_METHOD(AMQPQueue, get) {
 
 	Object ob{Unit::loadClass(s_AMQPEnvelope.get())};
-	auto *data = Native::data<AMQPQueue>(this_);
-	if (!data)
-		raise_error( "Error input data");
-	
-	if (!data->amqpCh)
-		raise_warning("The AMQPQueue class is`nt binding with AMQPChannel");
+
+	GET_CLASS_DATA_AND_CHECK( AMQPQueue );
+
 
 	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
@@ -796,24 +802,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 
-	auto *data = Native::data<AMQPQueue>(this_);
-	if (!data)
-		raise_error( "Error input data");
-
-	if (!data->amqpCh)
-		raise_error( "Unbind AMQPChannel class");
-
-	if (!data->amqpCh->amqpCnn)
-		raise_error( "Unbind AMQPConnection class");
-
-	if (!data->amqpCh->amqpCnn->conn){
-		raise_error( "Error connection");	
-	}
-	
-	if (data->amqpCh->amqpCnn->is_connected == false) {
-		raise_warning("AMQP disconnect");
-		return false;
-	}
+	GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
 	uint64_t _flags;
 	_flags =  flags ? flags : this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
@@ -899,25 +888,7 @@ bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& rout
 
 bool HHVM_METHOD(AMQPExchange, declare){
 
-	auto *data = Native::data<AMQPExchange>(this_);
-	if (!data)
-		raise_error( "Error input data");
-
-	
-	if (!data->amqpCh)
-		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");
-
-	if (!data->amqpCh->amqpCnn)
-		raise_error( "Unbind AMQPConnection class");
-
-	if (!data->amqpCh->amqpCnn->conn){
-		raise_error( "Error connection");	
-	}
-	
-	if (data->amqpCh->amqpCnn->is_connected == false) {
-		raise_warning("AMQP disconnect");
-		return false;
-	}
+	GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 	const char* type = const_cast<char* >(this_->o_get(s_type, false, s_AMQPExchange).toString().c_str());
@@ -950,24 +921,7 @@ bool HHVM_METHOD(AMQPExchange, declare){
 
 bool HHVM_METHOD(AMQPExchange, delete){
 
-	auto *data = Native::data<AMQPExchange>(this_);
-	if (!data)
-		raise_error( "Error input data");
-	
-	if (!data->amqpCh)
-		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");
-
-	if (!data->amqpCh->amqpCnn)
-		raise_error( "Unbind AMQPConnection class");
-
-	if (!data->amqpCh->amqpCnn->conn){
-		raise_error( "Error connection");	
-	}
-	
-	if (data->amqpCh->amqpCnn->is_connected == false) {
-		raise_warning("AMQP disconnect");
-		return false;
-	}
+	GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
@@ -993,6 +947,8 @@ bool HHVM_METHOD(AMQPExchange, delete){
 // public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
 
 bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags = AMQP_NOPARAM, const Array& arguments = Array{}) {
+
+	GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
 	return true;
 }
