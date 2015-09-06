@@ -81,6 +81,7 @@ enum amqp_param {
 	AMQP_IFEMPTY = 64,
 	AMQP_AUTOACK = 128,
 	AMQP_MULTIPLE = 256,
+	AMQP_INTERNAL = 512,
 };
 
 

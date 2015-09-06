@@ -64,7 +64,8 @@ const StaticString
 	s_flags("flags"),
 	s_delivery_tag("delivery_tag"),
 	s_body("body"),
-	s_message("message")
+	s_message("message"),
+	s_type("type")
   ;
 
 
@@ -882,7 +883,8 @@ bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& rout
 	const char* queue = const_cast<char* >(queueName.c_str());
 	const char* bindingkey = const_cast<char* >(routingKey.c_str());
 
-	amqp_queue_bind(data->amqpCh->amqpCnn->conn , data->amqpCh->channel_id,
+	amqp_queue_bind(data->amqpCh->amqpCnn->conn , 
+				data->amqpCh->channel_id,
 				amqp_cstring_bytes(queue),
 				amqp_cstring_bytes(exchange),
 				amqp_cstring_bytes(bindingkey),
@@ -904,9 +906,24 @@ int64_t HHVM_METHOD(AMQPExchange, declare){
 	if (!data->amqpCh)
 		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");
 
-	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
+	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
+	const char* type = const_cast<char* >(this_->o_get(s_type, false, s_AMQPExchange).toString().c_str());
+
+
 
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
+
+	amqp_exchange_declare_ok_t * res = amqp_exchange_declare(
+			data->amqpCh->amqpCnn->conn,	// state connection state
+			data->amqpCh->channel_id, 		// channel the channel to do the RPC on
+			amqp_cstring_bytes(exchange), 	// exchange name
+			amqp_cstring_bytes(type), 		// type
+			(flags & AMQP_PASSIVE)  ? 1 : 0, 	// passive flag
+			(flags & AMQP_DURABLE)  ? 1 : 0, 	// durable flag
+			(flags & AMQP_AUTODELETE)  ? 1 : 0, // autodelete flag
+			(flags & AMQP_INTERNAL)  ? 1 : 0, 	// internal flag
+			amqp_empty_table); 					// arguments
+
 
 	return 0;
 }
