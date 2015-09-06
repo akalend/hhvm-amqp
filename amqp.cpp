@@ -44,6 +44,10 @@ namespace HPHP {
 
 const StaticString
 	s_AMQPConnection("AMQPConnection"),
+	s_AMQPChannel("AMQPChannel"),
+	s_AMQPQueue("AMQPQueue"),
+	s_AMQPEnvelope("AMQPEnvelope"),
+	s_AMQPExchange("AMQPExchange"),
 	s_host("host"),
 	s_vhost("vhost"),
 	s_login("login"),
@@ -55,13 +59,10 @@ const StaticString
 	s_PORT("AMQP_PORT"),
 	s_NOPARM("AMQP_NOPARAM"),
 	s_NOACK("AMQP_NOACK"),
-	s_AMQPChannel("AMQPChannel"),
 	s_amqp_connection("amqp_connection"),
 	s_name("name"),
 	s_flags("flags"),
-	s_AMQPQueue("AMQPQueue"),
 	s_delivery_tag("delivery_tag"),
-	s_AMQPEnvelope("AMQPEnvelope"),
 	s_body("body"),
 	s_message("message")
   ;
@@ -92,6 +93,7 @@ void AmqpExtension::moduleInit() {
 
 	HHVM_ME(AMQPExchange, __construct);
 	HHVM_ME(AMQPExchange, bind);
+	HHVM_ME(AMQPExchange, declare);
 
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
@@ -891,5 +893,23 @@ bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& rout
 
 	return true;
 }
+
+int64_t HHVM_METHOD(AMQPExchange, declare){
+
+	auto *data = Native::data<AMQPExchange>(this_);
+	if (!data)
+		raise_error( "Error input data");
+
+	
+	if (!data->amqpCh)
+		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");
+
+	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
+
+	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
+
+	return 0;
+}
+
 HHVM_GET_MODULE(amqp);
 } // namespace

@@ -59,6 +59,8 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags);
 
 void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpQueue);
 bool HHVM_METHOD(AMQPExchange, bind, const String& queueName, const String& routingKey);
+int64_t HHVM_METHOD(AMQPExchange, declare);
+
 
 enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
