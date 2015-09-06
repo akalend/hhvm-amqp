@@ -96,7 +96,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPExchange, bind);
 	HHVM_ME(AMQPExchange, declare);
 	HHVM_ME(AMQPExchange, delete);
-
+	HHVM_ME(AMQPExchange, publish);
 
 	Native::registerNativeDataInfo<AmqpExtension>(s_AMQPConnection.get(),
 													 Native::NDIFlags::NO_SWEEP);
@@ -978,18 +978,23 @@ bool HHVM_METHOD(AMQPExchange, delete){
 		data->amqpCh->channel_id, 
 		amqp_cstring_bytes(exchange), 
 		(flags & AMQP_IFUNUSED)  ? 1 : 0);
-/**
- * amqp_exchange_delete
- *
- * @param [in] state connection state
- * @param [in] channel the channel to do the RPC on
- * @param [in] exchange exchange
- * @param [in] if_unused if_unused
- * @returns amqp_exchange_delete_ok_t
-*/
 
- 	return true;
+	amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
 
+	/* handle any errors that occured outside of signals */
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		raise_warning("AMQP response error");
+		return false;
+	}
+	
+	return true;
+}
+
+// public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
+
+bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags = AMQP_NOPARAM) {
+
+	return true;
 }
 
 HHVM_GET_MODULE(amqp);

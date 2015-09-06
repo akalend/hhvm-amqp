@@ -2,3 +2,9 @@ AMQPConnection :
 	Create ssl
 	Persisten Connections
 	Create set timeout 
+
+AMQPExchange:
+	Implement Attributes (AMQP Headers)
+
+AMQPQueue:
+	Implement Attributes (AMQP Headers)

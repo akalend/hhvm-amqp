@@ -9,6 +9,7 @@
 
 	$ch = new AMQPChannel($cnn);
 	$ex = new AMQPExchange($ch);
+	$q = new AMQPQueue($ch);
 
 	echo "------  exchange Ok  --------\n";
 
@@ -18,5 +19,14 @@
 
 
 	$ex->declare();
+	echo "------  declare Ok  --------\n";
+
+	$q->setName('test_q');
+	$q->declare();
+
+
+	$res = $ex->bind("test_q", "kkk" );
+	echo "------  binding Ok  --------\n";
+	var_dump($res);
 
 	$cnn->disconnect();

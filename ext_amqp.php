@@ -381,13 +381,17 @@ class AMQPExchange {
 	public function delete (int $flags = AMQP::NOPARAM ): bool;
 
 
-// public mixed getArgument ( string $key )
-// public array getArguments ( void )
 
+	// public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
+	//  array $attributes NOT IMPLEMENT
 
-// public bool publish ( string $message , string $routing_key [, int $flags = AMQP_NOPARAM [, array $attributes = array() ]] )
+	<<__Native>>
+	public function publish(string $message, string $routing_key = '', int $flags = AMQP::NOPARAM) : bool;
+
 // public void setArgument ( string $key , mixed $value )
 // public void setArguments ( array $arguments )
+// public mixed getArgument ( string $key )
+// public array getArguments ( void )
 
 }
 
