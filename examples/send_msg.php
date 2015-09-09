@@ -15,6 +15,8 @@
 // $cnn->disconnect(AMQP_NOPARAM);
 	$ex->setName('test_e');
 	
-	$ex->publish('*******', 'scan');
+	define('PLAIN', 'text/plain');
+
+	$ex->publish('*******', 'scan', AMQP::NOPARAM, ['content_type1' => 1] );
 
 	$cnn->disconnect();
