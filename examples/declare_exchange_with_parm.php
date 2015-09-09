@@ -11,5 +11,18 @@
 
 	var_dump($ex);
 
+	$ex->setFlags(AMQP::NOPARAM);
 
+	echo $ex->getFlags();
+
+	$ex->setFlags(2);
+	echo $ex->getFlags();
+
+	$ex->setFlags(0);
+	echo $ex->getFlags();
+
+	$ex->setFlags(2);
+	echo $ex->getFlags();
+// --EXPECT-- 0202
+	
 	$cnn->disconnect();
