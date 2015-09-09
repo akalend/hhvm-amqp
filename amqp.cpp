@@ -944,6 +944,8 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 	
 	props.delivery_mode = 2; /* persistent delivery mode */
 
+
+
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 
 
@@ -951,10 +953,10 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 			data->amqpCh->channel_id,
 			amqp_cstring_bytes(exchange),
 			amqp_cstring_bytes(routing_key.c_str()),
-									0,
-									0,
-									&props,
-									amqp_cstring_bytes(message.c_str()));
+			(flags & AMQP_MANDATORY)  ? 1 : 0, 		// mandatory
+			(flags & AMQP_IMMEDIATE)  ? 1 : 0,			// immediate
+			&props,
+			amqp_cstring_bytes(message.c_str()));
 
 
 

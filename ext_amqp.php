@@ -45,6 +45,8 @@ final class AMQP {
 	const  AUTOACK 		= 128;
 	const  MULTIPLE 	= 256;
 	const  INTERNAL 	= 512;
+	const  MANDATORY 	= 1024;
+	const  IMMEDIATE 	= 2048;
 	const  TYPE_DIRECT = 'direct';
 	const  TYPE_FANOUT = 'fanout';
 	const  TYPE_TOPIC  = 'topic';
