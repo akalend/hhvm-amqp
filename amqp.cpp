@@ -113,8 +113,9 @@ const StaticString
 	s_user_id("user_id"),
 	s_correlation_id("correlation_id"),
 	s_reply_to("reply_to"),
-	s_type("type"),
-	s_message_id("message_id")
+	s_message_id("message_id"),
+	s_arguments("arguments"),
+	s_content_type("content_type")
   ;
 
 
@@ -652,7 +653,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.content_type.bytes), envelope.message.properties.content_type.len));
 
 			ob.o_set(
-				String("content_type"),
+				s_content_type,
 				v_tmp,
 				s_AMQPEnvelope);
 
@@ -981,7 +982,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
     //'headers'          => 'not array', // should be array // NOTE: covered in tests/amqpexchange_publish_with_properties_ignore_num_header.phpt
 
 	
-	Variant ct = Variant(arguments[String("content_type")]);
+	Variant ct = Variant(arguments[s_content_type]);
 
 	props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
 	switch (ct.getType()) {
@@ -1029,6 +1030,26 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 	// 		break;
 	// 	default:
 	// 		raise_warning("arguments value key error");			
+	} else {
+
+		Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
+
+		Variant ct = Variant(args[s_content_type]);
+
+		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
+		switch (ct.getType()) {
+			case KindOfNull : 
+				props.content_type = amqp_cstring_bytes("text/plain");
+				break;
+			case KindOfString :
+			case KindOfStaticString :
+				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
+				break;
+			default:
+				raise_warning("arguments value key error");			
+		}
+
+
 	}
 	
 

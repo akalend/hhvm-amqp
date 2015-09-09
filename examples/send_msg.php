@@ -17,6 +17,7 @@
 	
 	define('PLAIN', 'text/plain');
 
-	$ex->publish('*******', 'scan', AMQP::NOPARAM, ['content_type1' => 1] );
+	$ex->setArgument('content_type', 'text/json');
+	$ex->publish('*******', 'kkk');
 
 	$cnn->disconnect();
