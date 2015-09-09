@@ -1018,18 +1018,20 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 	Variant type = Variant(arguments[s_type]);
 	ADD_AMQP_STRING_PROPERTY(type, AMQP_BASIC_TYPE_FLAG );
 
-	// props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
-	// Variant dm = Variant(arguments[String("delivery_mode")]);
-	// switch (dm.getType()) {
-	// 	case KindOfNull : 
-	// 		props.delivery_mode = 1;
-	// 		break;
-	// 	case KindOfInt64 :
-	// 	case KindOfUninit : 
-	// 		props.delivery_mode =  dm.toInt64();
-	// 		break;
-	// 	default:
-	// 		raise_warning("arguments value key error");			
+	props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
+	Variant dm = Variant(arguments[String("delivery_mode")]);
+	switch (dm.getType()) {
+		case KindOfNull : 
+			props.delivery_mode = 1;
+			break;
+		case KindOfInt64 :
+		case KindOfUninit : 
+			props.delivery_mode =  dm.toInt64();
+			break;
+		default:
+			raise_warning("arguments value key error");			
+
+
 	} else {
 
 		Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
