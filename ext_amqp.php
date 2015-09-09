@@ -340,7 +340,7 @@ class AMQPExchange {
 	private $name = NULL;
 	private $type = NULL;
 	private $flags = NULL;
-
+	private $arguments = array();
 
 	/* Methods */
 	<<__Native>>
@@ -371,6 +371,29 @@ class AMQPExchange {
 		return $this->flags;
 	}
 
+	public function setArgument ( string $key , mixed $value ){
+		$this->arguments[$key] = $value;
+	}
+
+	public function clearArguments () {
+		$this->arguments = [];
+	}
+
+	public function setArguments ( array $arguments ) {
+		foreach ($arguments as $key => $value) {
+			$this->arguments[$key] = $value;
+		}
+	}
+	
+	public function getArgument ( string $key ) {
+		return isset($this->arguments[$key]) ? $this->arguments[$key] : NULL; 
+	}
+
+	public function getArguments () {
+		return $this->arguments;
+	}
+
+
 	<<__Native>>
 	public function bind ( string $destination_queue_name , string $routing_key ) : bool;
 
@@ -381,17 +404,11 @@ class AMQPExchange {
 	public function delete (int $flags = AMQP::NOPARAM ): bool;
 
 
-
 	// public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
 	//  array $attributes NOT IMPLEMENT
 
 	<<__Native>>
 	public function publish(string $message, string $routing_key = '', int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
-
-// public void setArgument ( string $key , mixed $value )
-// public void setArguments ( array $arguments )
-// public mixed getArgument ( string $key )
-// public array getArguments ( void )
 
 }
 
