@@ -966,71 +966,71 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 
 	amqp_basic_properties_t props;
 	if (arguments.size()) {
-		// printf("arguments count=%d\n",(int) arguments.size());
-    // 'content_type'     => 1, // should be string
-    // 'content_encoding' => 2, // should be string
-    // 'message_id'       => 3, // should be string
-    // //'user_id'          => 4, // should be string // NOTE: fail due to Validated User-ID https://www.rabbitmq.com/validated-user-id.html, @see tests/amqpexchange_publish_with_properties_user_id_failure.phpt test
-    // 'app_id'           => 5, // should be string
-    // 'delivery_mode'    => '1-non-persistent', // should be long
-    // 'priority'         => '2high', // should be long
-    // 'timestamp'        => '123now', // should be long
-    // 'expiration'       => 100000000, // should be string // NOTE: in fact it is milliseconds for how long to stay in queue, see https://www.rabbitmq.com/ttl.html#per-message-ttl for details
-    // 'type'             => 7, // should be string
-    // 'reply_to'         => 8, // should be string
-    // 'correlation_id'   => 9, // should be string
-    //'headers'          => 'not array', // should be array // NOTE: covered in tests/amqpexchange_publish_with_properties_ignore_num_header.phpt
+			// printf("arguments count=%d\n",(int) arguments.size());
+	    // 'content_type'     => 1, // should be string
+	    // 'content_encoding' => 2, // should be string
+	    // 'message_id'       => 3, // should be string
+	    // //'user_id'          => 4, // should be string // NOTE: fail due to Validated User-ID https://www.rabbitmq.com/validated-user-id.html, @see tests/amqpexchange_publish_with_properties_user_id_failure.phpt test
+	    // 'app_id'           => 5, // should be string
+	    // 'delivery_mode'    => '1-non-persistent', // should be long
+	    // 'priority'         => '2high', // should be long
+	    // 'timestamp'        => '123now', // should be long
+	    // 'expiration'       => 100000000, // should be string // NOTE: in fact it is milliseconds for how long to stay in queue, see https://www.rabbitmq.com/ttl.html#per-message-ttl for details
+	    // 'type'             => 7, // should be string
+	    // 'reply_to'         => 8, // should be string
+	    // 'correlation_id'   => 9, // should be string
+	    //'headers'          => 'not array', // should be array // NOTE: covered in tests/amqpexchange_publish_with_properties_ignore_num_header.phpt
 
-	
-	Variant ct = Variant(arguments[s_content_type]);
+		Variant ct = Variant(arguments[s_content_type]);
 
-	props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
-	switch (ct.getType()) {
-		case KindOfNull : 
-			props.content_type = amqp_cstring_bytes("text/plain");
-			break;
-		case KindOfString :
-		case KindOfStaticString :
-			props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
-			break;
-		default:
-			raise_warning("arguments value key error");			
-	}
+		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
+		switch (ct.getType()) {
+			case KindOfNull : 
+				props.content_type = amqp_cstring_bytes("text/plain");
+				break;
+			case KindOfString :
+			case KindOfStaticString :
+				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
+				break;
+			default:
+				raise_warning("arguments value key error");			
+		}
 
-	Variant ce = Variant(arguments[String("content_encoding")]);
-	ADD_AMQP_STRING_PROPERTY(ce, AMQP_BASIC_CONTENT_ENCODING_FLAG );
-	
-	Variant app_id = Variant(arguments[s_app_id]);
-	ADD_AMQP_STRING_PROPERTY(app_id, AMQP_BASIC_APP_ID_FLAG );
+		Variant ce = Variant(arguments[String("content_encoding")]);
+		ADD_AMQP_STRING_PROPERTY(ce, AMQP_BASIC_CONTENT_ENCODING_FLAG );
+		
+		Variant app_id = Variant(arguments[s_app_id]);
+		ADD_AMQP_STRING_PROPERTY(app_id, AMQP_BASIC_APP_ID_FLAG );
 
-	Variant user_id = Variant(arguments[s_user_id]);
-	ADD_AMQP_STRING_PROPERTY(user_id, AMQP_BASIC_USER_ID_FLAG );
+		Variant user_id = Variant(arguments[s_user_id]);
+		ADD_AMQP_STRING_PROPERTY(user_id, AMQP_BASIC_USER_ID_FLAG );
 
-	Variant message_id = Variant(arguments[s_message_id]);
-	ADD_AMQP_STRING_PROPERTY(message_id, AMQP_BASIC_USER_ID_FLAG );
+		Variant message_id = Variant(arguments[s_message_id]);
+		ADD_AMQP_STRING_PROPERTY(message_id, AMQP_BASIC_USER_ID_FLAG );
 
-	Variant correlation_id = Variant(arguments[s_correlation_id]);
-	ADD_AMQP_STRING_PROPERTY(correlation_id, AMQP_BASIC_CORRELATION_ID_FLAG );
+		Variant correlation_id = Variant(arguments[s_correlation_id]);
+		ADD_AMQP_STRING_PROPERTY(correlation_id, AMQP_BASIC_CORRELATION_ID_FLAG );
 
-	Variant reply_to = Variant(arguments[s_reply_to]);
-	ADD_AMQP_STRING_PROPERTY(reply_to, AMQP_BASIC_REPLY_TO_FLAG );
+		Variant reply_to = Variant(arguments[s_reply_to]);
+		ADD_AMQP_STRING_PROPERTY(reply_to, AMQP_BASIC_REPLY_TO_FLAG );
 
-	Variant type = Variant(arguments[s_type]);
-	ADD_AMQP_STRING_PROPERTY(type, AMQP_BASIC_TYPE_FLAG );
+		Variant type = Variant(arguments[s_type]);
+		ADD_AMQP_STRING_PROPERTY(type, AMQP_BASIC_TYPE_FLAG );
 
-	props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
-	Variant dm = Variant(arguments[String("delivery_mode")]);
-	switch (dm.getType()) {
-		case KindOfNull : 
-			props.delivery_mode = 1;
-			break;
-		case KindOfInt64 :
-		case KindOfUninit : 
-			props.delivery_mode =  dm.toInt64();
-			break;
-		default:
-			raise_warning("arguments value key error");			
+		props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
+		Variant dm = Variant(arguments[String("delivery_mode")]);
+		switch (dm.getType()) {
+			case KindOfNull : 
+				props.delivery_mode = 1;
+				break;
+			case KindOfInt64 :
+			case KindOfUninit : 
+				props.delivery_mode =  dm.toInt64();
+				break;
+			default:
+				raise_warning("arguments value key error");
 
+		}
 
 	} else {
 
@@ -1051,13 +1051,42 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 				raise_warning("arguments value key error");			
 		}
 
+		Variant ce = Variant(args[String("content_encoding")]);
+		ADD_AMQP_STRING_PROPERTY(ce, AMQP_BASIC_CONTENT_ENCODING_FLAG );
+		
+		Variant app_id = Variant(args[s_app_id]);
+		ADD_AMQP_STRING_PROPERTY(app_id, AMQP_BASIC_APP_ID_FLAG );
 
-	}
+		Variant user_id = Variant(args[s_user_id]);
+		ADD_AMQP_STRING_PROPERTY(user_id, AMQP_BASIC_USER_ID_FLAG );
+
+		Variant message_id = Variant(args[s_message_id]);
+		ADD_AMQP_STRING_PROPERTY(message_id, AMQP_BASIC_USER_ID_FLAG );
+
+		Variant correlation_id = Variant(args[s_correlation_id]);
+		ADD_AMQP_STRING_PROPERTY(correlation_id, AMQP_BASIC_CORRELATION_ID_FLAG );
+
+		Variant reply_to = Variant(args[s_reply_to]);
+		ADD_AMQP_STRING_PROPERTY(reply_to, AMQP_BASIC_REPLY_TO_FLAG );
+
+		Variant type = Variant(args[s_type]);
+		ADD_AMQP_STRING_PROPERTY(type, AMQP_BASIC_TYPE_FLAG );
+
+		props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
+		Variant dm = Variant(args[String("delivery_mode")]);
+		switch (dm.getType()) {
+			case KindOfNull : 
+				props.delivery_mode = 1;
+				break;
+			case KindOfInt64 :
+			case KindOfUninit : 
+				props.delivery_mode =  dm.toInt64();
+				break;
+			default:
+				raise_warning("arguments value key error");
+		}
 	
-
-
-
-
+	} // end if 
 
 
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
