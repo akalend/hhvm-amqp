@@ -67,25 +67,26 @@
 
 
 
-#define ADD_AMQP_STRING_PROPERTY(pxx, field,flag ) 			\
-	switch (pxx.getType()) {							\
+#define ADD_AMQP_STRING_PROPERTY(var, field,flag ) 			\
+	switch (var.getType()) {							\
 		case KindOfNull : 								\
 		case KindOfUninit : 							\
 			break;										\
 		case KindOfString :								\
 		case KindOfStaticString :						\
 			props._flags |= flag;						\
-			props.field = amqp_cstring_bytes( pxx.toString().c_str() );\
+			props.field = amqp_cstring_bytes( var.toString().c_str() );\
 			break;										\
 		default:										\
 			raise_warning("value argument error");		\
 	}
 
 
-// #define ADD_AMQP_LONG_PROPERTY(pxx, flag ) 				
-// 	if (pxx.getType() == KindOfInt64 ){
-// 		props._flags |= flag;
-// 	}
+#define ADD_AMQP_LONG_PROPERTY(var, field,flag ) 		\
+	if (var.getType() == KindOfInt64 ){					\
+		props._flags |= flag;							\
+		props.field = var.toInt64();					\
+	}
 
 
 namespace HPHP {
@@ -121,7 +122,8 @@ const StaticString
 	s_message_id("message_id"),
 	s_arguments("arguments"),
 	s_content_type("content_type"),
-	s_content_encoding("content_encoding")
+	s_content_encoding("content_encoding"),
+	s_expiration("s_expiration")
   ;
 
 
@@ -1023,20 +1025,21 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		Variant type = Variant(arguments[s_type]);
 		ADD_AMQP_STRING_PROPERTY(type, type, AMQP_BASIC_TYPE_FLAG );
 
-		props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
-		Variant dm = Variant(arguments[String("delivery_mode")]);
-		switch (dm.getType()) {
-			case KindOfNull : 
-				props.delivery_mode = 1;
-				break;
-			case KindOfInt64 :
-			case KindOfUninit : 
-				props.delivery_mode =  dm.toInt64();
-				break;
-			default:
-				raise_warning("arguments value key error");
+		Variant ep = Variant(arguments[s_expiration]);
+		ADD_AMQP_STRING_PROPERTY(ep, expiration, AMQP_BASIC_EXPIRATION_FLAG );
 
+		Variant dm = Variant(arguments[String("delivery_mode")]);
+		ADD_AMQP_LONG_PROPERTY(dm, delivery_mode, AMQP_BASIC_DELIVERY_MODE_FLAG );
+		if (dm.getType() == KindOfNull) { 
+			props.delivery_mode = 1;
+			props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
 		}
+
+		Variant pr = Variant(arguments[String("priority")]);
+		ADD_AMQP_LONG_PROPERTY(dm, priority, AMQP_BASIC_PRIORITY_FLAG );
+
+		Variant ts = Variant(arguments[String("timestamp")]);
+		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 
 	} else {
 
@@ -1057,40 +1060,42 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 				raise_warning("arguments value key error");			
 		}
 
-		// Variant ce = Variant(args[String("content_encoding")]);
-		// 		ADD_AMQP_STRING_PROPERTY(ce, content_encoding, AMQP_BASIC_CONTENT_ENCODING_FLAG );
+		Variant ep = Variant(args[s_expiration]);
+		ADD_AMQP_STRING_PROPERTY(ep, expiration, AMQP_BASIC_EXPIRATION_FLAG );
+
+		Variant ce = Variant(args[String("content_encoding")]);
+		ADD_AMQP_STRING_PROPERTY(ce, content_encoding, AMQP_BASIC_CONTENT_ENCODING_FLAG );
 		
-		// Variant app_id = Variant(args[s_app_id]);
-		// ADD_AMQP_STRING_PROPERTY(app_id, AMQP_BASIC_APP_ID_FLAG );
+		Variant app_id = Variant(args[s_app_id]);
+		ADD_AMQP_STRING_PROPERTY(app_id, app_id, AMQP_BASIC_APP_ID_FLAG );
 
-		// Variant user_id = Variant(args[s_user_id]);
-		// ADD_AMQP_STRING_PROPERTY(user_id, AMQP_BASIC_USER_ID_FLAG );
+		Variant user_id = Variant(args[s_user_id]);
+		ADD_AMQP_STRING_PROPERTY(user_id, user_id, AMQP_BASIC_USER_ID_FLAG );
 
-		// Variant message_id = Variant(args[s_message_id]);
-		// ADD_AMQP_STRING_PROPERTY(message_id, AMQP_BASIC_USER_ID_FLAG );
+		Variant message_id = Variant(args[s_message_id]);
+		ADD_AMQP_STRING_PROPERTY(message_id, message_id, AMQP_BASIC_USER_ID_FLAG );
 
-		// Variant correlation_id = Variant(args[s_correlation_id]);
-		// ADD_AMQP_STRING_PROPERTY(correlation_id, AMQP_BASIC_CORRELATION_ID_FLAG );
+		Variant correlation_id = Variant(args[s_correlation_id]);
+		ADD_AMQP_STRING_PROPERTY(correlation_id, correlation_id, AMQP_BASIC_CORRELATION_ID_FLAG );
 
-		// Variant reply_to = Variant(args[s_reply_to]);
-		// ADD_AMQP_STRING_PROPERTY(reply_to, AMQP_BASIC_REPLY_TO_FLAG );
+		Variant reply_to = Variant(args[s_reply_to]);
+		ADD_AMQP_STRING_PROPERTY(reply_to, reply_to, AMQP_BASIC_REPLY_TO_FLAG );
 
-		// Variant type = Variant(args[s_type]);
-		// ADD_AMQP_STRING_PROPERTY(type, AMQP_BASIC_TYPE_FLAG );
+		Variant tp = Variant(args[s_type]);
+		ADD_AMQP_STRING_PROPERTY(tp, type, AMQP_BASIC_TYPE_FLAG );
 
-		props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
 		Variant dm = Variant(args[String("delivery_mode")]);
-		switch (dm.getType()) {
-			case KindOfNull : 
-				props.delivery_mode = 1;
-				break;
-			case KindOfInt64 :
-			case KindOfUninit : 
-				props.delivery_mode =  dm.toInt64();
-				break;
-			default:
-				raise_warning("arguments value key error");
+		ADD_AMQP_LONG_PROPERTY(dm, delivery_mode, AMQP_BASIC_DELIVERY_MODE_FLAG );
+		if (dm.getType() == KindOfNull) { 
+			props.delivery_mode = 1;
+			props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
 		}
+
+		Variant pr = Variant(args[String("priority")]);
+		ADD_AMQP_LONG_PROPERTY(pr, priority, AMQP_BASIC_PRIORITY_FLAG );
+
+		Variant ts = Variant(args[String("timestamp")]);
+		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 	
 	} // end if 
 
