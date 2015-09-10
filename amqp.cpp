@@ -97,6 +97,7 @@ const StaticString
 	s_AMQPQueue("AMQPQueue"),
 	s_AMQPEnvelope("AMQPEnvelope"),
 	s_AMQPExchange("AMQPExchange"),
+	s_exchange("exchange"),
 	s_host("host"),
 	s_vhost("vhost"),
 	s_login("login"),
@@ -127,7 +128,8 @@ const StaticString
 	s_headers("headers"),
 	s_delivery_mode("delivery_mode"),
 	s_priority("priority"),
-	s_timestamp("timestamp")
+	s_timestamp("timestamp"),
+	s_consumer_tag("consumer_tag")
   ;
 
 
@@ -582,7 +584,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	amqp_basic_get_ok_t *get_ok_method = static_cast<amqp_basic_get_ok_t*>(res.reply.decoded);
 
 	amqp_envelope_t envelope;
-
+// printf("count %d\n", get_ok_method->message_count);
 	envelope.channel      = data->amqpCh->channel_id;
 	envelope.consumer_tag = amqp_empty_bytes;
 	envelope.delivery_tag = get_ok_method->delivery_tag;
@@ -614,17 +616,21 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 	Variant v_tmp;
 
-	ob.o_set(String("exchange"),
+	ob.o_set(String("queue_count"),
+			(get_ok_method->message_count) ? Variant(static_cast<int64_t>(get_ok_method->message_count)) : v_null,
+			s_AMQPEnvelope);
+
+	ob.o_set(s_exchange,
 			(envelope.exchange.len) ? Variant(static_cast<char*>(envelope.exchange.bytes)) : v_null,
 			s_AMQPEnvelope);
 
 	v_tmp.setNull();
 	if (envelope.consumer_tag.len) {
-		v_tmp = Variant( std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
+		v_tmp = Variant( std::string(static_cast<char*>(envelope.consumer_tag.bytes), envelope.consumer_tag.len));
 	}
 
 	ob.o_set(
-		String("consumer_tag"),
+		s_consumer_tag,
 		v_tmp,
 		s_AMQPEnvelope);
 

@@ -202,7 +202,13 @@ class AMQPEnvelope  {
 	private $content_encoding = NULL;
 	private $content_type = NULL;
 
+	private $queue_count = 0;
 	/* Metody */
+
+	public function  getQueueCount (){
+		return $this->queue_count;
+	}
+
 
 	public function getDeliveryTag(){
 		return $this->delivery_tag;

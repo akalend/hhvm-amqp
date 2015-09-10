@@ -1,6 +1,6 @@
 <?php
 // print_r( get_loaded_extensions() );
-	$cnn = new AMQPConnection();
+	$cnn = new AMQPConnection(['port'=>5677]);
 	echo "------  connect ...  --------\n";
 
 	$ret = $cnn->connect();
@@ -20,6 +20,7 @@
 	$ex->setArgument('content_type', 'text/json');
 	// $ex->setArgument('headers', ['xxx'=>123]);
 	$headers = ['sss'=> 'asd'];
-	$ex->publish('*******', 'kkk', AMQP::NOPARAM, ['content_type'=> 'text/xml', 'headers' => $headers]);
+	$ex->publish('*******', 'kkk', AMQP::NOPARAM, ['content_type'=> 'text/xml', 
+		'headers' => $headers]);
 
 	$cnn->disconnect();
