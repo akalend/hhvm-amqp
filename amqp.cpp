@@ -98,11 +98,14 @@ const StaticString
 	s_AMQPEnvelope("AMQPEnvelope"),
 	s_AMQPExchange("AMQPExchange"),
 	s_exchange("exchange"),
+	s_routing_key("routing_key"),
+	s_queue_count("queue_count"),
 	s_host("host"),
 	s_vhost("vhost"),
 	s_login("login"),
 	s_password("password"),
 	s_timeout("timeout"),
+	s_channel("channel"),
 	s_connect_timeout("connect_timeout"),
 	s_is_persisten("is_persisten"),
 	s_port("port"),
@@ -616,7 +619,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 	Variant v_tmp;
 
-	ob.o_set(String("queue_count"),
+	ob.o_set(s_queue_count,
 			(get_ok_method->message_count) ? Variant(static_cast<int64_t>(get_ok_method->message_count)) : v_null,
 			s_AMQPEnvelope);
 
@@ -640,7 +643,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		v_tmp = Variant(std::string(static_cast<char*>(envelope.routing_key.bytes), envelope.routing_key.len));
 	}
 	ob.o_set(
-		String("routing_key"),
+		s_routing_key,
 		v_tmp,
 		s_AMQPEnvelope);
 
@@ -656,13 +659,19 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
 	ob.o_set(
-		String("channel"),
+		s_channel,
 		Variant(static_cast<int64_t>(envelope.channel)),
 		s_AMQPEnvelope);
 	
 
 	ob.o_set(s_delivery_tag, Variant(envelope.delivery_tag), s_AMQPEnvelope);
 
+
+	if (envelope.message.properties._flags & AMQP_BASIC_HEADERS_FLAG) {
+		printf("headers:\n");
+
+
+	}
 
 	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
 
@@ -734,7 +743,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.reply_to.bytes), envelope.message.properties.reply_to.len));
 
 			ob.o_set(
-				String("reply_to"),
+				s_reply_to,
 				Variant(v_tmp),
 				s_AMQPEnvelope);
 		}
@@ -748,7 +757,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 			v_tmp = Variant(std::string(static_cast<char*>(envelope.message.properties.expiration.bytes), envelope.message.properties.expiration.len));
 
 			ob.o_set(
-				String("expiration"),
+				s_expiration,
 				Variant(v_tmp),
 				s_AMQPEnvelope);
 		}
@@ -838,11 +847,13 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
 	amqp_destroy_envelope(&envelope);
-	
-	this_->o_set( String("message"), Variant(ob), s_AMQPQueue );
+	// amqp_bytes_free(envelope->routing_key);
+	// amqp_bytes_free(envelope->exchange);
+ 	// amqp_bytes_free(envelope->consumer_tag);
+
+	this_->o_set( s_message, Variant(ob), s_AMQPQueue );
 	
 	return ob;
-
 }
 
 
