@@ -603,10 +603,10 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	);
 
 
-	if (res.reply_type == AMQP_RESPONSE_NORMAL)
-		printf("read: AMQP_RESPONSE_NORMAL\n" );
-	else
+	if (res.reply_type != AMQP_RESPONSE_NORMAL)
 		return Object();	
+
+//		printf("read: AMQP_RESPONSE_NORMAL\n" );
 
 
 	amqp_bytes_t* message = &envelope.message.body;
@@ -668,8 +668,12 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
 	if (envelope.message.properties._flags & AMQP_BASIC_HEADERS_FLAG) {
-		printf("headers:\n");
-
+		
+		// amqp_table_t *table;
+		int i;
+		for (i = 0; i < envelope.message.properties.headers.num_entries; i++) {
+		printf("entries ****\n");
+		}
 
 	}
 
@@ -847,9 +851,6 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
 	amqp_destroy_envelope(&envelope);
-	// amqp_bytes_free(envelope->routing_key);
-	// amqp_bytes_free(envelope->exchange);
- 	// amqp_bytes_free(envelope->consumer_tag);
 
 	this_->o_set( s_message, Variant(ob), s_AMQPQueue );
 	
