@@ -123,7 +123,11 @@ const StaticString
 	s_arguments("arguments"),
 	s_content_type("content_type"),
 	s_content_encoding("content_encoding"),
-	s_expiration("s_expiration")
+	s_expiration("s_expiration"),
+	s_headers("s_headers"),
+	s_delivery_mode("delivery_mode"),
+	s_priority("priority"),
+	s_timestamp("timestamp")
   ;
 
 
@@ -687,7 +691,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	if (envelope.message.properties._flags & AMQP_BASIC_DELIVERY_MODE_FLAG) {
 
 		ob.o_set(
-			String("delivery_mode"),
+			s_delivery_mode,
 			Variant(static_cast<int64_t>(envelope.message.properties.delivery_mode)), // int64_t
 			s_AMQPEnvelope);
 	}
@@ -696,7 +700,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	if (envelope.message.properties._flags & AMQP_BASIC_PRIORITY_FLAG) {
 
 		ob.o_set(
-			String("priority"),
+			s_priority,
 			Variant(static_cast<int64_t>(envelope.message.properties.priority)), // int64_t
 			s_AMQPEnvelope);
 	}
@@ -762,7 +766,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	if (envelope.message.properties._flags & AMQP_BASIC_TIMESTAMP_FLAG) {
 
 		ob.o_set(
-			String("timestamp"),
+			s_timestamp,
 			Variant(static_cast<int64_t>(envelope.message.properties.timestamp)), // int64_t
 				s_AMQPEnvelope);
 	}
@@ -974,19 +978,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 
 	amqp_basic_properties_t props;
 	if (arguments.size()) {
-			// printf("arguments count=%d\n",(int) arguments.size());
-	    // 'content_type'     => 1, // should be string
-	    // 'content_encoding' => 2, // should be string
-	    // 'message_id'       => 3, // should be string
-	    // //'user_id'          => 4, // should be string // NOTE: fail due to Validated User-ID https://www.rabbitmq.com/validated-user-id.html, @see tests/amqpexchange_publish_with_properties_user_id_failure.phpt test
-	    // 'app_id'           => 5, // should be string
-	    // 'delivery_mode'    => '1-non-persistent', // should be long
-	    // 'priority'         => '2high', // should be long
-	    // 'timestamp'        => '123now', // should be long
-	    // 'expiration'       => 100000000, // should be string // NOTE: in fact it is milliseconds for how long to stay in queue, see https://www.rabbitmq.com/ttl.html#per-message-ttl for details
-	    // 'type'             => 7, // should be string
-	    // 'reply_to'         => 8, // should be string
-	    // 'correlation_id'   => 9, // should be string
+
 	    //'headers'          => 'not array', // should be array // NOTE: covered in tests/amqpexchange_publish_with_properties_ignore_num_header.phpt
 
 		Variant ct = Variant(arguments[s_content_type]);
@@ -1004,7 +996,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 				raise_warning("arguments value key error");			
 		}
 
-		Variant ce = Variant(arguments[String("content_encoding")]);
+		Variant ce = Variant(arguments[s_content_encoding]);
 		ADD_AMQP_STRING_PROPERTY(ce, content_encoding, AMQP_BASIC_CONTENT_ENCODING_FLAG );
 		
 		Variant app_id = Variant(arguments[s_app_id]);
@@ -1028,18 +1020,21 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		Variant ep = Variant(arguments[s_expiration]);
 		ADD_AMQP_STRING_PROPERTY(ep, expiration, AMQP_BASIC_EXPIRATION_FLAG );
 
-		Variant dm = Variant(arguments[String("delivery_mode")]);
+		Variant dm = Variant(arguments[s_delivery_mode]);
 		ADD_AMQP_LONG_PROPERTY(dm, delivery_mode, AMQP_BASIC_DELIVERY_MODE_FLAG );
 		if (dm.getType() == KindOfNull) { 
 			props.delivery_mode = 1;
 			props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
 		}
 
-		Variant pr = Variant(arguments[String("priority")]);
+		Variant pr = Variant(arguments[s_priority]);
 		ADD_AMQP_LONG_PROPERTY(dm, priority, AMQP_BASIC_PRIORITY_FLAG );
 
-		Variant ts = Variant(arguments[String("timestamp")]);
+		Variant ts = Variant(arguments[s_timestamp]);
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
+
+		Variant hd = Variant(arguments[s_headers]);
+
 
 	} else {
 
@@ -1084,17 +1079,17 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		Variant tp = Variant(args[s_type]);
 		ADD_AMQP_STRING_PROPERTY(tp, type, AMQP_BASIC_TYPE_FLAG );
 
-		Variant dm = Variant(args[String("delivery_mode")]);
+		Variant dm = Variant(args[s_delivery_mode]);
 		ADD_AMQP_LONG_PROPERTY(dm, delivery_mode, AMQP_BASIC_DELIVERY_MODE_FLAG );
 		if (dm.getType() == KindOfNull) { 
 			props.delivery_mode = 1;
 			props._flags |= AMQP_BASIC_DELIVERY_MODE_FLAG;
 		}
 
-		Variant pr = Variant(args[String("priority")]);
+		Variant pr = Variant(args[s_priority]);
 		ADD_AMQP_LONG_PROPERTY(pr, priority, AMQP_BASIC_PRIORITY_FLAG );
 
-		Variant ts = Variant(args[String("timestamp")]);
+		Variant ts = Variant(args[s_timestamp]);
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 	
 	} // end if 
