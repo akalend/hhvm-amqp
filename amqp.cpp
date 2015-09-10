@@ -703,6 +703,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 			case AMQP_FIELD_KIND_I64:
 			case AMQP_FIELD_KIND_U64:
 				value =static_cast<int64_t>(entry->value.value.i64);
+			printf("value %ld\n", value.toInt64());	
 				break;
 			case AMQP_FIELD_KIND_F32:
 				value =static_cast<float>(entry->value.value.f32);
