@@ -123,8 +123,8 @@ const StaticString
 	s_arguments("arguments"),
 	s_content_type("content_type"),
 	s_content_encoding("content_encoding"),
-	s_expiration("s_expiration"),
-	s_headers("s_headers"),
+	s_expiration("expiration"),
+	s_headers("headers"),
 	s_delivery_mode("delivery_mode"),
 	s_priority("priority"),
 	s_timestamp("timestamp")
@@ -1034,6 +1034,15 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 
 		Variant hd = Variant(arguments[s_headers]);
+		printf("check headers ******* type=%d\n", (int)hd.getType());
+
+		switch(hd.getType()) {
+			case KindOfNull: break;
+			case KindOfArray :
+				printf("headers OK\n");
+			default:
+				raise_warning("error header type");
+		}
 
 
 	} else {

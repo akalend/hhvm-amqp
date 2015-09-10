@@ -18,6 +18,8 @@
 	define('PLAIN', 'text/plain');
 
 	$ex->setArgument('content_type', 'text/json');
-	$ex->publish('*******', 'kkk');
+	// $ex->setArgument('headers', ['xxx'=>123]);
+	$headers = ['sss'=> 'asd'];
+	$ex->publish('*******', 'kkk', AMQP::NOPARAM, ['content_type'=> 'text/xml', 'headers' => $headers]);
 
 	$cnn->disconnect();
