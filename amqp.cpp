@@ -674,48 +674,41 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		for (i = 0; i < envelope.message.properties.headers.num_entries; i++) {
 			amqp_table_entry_t *entry = &(envelope.message.properties.headers.entries[i]);
 			printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
-			// Variant value;
+			Variant value;
 		switch (entry->value.kind) {
-			case AMQP_FIELD_KIND_BOOLEAN:
-				{
-					bool bb = entry->value.value.boolean;
+			case AMQP_FIELD_KIND_BOOLEAN: {
+					value =static_cast<bool>(entry->value.value.boolean);
 					break;
 				}
-				// 
-				// Variant value(b);
-				// ZVAL_BOOL(value, entry->value.value.boolean);
 				
-			case AMQP_FIELD_KIND_I8:
-				// ZVAL_LONG(value, entry->value.value.i8);
+			case AMQP_FIELD_KIND_I8: {
+				value =static_cast<int64_t>(entry->value.value.i8);
 				break;
+				}
 			case AMQP_FIELD_KIND_U8:
-				// ZVAL_LONG(value, entry->value.value.u8);
+				value =static_cast<int64_t>(entry->value.value.u8);
 				break;
 			case AMQP_FIELD_KIND_I16:
-				// ZVAL_LONG(value, entry->value.value.i16);
+				value =static_cast<int64_t>(entry->value.value.i16);
 				break;
 			case AMQP_FIELD_KIND_U16:
-				// ZVAL_LONG(value, entry->value.value.u16);
+				value =static_cast<int64_t>(entry->value.value.u16);
 				break;
 			case AMQP_FIELD_KIND_I32:
-				// ZVAL_LONG(value, entry->value.value.i32);
+				value =static_cast<int64_t>(entry->value.value.i32);
 				break;
 			case AMQP_FIELD_KIND_U32:
-				// ZVAL_LONG(value, entry->value.value.u32);
+				value =static_cast<int64_t>(entry->value.value.u16);
 				break;
 			case AMQP_FIELD_KIND_I64:
-			printf("long type\n");
-				// ZVAL_LONG(value, entry->value.value.i64);
-				break;
 			case AMQP_FIELD_KIND_U64:
-			printf("ulong type\n");
-				// ZVAL_LONG(value, entry->value.value.i64);
+				value =static_cast<int64_t>(entry->value.value.i64);
 				break;
 			case AMQP_FIELD_KIND_F32:
-				// ZVAL_DOUBLE(value, entry->value.value.f32);
+				value =static_cast<float>(entry->value.value.f32);
 				break;
 			case AMQP_FIELD_KIND_F64:
-				// ZVAL_DOUBLE(value, entry->value.value.f64);
+				value =static_cast<double>(entry->value.value.f64);
 				break;
 			case AMQP_FIELD_KIND_UTF8:
 			case AMQP_FIELD_KIND_BYTES:
