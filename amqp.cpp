@@ -674,8 +674,11 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		int i;
 		for (i = 0; i < envelope.message.properties.headers.num_entries; i++) {
 			amqp_table_entry_t *entry = &(envelope.message.properties.headers.entries[i]);
-			printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
+			// printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
+		
+			String key(std::string(static_cast<char*>(entry->key.bytes), entry->key.len));
 			Variant value;
+		
 			switch (entry->value.kind) {
 				case AMQP_FIELD_KIND_BOOLEAN: {
 						value =static_cast<bool>(entry->value.value.boolean);
@@ -762,7 +765,14 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 					value.setNull();
 					break;
 			}
+
+			headers.add(key,value,true);
 		}
+
+		ob.o_set(
+			String("headers"),
+			headers,
+			s_AMQPEnvelope);
 
 	}
 
