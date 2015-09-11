@@ -674,7 +674,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		int i;
 		for (i = 0; i < envelope.message.properties.headers.num_entries; i++) {
 			amqp_table_entry_t *entry = &(envelope.message.properties.headers.entries[i]);
-			// printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
+			printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
 		
 			String key(std::string(static_cast<char*>(entry->key.bytes), entry->key.len));
 			Variant value;
@@ -718,6 +718,8 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 				case AMQP_FIELD_KIND_UTF8:
 				case AMQP_FIELD_KIND_BYTES:
 				printf("str type\n");
+					value = std::string(static_cast<char*>(entry->value.value.bytes.bytes), entry->value.value.bytes.len);
+
 					// ZVAL_STRINGL(value, entry->value.value.bytes.bytes, entry->value.value.bytes.len, 1);
 					break;
 				case AMQP_FIELD_KIND_ARRAY:
