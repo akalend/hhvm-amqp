@@ -128,11 +128,11 @@ const StaticString
 	s_content_type("content_type"),
 	s_content_encoding("content_encoding"),
 	s_expiration("expiration"),
-	s_headers("headers"),
 	s_delivery_mode("delivery_mode"),
 	s_priority("priority"),
 	s_timestamp("timestamp"),
-	s_consumer_tag("consumer_tag")
+	s_consumer_tag("consumer_tag"),
+	s_headers("headers")
   ;
 
 
@@ -674,7 +674,6 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		int i;
 		for (i = 0; i < envelope.message.properties.headers.num_entries; i++) {
 			amqp_table_entry_t *entry = &(envelope.message.properties.headers.entries[i]);
-			printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
 		
 			String key(std::string(static_cast<char*>(entry->key.bytes), entry->key.len));
 			Variant value;
@@ -707,7 +706,6 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 				case AMQP_FIELD_KIND_I64:
 				case AMQP_FIELD_KIND_U64:
 					value =static_cast<int64_t>(entry->value.value.i64);
-				printf("value %ld\n", value.toInt64());	
 					break;
 				case AMQP_FIELD_KIND_F32:
 					value =static_cast<float>(entry->value.value.f32);
@@ -719,8 +717,6 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 				case AMQP_FIELD_KIND_BYTES:
 				printf("str type\n");
 					value = std::string(static_cast<char*>(entry->value.value.bytes.bytes), entry->value.value.bytes.len);
-
-					// ZVAL_STRINGL(value, entry->value.value.bytes.bytes, entry->value.value.bytes.len, 1);
 					break;
 				case AMQP_FIELD_KIND_ARRAY:
 				printf("arr type\n");
@@ -772,10 +768,9 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		}
 
 		ob.o_set(
-			String("headers"),
+			s_headers),
 			headers,
 			s_AMQPEnvelope);
-
 	}
 
 	if (envelope.message.properties._flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
