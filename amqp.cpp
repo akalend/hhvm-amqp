@@ -670,99 +670,98 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 	if (envelope.message.properties._flags & AMQP_BASIC_HEADERS_FLAG) {
 		
 		// amqp_table_t *table;
+		Array headers;
 		int i;
 		for (i = 0; i < envelope.message.properties.headers.num_entries; i++) {
 			amqp_table_entry_t *entry = &(envelope.message.properties.headers.entries[i]);
 			printf("entries type %d  key %s\n", entry->value.kind, (char*)entry->key.bytes );
 			Variant value;
-		switch (entry->value.kind) {
-			case AMQP_FIELD_KIND_BOOLEAN: {
-					value =static_cast<bool>(entry->value.value.boolean);
+			switch (entry->value.kind) {
+				case AMQP_FIELD_KIND_BOOLEAN: {
+						value =static_cast<bool>(entry->value.value.boolean);
+						break;
+					}
+					
+				case AMQP_FIELD_KIND_I8: {
+					value =static_cast<int64_t>(entry->value.value.i8);
 					break;
-				}
-				
-			case AMQP_FIELD_KIND_I8: {
-				value =static_cast<int64_t>(entry->value.value.i8);
-				break;
-				}
-			case AMQP_FIELD_KIND_U8:
-				value =static_cast<int64_t>(entry->value.value.u8);
-				break;
-			case AMQP_FIELD_KIND_I16:
-				value =static_cast<int64_t>(entry->value.value.i16);
-				break;
-			case AMQP_FIELD_KIND_U16:
-				value =static_cast<int64_t>(entry->value.value.u16);
-				break;
-			case AMQP_FIELD_KIND_I32:
-				value =static_cast<int64_t>(entry->value.value.i32);
-				break;
-			case AMQP_FIELD_KIND_U32:
-				value =static_cast<int64_t>(entry->value.value.u16);
-				break;
-			case AMQP_FIELD_KIND_I64:
-			case AMQP_FIELD_KIND_U64:
-				value =static_cast<int64_t>(entry->value.value.i64);
-			printf("value %ld\n", value.toInt64());	
-				break;
-			case AMQP_FIELD_KIND_F32:
-				value =static_cast<float>(entry->value.value.f32);
-				break;
-			case AMQP_FIELD_KIND_F64:
-				value =static_cast<double>(entry->value.value.f64);
-				break;
-			case AMQP_FIELD_KIND_UTF8:
-			case AMQP_FIELD_KIND_BYTES:
-			printf("str type\n");
-				// ZVAL_STRINGL(value, entry->value.value.bytes.bytes, entry->value.value.bytes.len, 1);
-				break;
-			case AMQP_FIELD_KIND_ARRAY:
-			printf("arr type\n");
-				// {
-				// 	int j;
-				// 	array_init(value);
-				// 	for (j = 0; j < entry->value.value.array.num_entries; ++j) {
-				// 		switch (entry->value.value.array.entries[j].kind) {
-				// 			case AMQP_FIELD_KIND_UTF8:
-				// 				add_next_index_stringl(
-				// 					value,
-				// 					entry->value.value.array.entries[j].value.bytes.bytes,
-				// 					entry->value.value.array.entries[j].value.bytes.len,
-				// 					1
-				// 				);
-				// 				break;
-				// 			case AMQP_FIELD_KIND_TABLE:
-				// 				{
-				// 					zval *subtable;
-				// 					MAKE_STD_ZVAL(subtable);
-				// 					array_init(subtable);
-				// 					parse_amqp_table(
-				// 						&(entry->value.value.array.entries[j].value.table),
-				// 						subtable
-				// 					);
-				// 					add_next_index_zval(value, subtable);
-				// 				}
-				// 				break;
-				// 		}
-				// 	}
-				// }
-				break;
-			case AMQP_FIELD_KIND_TABLE:
-			printf("table type\n");
-			 //    array_init(value);
-				// parse_amqp_table(&(entry->value.value.table), value);
-				break;
-			case AMQP_FIELD_KIND_TIMESTAMP:
-				// ZVAL_DOUBLE(value, entry->value.value.u64);
-				break;
-			case AMQP_FIELD_KIND_VOID:
-			case AMQP_FIELD_KIND_DECIMAL:
-			default:
-				// ZVAL_NULL(value);
-				break;
-		}
-
-
+					}
+				case AMQP_FIELD_KIND_U8:
+					value =static_cast<int64_t>(entry->value.value.u8);
+					break;
+				case AMQP_FIELD_KIND_I16:
+					value =static_cast<int64_t>(entry->value.value.i16);
+					break;
+				case AMQP_FIELD_KIND_U16:
+					value =static_cast<int64_t>(entry->value.value.u16);
+					break;
+				case AMQP_FIELD_KIND_I32:
+					value =static_cast<int64_t>(entry->value.value.i32);
+					break;
+				case AMQP_FIELD_KIND_U32:
+					value =static_cast<int64_t>(entry->value.value.u16);
+					break;
+				case AMQP_FIELD_KIND_I64:
+				case AMQP_FIELD_KIND_U64:
+					value =static_cast<int64_t>(entry->value.value.i64);
+				printf("value %ld\n", value.toInt64());	
+					break;
+				case AMQP_FIELD_KIND_F32:
+					value =static_cast<float>(entry->value.value.f32);
+					break;
+				case AMQP_FIELD_KIND_F64:
+					value =static_cast<double>(entry->value.value.f64);
+					break;
+				case AMQP_FIELD_KIND_UTF8:
+				case AMQP_FIELD_KIND_BYTES:
+				printf("str type\n");
+					// ZVAL_STRINGL(value, entry->value.value.bytes.bytes, entry->value.value.bytes.len, 1);
+					break;
+				case AMQP_FIELD_KIND_ARRAY:
+				printf("arr type\n");
+					// {
+					// 	int j;
+					// 	array_init(value);
+					// 	for (j = 0; j < entry->value.value.array.num_entries; ++j) {
+					// 		switch (entry->value.value.array.entries[j].kind) {
+					// 			case AMQP_FIELD_KIND_UTF8:
+					// 				add_next_index_stringl(
+					// 					value,
+					// 					entry->value.value.array.entries[j].value.bytes.bytes,
+					// 					entry->value.value.array.entries[j].value.bytes.len,
+					// 					1
+					// 				);
+					// 				break;
+					// 			case AMQP_FIELD_KIND_TABLE:
+					// 				{
+					// 					zval *subtable;
+					// 					MAKE_STD_ZVAL(subtable);
+					// 					array_init(subtable);
+					// 					parse_amqp_table(
+					// 						&(entry->value.value.array.entries[j].value.table),
+					// 						subtable
+					// 					);
+					// 					add_next_index_zval(value, subtable);
+					// 				}
+					// 				break;
+					// 		}
+					// 	}
+					// }
+					break;
+				case AMQP_FIELD_KIND_TABLE:
+					printf("table type\n");
+				 //    array_init(value);
+					// parse_amqp_table(&(entry->value.value.table), value);
+					break;
+				case AMQP_FIELD_KIND_TIMESTAMP:
+					value =static_cast<double>(entry->value.value.u64);
+					break;
+				case AMQP_FIELD_KIND_VOID:
+				case AMQP_FIELD_KIND_DECIMAL:
+				default:
+					value.setNull();
+					break;
+			}
 		}
 
 	}

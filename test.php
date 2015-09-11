@@ -4,7 +4,7 @@
 
 printf("--------- %d  ---------\n", __LINE__);
 
-	$cnn = new AMQPConnection(['port'=>5677]);
+	$cnn = new AMQPConnection(['port'=>5672]);
 
 printf("--------- %d  ---------\n", __LINE__);
 
@@ -24,14 +24,14 @@ printf("--------- %d  ---------\n", __LINE__);
 
 printf("--------- %d  ---------\n", __LINE__);
 	var_dump($message);
-printf("--------- %d  ---------\n", __LINE__);
-	var_dump($queue);
+// printf("--------- %d  ---------\n", __LINE__);
+// 	var_dump($queue);
 
-printf("--------- %d  ---------\n", __LINE__);
-	$msg = $queue->getMessage();
-	var_dump($message->getContentType());
+// printf("--------- %d  ---------\n", __LINE__);
+// 	$msg = $queue->getMessage();
+// 	var_dump($message->getContentType());
 
-printf("--------- %d  ---------\n", __LINE__);
+// printf("--------- %d  ---------\n", __LINE__);
 
 	// $ret = $queue->ack();
 // 	var_dump($ret);
