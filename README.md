@@ -1,5 +1,6 @@
 # HHVM AMQP bindings 
 ### Build Status: in the devepolment
+This is developer branch. You must to use for work the stable branch. 
 
 Object-oriented PHP bindings for the AMQP C library (https://github.com/alanxz/rabbitmq-c)
 
