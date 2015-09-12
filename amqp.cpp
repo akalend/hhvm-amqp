@@ -263,7 +263,7 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
-	printf("%s:%d\n", __FUNCTION__,__LINE__);
+	// printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	auto *data = Native::data<AMQPConnection>(this_);
 	assert(data);
@@ -408,7 +408,7 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (r.reply_type != AMQP_RESPONSE_NORMAL)
 		raise_warning("The AMQPChannel class: open channel error");
 	
-	printf("channel_id=%d\n", data->channel_id);
+	// printf("channel_id=%d\n", data->channel_id);
 
 	// if (data->prefetch_count) {
 	// 	amqp_basic_qos(
@@ -569,13 +569,13 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 
 
 	if (res.reply_type != AMQP_RESPONSE_NORMAL ) {
-		printf("The AMQPQueue response code: %d\n", res.reply_type);
+		// printf("The AMQPQueue response code: %d\n", res.reply_type);
 		// raise_warning("The AMQPQueue: response error");
 		return Object();
 	}
 
 	if (AMQP_BASIC_GET_EMPTY_METHOD == res.reply.id) {
-		printf("The AMQPQueue: AMQP_BASIC_GET_EMPTY_METHOD\n");
+		// printf("The AMQPQueue: AMQP_BASIC_GET_EMPTY_METHOD\n");
 		
 		return Object();
 	}
@@ -715,11 +715,12 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 					break;
 				case AMQP_FIELD_KIND_UTF8:
 				case AMQP_FIELD_KIND_BYTES:
-				printf("str type\n");
+				// printf("str type\n");
 					value = std::string(static_cast<char*>(entry->value.value.bytes.bytes), entry->value.value.bytes.len);
 					break;
 				case AMQP_FIELD_KIND_ARRAY:
-				printf("arr type\n");
+					raise_warning("not implement the array type");
+				// printf("arr type\n");
 					// {
 					// 	int j;
 					// 	array_init(value);
@@ -750,7 +751,8 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 					// }
 					break;
 				case AMQP_FIELD_KIND_TABLE:
-					printf("table type\n");
+					// printf("table type\n");
+				raise_warning("not implement the table type");
 				 //    array_init(value);
 					// parse_amqp_table(&(entry->value.value.table), value);
 					break;
@@ -1148,12 +1150,14 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 
 		Variant hd = Variant(arguments[s_headers]);
-		printf("check headers ******* type=%d\n", (int)hd.getType());
+		// printf("check headers ******* type=%d\n", (int)hd.getType());
 
 		switch(hd.getType()) {
 			case KindOfNull: break;
 			case KindOfArray :
-				printf("headers OK\n");
+				raise_warning("not implement the array type");
+
+				// printf("headers OK\n");
 			default:
 				raise_warning("error header type");
 		}
