@@ -41,6 +41,8 @@
 
 #define NOPARAM -1
 
+#define AMQP_TRACE printf("%s:%d\n", __FUNCTION__, __LINE__);
+
 #define GET_CLASS_DATA_AND_CHECK( class_name ) 			\
 	auto *data = Native::data<class_name>(this_);		\
 	if (!data)											\
@@ -67,7 +69,7 @@
 
 
 
-#define ADD_AMQP_STRING_PROPERTY(var, field,flag ) 			\
+#define ADD_AMQP_STRING_PROPERTY(var, field,flag ) 		\
 	switch (var.getType()) {							\
 		case KindOfNull : 								\
 		case KindOfUninit : 							\
@@ -408,7 +410,7 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (r.reply_type != AMQP_RESPONSE_NORMAL)
 		raise_warning("The AMQPChannel class: open channel error");
 	
-	printf("channel_id=%d\n", data->channel_id);
+	// printf("channel_id=%d\n", data->channel_id);
 
 	// if (data->prefetch_count) {
 	// 	amqp_basic_qos(
@@ -768,7 +770,7 @@ Variant HHVM_METHOD(AMQPQueue, get) {
 		}
 
 		ob.o_set(
-			s_headers),
+			s_headers,
 			headers,
 			s_AMQPEnvelope);
 	}
@@ -1089,11 +1091,8 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 	if ( flags == NOPARAM)
 		flags = _flags; 
 
-
 	amqp_basic_properties_t props;
 	if (arguments.size()) {
-
-	    //'headers'          => 'not array', // should be array // NOTE: covered in tests/amqpexchange_publish_with_properties_ignore_num_header.phpt
 
 		Variant ct = Variant(arguments[s_content_type]);
 
@@ -1148,16 +1147,76 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 
 		Variant hd = Variant(arguments[s_headers]);
-		printf("check headers ******* type=%d\n", (int)hd.getType());
 
 		switch(hd.getType()) {
 			case KindOfNull: break;
-			case KindOfArray :
-				printf("headers OK\n");
-			default:
-				raise_warning("error header type");
-		}
+			case KindOfArray : {
+				
+				AMQP_TRACE
+		// ??????	
+				amqp_table_t *headers = (amqp_table_t *) malloc(sizeof(amqp_table_t));
+				char type[16];
+				amqp_table_t *inner_table;
+				headers->entries = (amqp_table_entry_t *) calloc( hd.toArray().size(), sizeof(amqp_table_entry_t));
+				ssize_t offset= 0;
 
+				ArrayData* hdata = hd.toArray().get();
+				for (ssize_t pos = hdata->iter_begin(); pos != hdata->iter_end();
+							pos = hdata->iter_advance(pos)){
+					const char* key = hdata->getKey(pos).toString().c_str();
+					const Variant val = hdata->getValue(pos);
+					amqp_table_entry_t *table;
+					amqp_field_value_t *field;
+
+					AMQP_TRACE
+					// int rc = amqp_encode_table(encoded, &(m->server_properties), &offset);
+			
+					table = &headers->entries[headers->num_entries++];
+					field = &table->value;
+					switch(val.getType()) {
+						case KindOfBoolean:
+							field->kind 			= AMQP_FIELD_KIND_BOOLEAN;
+							field->value.boolean 	= (amqp_boolean_t) val.toBoolean();
+							break;
+						case KindOfDouble:
+							field->kind 			= AMQP_FIELD_KIND_F64;
+							field->value.f64 		= val.toDouble();
+							printf("val(f)=%f\n", val.toDouble());
+							break;
+						case KindOfInt64:
+							field->kind 			= AMQP_FIELD_KIND_I64;
+							field->value.i64 		= val.toInt64();
+							printf("val(i)=%ld\n", val.toInt64());
+							break;
+						case KindOfString:
+						case KindOfStaticString:
+							field->kind        		= AMQP_FIELD_KIND_UTF8;
+							// strValue           = ; // strndup()
+							field->value.bytes 		= amqp_cstring_bytes(val.toString().c_str());
+							printf("val(s)=%s\n", val.toString().c_str());
+							break;
+						case KindOfArray:
+							// field->kind = AMQP_FIELD_KIND_TABLE;
+							raise_warning("the field array is not implement");
+							break;
+						default:
+							switch(val.getType()) {
+								case KindOfNull:	 strcpy(type, "null"); break;
+								case KindOfObject:	 strcpy(type, "object"); break;
+								case KindOfResource: strcpy(type, "resource"); break;
+								default:			 strcpy(type, "unknown");
+							}
+					}
+				}
+
+				props.headers = *headers;
+				props._flags |= AMQP_BASIC_HEADERS_FLAG;
+				break;
+			}
+			default:
+				raise_warning("error header type, must be Array");
+				printf("type=%d\n", hd.getType());
+		}
 
 	} else {
 
