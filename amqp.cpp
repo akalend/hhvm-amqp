@@ -1186,14 +1186,14 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 						case KindOfInt64:
 							field->kind 			= AMQP_FIELD_KIND_I64;
 							field->value.i64 		= val.toInt64();
-							printf("val(i)=%ld\n", val.toInt64());
+							printf("key %s val(i)=%ld\n", key,val.toInt64());
 							break;
 						case KindOfString:
 						case KindOfStaticString:
 							field->kind        		= AMQP_FIELD_KIND_UTF8;
 							// strValue           = ; // strndup()
-							field->value.bytes 		= amqp_cstring_bytes(val.toString().c_str());
-							printf("val(s)=%s\n", val.toString().c_str());
+							field->value.bytes 		= amqp_cstring_bytes(  val.toString().c_str());
+							printf("key %s val(s)=%s\n", key,val.toString().c_str());
 							break;
 						case KindOfArray:
 							// field->kind = AMQP_FIELD_KIND_TABLE;
@@ -1207,6 +1207,11 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 								default:			 strcpy(type, "unknown");
 							}
 					}
+				
+
+				table->key = amqp_cstring_bytes(key);
+
+
 				}
 
 				props.headers = *headers;
