@@ -381,6 +381,8 @@ class AMQPQueue {
 	<<__Native>>
 	public function get (int $flags=AMQP_NOACK) : mixed;
 
+	<<__Native>>
+	public function cancel (string $consumer_tag = "") : bool;
 
 	public function getMessage () {
 		return $this->message;
@@ -409,8 +411,8 @@ class AMQPQueue {
 	public function setArgument ( string $key , mixed $value ){
 		$this->arguments->setArgument($key, $value);	
 	}
-	
-	// public function cancel ([ string $consumer_tag = "" ] ){}
+		
+
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
@@ -487,9 +489,6 @@ class AMQPExchange {
 	<<__Native>>
 	public function delete (int $flags = AMQP::NOPARAM ): bool;
 
-
-	// public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
-	//  array $attributes NOT IMPLEMENT
 
 	<<__Native>>
 	public function publish(string $message, string $routing_key = '', int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;

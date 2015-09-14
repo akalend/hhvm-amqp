@@ -181,7 +181,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPQueue, delete);
 	HHVM_ME(AMQPQueue, ack);
 	HHVM_ME(AMQPQueue, get);
-
+	HHVM_ME(AMQPQueue, cancel);
 
 	HHVM_ME(AMQPExchange, __construct);
 	HHVM_ME(AMQPExchange, bind);
@@ -590,6 +590,32 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 	return data->message_count;
 }
 
+
+bool HHVM_METHOD(AMQPQueue, cancel, const String& consumer_tag) {
+
+	GET_CLASS_DATA_AND_CHECK( AMQPQueue );
+
+	data->message_count=0;
+	
+	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
+
+	// взять consumer_tag из $this->message
+
+	amqp_basic_cancel_ok_t *r = amqp_basic_cancel(data->amqpCh->amqpCnn->conn,
+									data->amqpCh->channel_id,
+									amqp_cstring_bytes(consumer_tag.c_str()));
+		
+
+
+	if (!r) {
+		amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
+		raise_warning("The AMQPQueue class: cancel queue error");
+
+		return false;
+	}
+
+	return true;	
+}
 
 
 Variant HHVM_METHOD(AMQPQueue, get) {
