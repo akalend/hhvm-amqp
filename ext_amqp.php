@@ -292,6 +292,47 @@ class AMQPEnvelope  {
 	public function getHeaders (){
 		return isset($this->headers) ? $this->headers : NULL;
 	}
+
+	public function getArgument (string $key){
+		return isset($this->$key) ? $this->$key : NULL;
+	}
+
+	public function setArguments( array $arguments ) {
+		foreach ($arguments as $key => $value) {
+			if ( property_exists($this, $key) ){
+				$this->$key = $value;  
+			}
+		}
+	}
+
+	public function getArguments (){
+
+		return [
+			'delivery_tag' 	=> $this->delivery_tag,
+			'exchange' 		=> $this->exchange,
+			'consumer_tag' 	=> $this->consumer_tag,
+			'routing_key' 	=> $this->routing_key,
+			'channel' 		=> $this->channel,
+			'redelivered' 	=> $this->redelivered,
+			'app_id' 		=> $this->app_id,
+			'cluster_id' 	=> $this->cluster_id,
+			'user_id'		=> $this->user_id,
+			'expiration'	=> $this->expiration,
+			'timestamp'		=> $this->timestamp,
+		 	'body'			=> $this->body,
+	 		'type'			=> $this->type,
+	 		'message_id'	=> $this->message_id,
+	 		'reply_to'		=> $this->reply_to,
+	 		'correlation_id'=> $this->correlation_id,
+	 		'priority'		=> $this->priority,
+	 		'delivery_mode' => $this->delivery_mode,
+	 		'content_encoding' => $this->content_encoding,
+	 		'content_type' 	=> $this->content_type,
+	 		'headers' 		=> $this->headers,
+	 		'queue_count'	=> $this->queue_count
+		];
+	}
+
 }
 
 
@@ -346,17 +387,23 @@ class AMQPQueue {
 	}
 
 	public function getArgument ( string $key ) {
-		return isset($this->message) && isset($this->message->$key) ? $this->message->$key : NULL;
+		return !is_null($this->message) ? $this->message->getArgument($key) : NULL;
+	}
+
+	public function getArguments () {
+		return !is_null($this->message) ? $this->message->getArguments() : NULL;	
+	}
+
+	public function setArguments( array $arguments ){
+		$this->arguments->setArguments($arguments);
 	}
 	
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 
-	// public function getArguments ( void ): array
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
 	// public function purge ( void ){}
 	// public function setArgument ( string $key , mixed $value ){}
-	// public function setArguments ( array $arguments ){}
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
 

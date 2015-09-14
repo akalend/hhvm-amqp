@@ -29,7 +29,10 @@ printf("--------- %d  ---------\n", __LINE__);
 	if ($message)
 	 	var_dump($message->getHeader('sss'));
 
-// printf("--------- %d  ---------\n", __LINE__);
+printf("--------- %d  ---------\n", __LINE__);
+	var_dump($queue->getArguments());
+	// var_dump($queue);
+
 // 	$msg = $queue->getMessage();
 // 	var_dump($message->getContentType());
 
