@@ -188,6 +188,7 @@ void AmqpExtension::moduleInit() {
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_TOPIC.get(), s_topic.get());
 
 
+
 	loadSystemlib();
 }
 
