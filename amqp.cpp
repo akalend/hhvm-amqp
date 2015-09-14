@@ -595,9 +595,6 @@ bool HHVM_METHOD(AMQPQueue, cancel, const String& consumer_tag) {
 
 	GET_CLASS_DATA_AND_CHECK( AMQPQueue );
 
-	data->message_count=0;
-	
-	const char* queue = const_cast<char* >(this_->o_get(s_name, false, s_AMQPQueue).toString().c_str());
 
 	// взять consumer_tag из $this->message
 

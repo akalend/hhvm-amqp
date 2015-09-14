@@ -4,7 +4,7 @@
 
 printf("--------- %d  ---------\n", __LINE__);
 
-	$cnn = new AMQPConnection(['port'=>5672]);
+	$cnn = new AMQPConnection(['port'=>5677]);
 
 printf("--------- %d  ---------\n", __LINE__);
 
@@ -22,9 +22,17 @@ printf("--------- %d  ---------\n", __LINE__);
 	$queue->setFlags(AMQP::AUTOACK);//| ); AMQP::AUTODELETE
 	$message = $queue->get( );
 
+
 printf("--------- %d  ---------\n", __LINE__);
 	var_dump($message);
-// printf("--------- %d  ---------\n", __LINE__);
+printf("--------- %d  ---------\n", __LINE__);
+
+	var_dump($queue->cancel(NULL));
+
+	$cnn->disconnect();
+	exit();
+
+
 
 	if ($message)
 	 	var_dump($message->getHeader('sss'));
