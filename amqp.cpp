@@ -1181,19 +1181,16 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 						case KindOfDouble:
 							field->kind 			= AMQP_FIELD_KIND_F64;
 							field->value.f64 		= val.toDouble();
-							printf("val(f)=%f\n", val.toDouble());
 							break;
 						case KindOfInt64:
 							field->kind 			= AMQP_FIELD_KIND_I64;
 							field->value.i64 		= val.toInt64();
-							printf("key %s val(i)=%ld\n", key,val.toInt64());
 							break;
 						case KindOfString:
 						case KindOfStaticString:
 							field->kind        		= AMQP_FIELD_KIND_UTF8;
 							// strValue           = ; // strndup()
 							field->value.bytes 		= amqp_cstring_bytes(  val.toString().c_str());
-							printf("key %s val(s)=%s\n", key,val.toString().c_str());
 							break;
 						case KindOfArray:
 							// field->kind = AMQP_FIELD_KIND_TABLE;
