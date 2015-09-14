@@ -141,7 +141,18 @@ const StaticString
 	s_headers("headers"),
 	s_direct("direct"),
 	s_fanout("fanout"),
-	s_topic("topic")
+	s_topic("topic"),
+	s_AMQP_PASSIVE("AMQP_PASSIVE"),
+	s_AMQP_DURABLE("AMQP_DURABLE"),
+	s_AMQP_EXCLUSIVE("AMQP_EXCLUSIVE"),
+	s_AMQP_AUTODELETE("AMQP_AUTODELETE"),
+	s_AMQP_IFUNUSED("AMQP_IFUNUSED"),
+	s_AMQP_IFEMPTY("AMQP_IFEMPTY"),
+	s_AMQP_AUTOACK("AMQP_AUTOACK"),
+	s_AMQP_MULTIPLE("AMQP_MULTIPLE"),
+	s_AMQP_INTERNAL("AMQP_INTERNAL"),
+	s_AMQP_MANDATORY("AMQP_MANDATORY"),
+	s_AMQP_IMMEDIATE("AMQP_IMMEDIATE")
   ;
 
 
@@ -181,11 +192,22 @@ void AmqpExtension::moduleInit() {
 	Native::registerConstant<KindOfInt64>(s_NOPARM.get(), AMQP_NOPARAM);
 	Native::registerConstant<KindOfInt64>(s_NOACK.get(), AMQP_NOACK);
 
+	Native::registerConstant<KindOfInt64>(s_AMQP_PASSIVE.get(), AMQP_PASSIVE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_DURABLE.get(), AMQP_DURABLE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_AUTODELETE.get(), AMQP_AUTODELETE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_IFUNUSED.get(), AMQP_IFUNUSED);
+	Native::registerConstant<KindOfInt64>(s_AMQP_IFEMPTY.get(), AMQP_IFEMPTY);
+	Native::registerConstant<KindOfInt64>(s_AMQP_AUTOACK.get(), AMQP_AUTOACK);
+	Native::registerConstant<KindOfInt64>(s_AMQP_MULTIPLE.get(), AMQP_MULTIPLE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_INTERNAL.get(), AMQP_INTERNAL);
+	Native::registerConstant<KindOfInt64>(s_AMQP_MANDATORY.get(), AMQP_MANDATORY);
+	Native::registerConstant<KindOfInt64>(s_AMQP_IMMEDIATE.get(), AMQP_IMMEDIATE);
 
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_HEADERS.get(), s_headers.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_DIRECT.get(), s_direct.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_FANOUT.get(), s_fanout.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_TOPIC.get(), s_topic.get());
+
 
 
 
