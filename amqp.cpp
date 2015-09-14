@@ -152,7 +152,11 @@ const StaticString
 	s_AMQP_MULTIPLE("AMQP_MULTIPLE"),
 	s_AMQP_INTERNAL("AMQP_INTERNAL"),
 	s_AMQP_MANDATORY("AMQP_MANDATORY"),
-	s_AMQP_IMMEDIATE("AMQP_IMMEDIATE")
+	s_AMQP_IMMEDIATE("AMQP_IMMEDIATE"),
+	s_AMQP_NOWAIT("s_AMQP_NOWAIT"),
+	s_AMQP_REQUEUE("AMQP_REQUEUE"),
+	s_AMQP_NOLOCAL("AMQP_NOLOCAL")
+
   ;
 
 
@@ -202,13 +206,14 @@ void AmqpExtension::moduleInit() {
 	Native::registerConstant<KindOfInt64>(s_AMQP_INTERNAL.get(), AMQP_INTERNAL);
 	Native::registerConstant<KindOfInt64>(s_AMQP_MANDATORY.get(), AMQP_MANDATORY);
 	Native::registerConstant<KindOfInt64>(s_AMQP_IMMEDIATE.get(), AMQP_IMMEDIATE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_NOLOCAL.get(), AMQP_NOLOCAL);
+	Native::registerConstant<KindOfInt64>(s_AMQP_NOWAIT.get(), s_AMQP_NOWAIT);
+	Native::registerConstant<KindOfInt64>(s_AMQP_REQUEUE.get(), AMQP_REQUEUE);
 
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_HEADERS.get(), s_headers.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_DIRECT.get(), s_direct.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_FANOUT.get(), s_fanout.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_TOPIC.get(), s_topic.get());
-
-
 
 
 	loadSystemlib();

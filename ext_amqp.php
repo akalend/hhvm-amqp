@@ -47,38 +47,18 @@ final class AMQP {
 	const  INTERNAL 	= 512;
 	const  MANDATORY 	= 1024;
 	const  IMMEDIATE 	= 2048;
-	const  TYPE_DIRECT = 'direct';
-	const  TYPE_FANOUT = 'fanout';
-	const  TYPE_TOPIC  = 'topic';
+	const  NOWAIT 		= 4096;
+	const  REQUEUE 		= 8192;
+	const  NOLOCAL 		= 16384;
+	const  TYPE_DIRECT 	= 'direct';
+	const  TYPE_FANOUT 	= 'fanout';
+	const  TYPE_TOPIC  	= 'topic';
 	const  TYPE_HEADER  = 'headers';
 	
 	const  EXCHANGE_FLAGS = (self::PASSIVE | self::DURABLE | self::AUTODELETE | self::INTERNAL);
 	const  QUEUE_FLAGS =    (self::PASSIVE | self::DURABLE | self::EXCLUSIVE  | self::AUTODELETE);
 
 }
-
-#define AMQP_NOPARAM		0
-/* Where is 1?*/
-#define AMQP_DURABLE		2
-#define AMQP_PASSIVE		4
-#define AMQP_EXCLUSIVE		8
-#define AMQP_AUTODELETE		16
-#define AMQP_INTERNAL		32
-#define AMQP_NOLOCAL		64
-#define AMQP_AUTOACK		128
-#define AMQP_IFEMPTY		256
-#define AMQP_IFUNUSED		512
-#define AMQP_MANDATORY		1024
-#define AMQP_IMMEDIATE		2048
-#define AMQP_MULTIPLE		4096
-#define AMQP_NOWAIT			8192
-#define AMQP_REQUEUE		16384
-
-/* passive, durable, auto-delete, internal, no-wait (see https://www.rabbitmq.com/amqp-0-9-1-reference.html#exchange.declare) */
-#define PHP_AMQP_EXCHANGE_FLAGS     (AMQP_PASSIVE | AMQP_DURABLE | AMQP_AUTODELETE | AMQP_INTERNAL)
-
-/* passive, durable, exclusive, auto-delete, no-wait (see https://www.rabbitmq.com/amqp-0-9-1-reference.html#queue.declare) */
-#define PHP_AMQP_QUEUE_FLAGS        (AMQP_PASSIVE | AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE | AMQP_EXCLUSIVE)
 
 
 
