@@ -345,11 +345,13 @@ class AMQPQueue {
 		$this->flags = $flags;
 	}
 
+	public function getArgument ( string $key ) {
+		return isset($this->message) && isset($this->message->$key) ? $this->message->$key : NULL;
+	}
 	
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 
-	// public function getArgument ( string $key ): mixed
 	// public function getArguments ( void ): array
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
 	// public function purge ( void ){}

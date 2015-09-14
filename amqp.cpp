@@ -196,19 +196,19 @@ void AmqpExtension::moduleInit() {
 	Native::registerConstant<KindOfInt64>(s_NOPARM.get(), AMQP_NOPARAM);
 	Native::registerConstant<KindOfInt64>(s_NOACK.get(), AMQP_NOACK);
 
-	Native::registerConstant<KindOfInt64>(s_AMQP_PASSIVE.get(), AMQP_PASSIVE);
-	Native::registerConstant<KindOfInt64>(s_AMQP_DURABLE.get(), AMQP_DURABLE);
-	Native::registerConstant<KindOfInt64>(s_AMQP_AUTODELETE.get(), AMQP_AUTODELETE);
-	Native::registerConstant<KindOfInt64>(s_AMQP_IFUNUSED.get(), AMQP_IFUNUSED);
-	Native::registerConstant<KindOfInt64>(s_AMQP_IFEMPTY.get(), AMQP_IFEMPTY);
-	Native::registerConstant<KindOfInt64>(s_AMQP_AUTOACK.get(), AMQP_AUTOACK);
-	Native::registerConstant<KindOfInt64>(s_AMQP_MULTIPLE.get(), AMQP_MULTIPLE);
-	Native::registerConstant<KindOfInt64>(s_AMQP_INTERNAL.get(), AMQP_INTERNAL);
-	Native::registerConstant<KindOfInt64>(s_AMQP_MANDATORY.get(), AMQP_MANDATORY);
-	Native::registerConstant<KindOfInt64>(s_AMQP_IMMEDIATE.get(), AMQP_IMMEDIATE);
-	Native::registerConstant<KindOfInt64>(s_AMQP_NOLOCAL.get(), AMQP_NOLOCAL);
-	Native::registerConstant<KindOfInt64>(s_AMQP_NOWAIT.get(), s_AMQP_NOWAIT);
-	Native::registerConstant<KindOfInt64>(s_AMQP_REQUEUE.get(), AMQP_REQUEUE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_PASSIVE.get(), 	AMQP_PASSIVE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_DURABLE.get(), 	AMQP_DURABLE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_AUTODELETE.get(), 	AMQP_AUTODELETE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_IFUNUSED.get(), 	AMQP_IFUNUSED);
+	Native::registerConstant<KindOfInt64>(s_AMQP_IFEMPTY.get(), 	AMQP_IFEMPTY);
+	Native::registerConstant<KindOfInt64>(s_AMQP_AUTOACK.get(), 	AMQP_AUTOACK);
+	Native::registerConstant<KindOfInt64>(s_AMQP_MULTIPLE.get(), 	AMQP_MULTIPLE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_INTERNAL.get(), 	AMQP_INTERNAL);
+	Native::registerConstant<KindOfInt64>(s_AMQP_MANDATORY.get(), 	AMQP_MANDATORY);
+	Native::registerConstant<KindOfInt64>(s_AMQP_IMMEDIATE.get(), 	AMQP_IMMEDIATE);
+	Native::registerConstant<KindOfInt64>(s_AMQP_NOLOCAL.get(), 	AMQP_NOLOCAL);
+	Native::registerConstant<KindOfInt64>(s_AMQP_NOWAIT.get(), 		AMQP_NOWAIT);
+	Native::registerConstant<KindOfInt64>(s_AMQP_REQUEUE.get(), 	AMQP_REQUEUE);
 
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_HEADERS.get(), s_headers.get());
 	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_DIRECT.get(), s_direct.get());
