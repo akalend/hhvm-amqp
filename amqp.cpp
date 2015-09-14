@@ -133,8 +133,15 @@ const StaticString
 	s_delivery_mode("delivery_mode"),
 	s_priority("priority"),
 	s_timestamp("timestamp"),
-	s_consumer_tag("consumer_tag"),
-	s_headers("headers")
+	s_consumer_tag("consumer_tag"),	
+	s_AMQP_EX_TYPE_DIRECT("AMQP_EX_TYPE_DIRECT"),
+	s_AMQP_EX_TYPE_FANOUT("AMQP_EX_TYPE_FANOUT"),
+	s_AMQP_EX_TYPE_TOPIC("AMQP_EX_TYPE_TOPIC"),
+	s_AMQP_EX_TYPE_HEADERS("AMQP_EX_TYPE_HEADERS"),
+	s_headers("headers"),
+	s_direct("direct"),
+	s_fanout("fanout"),
+	s_topic("topic")
   ;
 
 
@@ -173,6 +180,13 @@ void AmqpExtension::moduleInit() {
 	Native::registerConstant<KindOfInt64>(s_PORT.get(), AMQP_PORT);
 	Native::registerConstant<KindOfInt64>(s_NOPARM.get(), AMQP_NOPARAM);
 	Native::registerConstant<KindOfInt64>(s_NOACK.get(), AMQP_NOACK);
+
+
+	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_HEADERS.get(), s_headers.get());
+	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_DIRECT.get(), s_direct.get());
+	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_FANOUT.get(), s_fanout.get());
+	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_TOPIC.get(), s_topic.get());
+
 
 	loadSystemlib();
 }
