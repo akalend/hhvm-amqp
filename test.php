@@ -25,7 +25,9 @@ printf("--------- %d  ---------\n", __LINE__);
 printf("--------- %d  ---------\n", __LINE__);
 	var_dump($message);
 // printf("--------- %d  ---------\n", __LINE__);
-// 	var_dump($queue);
+
+	if ($message)
+	 	var_dump($message->getHeader('sss'));
 
 // printf("--------- %d  ---------\n", __LINE__);
 // 	$msg = $queue->getMessage();

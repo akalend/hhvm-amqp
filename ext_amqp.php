@@ -201,6 +201,7 @@ class AMQPEnvelope  {
 	private $delivery_mode = NULL;
 	private $content_encoding = NULL;
 	private $content_type = NULL;
+	private $headers = NULL;
 
 	private $queue_count = 0;
 	/* Metody */
@@ -274,8 +275,13 @@ class AMQPEnvelope  {
 		return $this->redelivered;
 	}
 
-	// public function getHeader ( string $header_key )
-	//public array getHeaders ( void )
+	public function getHeader ( string $header_key ){
+		return isset($this->headers[$header_key]) ? $this->headers[$header_key] : NULL;
+	}
+	
+	public function getHeaders (){
+		return isset($this->headers) ? $this->headers : NULL;
+	}
 }
 
 
