@@ -305,6 +305,14 @@ class AMQPEnvelope  {
 		}
 	}
 
+	public function setArgument ( string $key , mixed $value ){
+		
+		if ( property_exists($this, $key) ){
+				$this->$key = $value;  
+		}
+	}
+
+
 	public function getArguments (){
 
 		return [
@@ -397,13 +405,16 @@ class AMQPQueue {
 	public function setArguments( array $arguments ){
 		$this->arguments->setArguments($arguments);
 	}
+
+	public function setArgument ( string $key , mixed $value ){
+		$this->arguments->setArgument($key, $value);	
+	}
 	
 	// public function cancel ([ string $consumer_tag = "" ] ){}
 	// public function consume ( callable $callback [, int $flags = AMQP_NOPARAM ] ){}
 
 	// public function nack ( string $delivery_tag, string $flags = AMQP_NOPARAM  ){}
 	// public function purge ( void ){}
-	// public function setArgument ( string $key , mixed $value ){}
 	// public function unbind ( string $exchange_name , string $routing_key ){}
 }
 
