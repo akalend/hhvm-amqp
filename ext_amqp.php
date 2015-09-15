@@ -491,7 +491,7 @@ class AMQPExchange {
 
 
 	<<__Native>>
-	public function publish(string $message, string $routing_key = '', int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
+	public function publish(mixed $message, string $routing_key = '', int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
 
 }
 

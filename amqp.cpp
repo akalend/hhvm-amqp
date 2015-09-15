@@ -155,8 +155,12 @@ const StaticString
 	s_AMQP_IMMEDIATE("AMQP_IMMEDIATE"),
 	s_AMQP_NOWAIT("s_AMQP_NOWAIT"),
 	s_AMQP_REQUEUE("AMQP_REQUEUE"),
-	s_AMQP_NOLOCAL("AMQP_NOLOCAL")
-
+	s_AMQP_NOLOCAL("AMQP_NOLOCAL"),
+	s_x_type("x-type"),
+	s_bool("bool"),
+	s_int("int"),
+	s_double("double"),
+	s_null("null")
   ;
 
 
@@ -284,7 +288,6 @@ bool amqpConnect( ObjectData* this_) {
 	client_properties.entries[1].value.value.bytes.bytes = (amqp_bytes_t*) name;
 	client_properties.entries[1].key.len = 16;
 	client_properties.entries[1].key.bytes = (amqp_bytes_t*) author;
-
 
 	
 	amqp_rpc_reply_t res = amqp_login_with_properties(
@@ -1178,9 +1181,12 @@ bool HHVM_METHOD(AMQPExchange, delete){
 	ANALYZE_RESPONSE_AND_RETURN();
 }
 
-// public function publish(string $message, string $routing_key, int $flags = AMQP::NOPARAM, array $attributes = array()) : bool;
 
-bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& routing_key, int64_t flags = AMQP_NOPARAM, const Array& arguments = Array{}) {
+bool HHVM_METHOD(AMQPExchange, publish, 
+				const Variant& message, 
+				const String& routing_key, 
+				int64_t flags = AMQP_NOPARAM, 
+				const Array& arguments = Array{}) {
 
 	GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
@@ -1188,6 +1194,79 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 
 	if ( flags == NOPARAM)
 		flags = _flags; 
+
+	Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
+	
+	amqp_bytes_t message_bytes;
+	// switch (message.getType()) {
+	// 	case KindOfString:
+	// 	case KindOfStaticString: {
+	// 		message_bytes = amqp_cstring_bytes(message.toString().c_str());
+	// 		break;
+	// 	}
+	// 	case KindOfInt64: 
+	// 		message_bytes = amqp_cstring_bytes(message.toString().c_str());
+	// 		if (arguments.size() && arguments[s_headers] ) {
+	
+	// 			Variant hd = Variant(arguments[s_headers]);
+	// 			hd.add(
+	// 				s_x_type,
+	// 				 Variant(s_int),
+	// 				false); 
+	// 		} else {
+				// args.add(
+				// 	s_x_type,
+				// 	Variant("int"),
+				// 	true);
+			// }
+			// break;
+		// case KindOfDouble: 
+		// 	message_bytes = amqp_cstring_bytes(message.toString().c_str());
+		// 	if (arguments.size()) {
+		// 		arguments.add(
+		// 			s_x_type,
+		// 			s_double,
+		// 			true); 
+		// 	} else {
+		// 		args.add(
+		// 			s_x_type,
+		// 			s_double,
+		// 			true);
+		// 	}
+		// 	break;
+		// case KindOfNull: 
+		// 	message_bytes = amqp_cstring_bytes("0");
+		// 	if (arguments.size()) {
+		// 		arguments.add(
+		// 			s_x_type,
+		// 			s_null,
+		// 			true); 
+		// 	} else {
+		// 		args.add(
+		// 			s_x_type,
+		// 			s_null,
+		// 			true);
+		// 	}
+		// 	break;
+		// case KindOfBoolean: 
+		// 	message_bytes = amqp_cstring_bytes(message.toBoolean() ? "1" : "0");
+		// 	if (arguments.size()) {
+		// 		arguments.add(
+		// 			s_x_type,
+		// 			s_bool,
+		// 			true); 
+		// 	} else {
+		// 		args.add(
+		// 			s_x_type,
+		// 			s_bool,
+		// 			true);
+		// 	}
+		// 	break;
+
+	// 	default:
+	// 		raise_warning("this type no implement");
+	// }
+
 
 	amqp_basic_properties_t props;
 	if (arguments.size()) {
@@ -1317,7 +1396,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 
 	} else {
 
-		Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
+		// Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
 
 		Variant ct = Variant(args[s_content_type]);
 
@@ -1376,7 +1455,6 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 
-
 	amqp_basic_publish(data->amqpCh->amqpCnn->conn,
 			data->amqpCh->channel_id,
 			amqp_cstring_bytes(exchange),
@@ -1384,7 +1462,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 			(flags & AMQP_MANDATORY)  ? 1 : 0, 		// mandatory
 			(flags & AMQP_IMMEDIATE)  ? 1 : 0,			// immediate
 			&props,
-			amqp_cstring_bytes(message.c_str()));
+			message_bytes);
 
 
 

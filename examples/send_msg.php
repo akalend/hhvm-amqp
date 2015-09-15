@@ -24,7 +24,7 @@
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish('*******',
+	$ex->publish(true,
 			'scan', 
 			AMQP::NOPARAM,
 			['content_type'=> 'text/xml', 	'headers' => $headers]);
