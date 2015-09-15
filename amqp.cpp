@@ -264,8 +264,41 @@ bool amqpConnect( ObjectData* this_) {
 	}
 
 
-	amqp_rpc_reply_t res = amqp_login(data->conn, data->vhost, channel_MAX, frame_MAX,
-							heartbeat, AMQP_SASL_METHOD_PLAIN, data->login, data->password);
+    amqp_table_t client_properties;
+	client_properties.entries = (amqp_table_entry_t *) calloc(2, sizeof(amqp_table_entry_t));
+
+	const char hhvm_amqp[9] = {'h','h','v','m','_','a','m','q','p'}; 
+	const char client_type[11] = {'c','l','i','e','n','t','-','t','y','p','e'}; 
+
+	const char author[16] = {'h','h','v','m','_','a','m','q','p',' ','a','u','t','h','o','r'}; 
+	const char name[10] = {'K','a','l','e','n','d','a','r','e','v'};
+
+	client_properties.num_entries=2;
+	client_properties.entries[0].value.kind = AMQP_FIELD_KIND_UTF8;
+	client_properties.entries[0].value.value.bytes.len = 9;
+	client_properties.entries[0].value.value.bytes.bytes = (amqp_bytes_t*)hhvm_amqp;
+	client_properties.entries[0].key.len = 11;
+	client_properties.entries[0].key.bytes = (amqp_bytes_t*)client_type;
+	client_properties.entries[1].value.kind = AMQP_FIELD_KIND_UTF8;
+	client_properties.entries[1].value.value.bytes.len = 10;
+	client_properties.entries[1].value.value.bytes.bytes = (amqp_bytes_t*) name;
+	client_properties.entries[1].key.len = 16;
+	client_properties.entries[1].key.bytes = (amqp_bytes_t*) author;
+
+
+	
+	amqp_rpc_reply_t res = amqp_login_with_properties(
+			data->conn, 
+			data->vhost, 
+			channel_MAX, 
+			frame_MAX,
+			heartbeat, 
+			&client_properties,
+			AMQP_SASL_METHOD_PLAIN, 
+			data->login, 
+			data->password);
+
+	free(client_properties.entries);
 
 
 	if ( res.reply_type == AMQP_RESPONSE_NORMAL) {
@@ -1221,9 +1254,7 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 		// ??????	
 				amqp_table_t *headers = (amqp_table_t *) malloc(sizeof(amqp_table_t));
 				char type[16];
-				amqp_table_t *inner_table;
 				headers->entries = (amqp_table_entry_t *) calloc( hd.toArray().size(), sizeof(amqp_table_entry_t));
-				ssize_t offset= 0;
 
 				ArrayData* hdata = hd.toArray().get();
 				for (ssize_t pos = hdata->iter_begin(); pos != hdata->iter_end();
@@ -1234,7 +1265,6 @@ bool HHVM_METHOD(AMQPExchange, publish, const String& message, const String& rou
 					amqp_field_value_t *field;
 
 					AMQP_TRACE
-					// int rc = amqp_encode_table(encoded, &(m->server_properties), &offset);
 			
 					table = &headers->entries[headers->num_entries++];
 					field = &table->value;
