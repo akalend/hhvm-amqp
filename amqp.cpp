@@ -1299,11 +1299,14 @@ bool HHVM_METHOD(AMQPExchange, publish,
 		// ??????	
 				amqp_table_t *headers = (amqp_table_t *) malloc(sizeof(amqp_table_t));
 				char type[16];
-				int size = hd.toArray().size() + static_cast<int>(message.getType() == KindOfString);
+				int size = hd.toArray().size() + static_cast<int>(message.getType() != KindOfString);
 
 				headers->entries = (amqp_table_entry_t *) calloc( size, sizeof(amqp_table_entry_t));
 				amqp_table_entry_t *table;
 				amqp_field_value_t *field;
+				printf("allocate %d elements for property isString()=%d\n", 
+					size,
+					static_cast<int>(message.getType() != KindOfString));
 
 				ArrayData* hdata = hd.toArray().get();
 				for (ssize_t pos = hdata->iter_begin(); pos != hdata->iter_end();
@@ -1363,57 +1366,40 @@ bool HHVM_METHOD(AMQPExchange, publish,
 					
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
+						field->kind = AMQP_FIELD_KIND_UTF8;
 						table->key = amqp_cstring_bytes("x-type");
 						field->value.bytes = amqp_cstring_bytes("int");
-
-						// -----------------------
 						break;
 					
-					// case KindOfDouble: 
-					// 	message_bytes = amqp_cstring_bytes(message.toString
-					// 	if (arguments.size()) {
-					// 								 arguments.add(
-					// 										 s_x_type,
-					// 										 s_double,
-					// 										 true); 
-					// 	} else {
-					// 								 args.add(
-					// 										 s_x_type,
-					// 										 s_double,
-					// 										 true);
-					// 	}
-					// 	break;
-
-					// case KindOfNull: 
-					// 	message_bytes = amqp_cstring_bytes("0");
+					case KindOfDouble: 
+						message_bytes = amqp_cstring_bytes(message.toString().c_str());
+						table = &headers->entries[headers->num_entries++];
+						field = &table->value;
+						field->kind = AMQP_FIELD_KIND_UTF8;
+						table->key = amqp_cstring_bytes("x-type");
+						field->value.bytes = amqp_cstring_bytes("double");
 						
-					// 	if (arguments.size()) {
-					// 								 arguments.add(
-					// 										 s_x_type,
-					// 										 s_null,
-					// 										 true); 
-					// 	} else {
-					// 								 args.add(
-					// 										 s_x_type,
-					// 										 s_null,
-					// 										 true);
-					// 	}
-					// 	break;
+						break;
 
-					// case KindOfBoolean: 
-					// 	message_bytes = amqp_cstring_bytes(message.toBoolea
-					// 	if (arguments.size()) {
-					// 								 arguments.add(
-					// 										 s_x_type,
-					// 										 s_bool,
-					// 										 true); 
-					// 	} else {
-					// 								 args.add(
-					// 										 s_x_type,
-					// 										 s_bool,
-					// 										 true);
-					// 	}
-					// 	break;
+					case KindOfNull: 
+						message_bytes = amqp_cstring_bytes("");
+						table = &headers->entries[headers->num_entries++];
+						field = &table->value;
+						field->kind = AMQP_FIELD_KIND_UTF8;
+						table->key = amqp_cstring_bytes("x-type");
+						field->value.bytes = amqp_cstring_bytes("null");
+						
+						break;
+
+					case KindOfBoolean: 
+						message_bytes = amqp_cstring_bytes(message.toBoolean().c_str());
+						table = &headers->entries[headers->num_entries++];
+						field = &table->value;
+						field->kind = AMQP_FIELD_KIND_UTF8;
+						table->key = amqp_cstring_bytes("x-type");
+						field->value.bytes = amqp_cstring_bytes("bool");
+
+						break;
 
 					default:
 						raise_warning("this type no implement");

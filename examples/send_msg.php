@@ -1,7 +1,7 @@
 #! /usr/bin/hhvm
 <?php
 // print_r( get_loaded_extensions() );
-	$cnn = new AMQPConnection(['port'=>5672]);
+	$cnn = new AMQPConnection(['port'=>5677]);
 	// $cnn = new AMQPConnection();
 	echo "------  connect ...  --------\n";
 
@@ -25,10 +25,16 @@
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish(123456,
+	$ex->publish(null,
 			'scan', 
 			AMQP::NOPARAM,
-			['content_type'=> 'text/xml', 	'headers' => $headers]);
+			['headers'=> []]);
+
+	// $ex->publish(null,
+	// 		'scan', 
+	// 		AMQP::NOPARAM);
+
+	
 
 // $testExchange->publish($msg, 'scan', AMQP_NOPARAM, 
 // 	['headers' => ['x-model'=>'object', 'x-type' => 123]]);
