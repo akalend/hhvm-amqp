@@ -67,6 +67,12 @@
 	}													\
 	return true;
 
+#define ANALYZE_RESPONSE_IF_ERROR_RETURN(conn)			\
+	{amqp_rpc_reply_t res = amqp_get_rpc_reply(conn);	\
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {		\
+		raise_warning("AMQP response error");			\
+		return false;									\
+	}}
 
 
 #define ADD_AMQP_STRING_PROPERTY(var, field,flag ) 		\
@@ -352,11 +358,19 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 		//TODO amqp_close_channel
 
 	amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		raise_warning( "channel close error" );
+		return false;
+	}
 
-	// printf("%s:%d\n", __FUNCTION__,__LINE__);
 
 	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 	data->is_connected = false;
+
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		raise_warning( "connection close error" );
+		return false;
+	}
 
 	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
 
@@ -380,9 +394,17 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 		data->is_connected = false;
 		
 		amqp_rpc_reply_t res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);		
+		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+			raise_warning( "connection close error" );
+			return false;
+		}
 
-		amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-		// close connection
+		res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+			raise_warning( "connection close error" );
+			return false;
+		}
+		
 
 		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
 		data->channel_id = 0;
@@ -615,8 +637,15 @@ int64_t HHVM_METHOD(AMQPQueue, delete) {
 									(flags & AMQP_IFEMPTY)  ? 1 : 0);
 
 	if (!r) {
-		amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
+		// amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
 		raise_warning("The AMQPQueue class: delete queue error");
+
+		//TODO check type error
+
+		// if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		// 	raise_warning( "connection close error" );
+	 // 		return NOPARAM;
+		// }
 
 		return NOPARAM;
 	}
@@ -641,7 +670,7 @@ bool HHVM_METHOD(AMQPQueue, cancel, const String& consumer_tag) {
 
 
 	if (!r) {
-		amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
+		// amqp_rpc_reply_t res = amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn);
 		raise_warning("The AMQPQueue class: cancel queue error");
 
 		return false;
@@ -1085,9 +1114,9 @@ bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags) {
 
 	if (status != AMQP_STATUS_OK) {
 		/* Emulate library error */
-		amqp_rpc_reply_t res;
-		res.reply_type 	  = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-		res.library_error = status;
+		// amqp_rpc_reply_t res;
+		// res.reply_type 	  = AMQP_RESPONSE_LIBRARY_EXCEPTION;
+		// res.library_error = status;
 
 		raise_warning("The AMQPQueue class: ack error");
 
@@ -1205,8 +1234,8 @@ bool HHVM_METHOD(AMQPExchange, publish,
 	
 	if (arguments.size()) {
 
-AMQP_TRACE;
-
+	AMQP_TRACE;
+	Variant hd = Variant(arguments[s_headers]);
 
 	switch (message.getType()) {
 		case KindOfString:
@@ -1214,24 +1243,37 @@ AMQP_TRACE;
 			message_bytes = amqp_cstring_bytes(message.toString().c_str());
 			break;
 		}
-		// case KindOfInt64: 
-		// 	message_bytes = amqp_cstring_bytes(message.toString());
-		// 	if (arguments.size() && arguments[s_headers] ) {
-
-		// 		Variant hd = Variant(arguments[s_headers]);
-		// 		hd.add(
-		// 			s_x_type,
-		// 			Variant(s_int),
-		// 			false);
-
-		// 	} else {
+		case KindOfInt64: 
+			message_bytes = amqp_cstring_bytes(message.toString().c_str());
+			AMQP_TRACE;
 			
-		// 		args.add(
-		// 			 s_x_type,
-		// 			 Variant("int"),
-		// 			 true);
-		// 	}
-		// 	break;
+			if (arguments.size() && arguments[s_headers].toBoolean() ) {
+		
+				AMQP_TRACE;
+					Array tmp;
+					if( hd.getType() == KindOfArray) {
+					AMQP_TRACE;
+					tmp.add(
+						s_x_type,
+						Variant(s_int),
+						true);
+					hd.attach(tmp.get());
+
+
+				} else {
+					raise_warning("error type of $this->arguments[header], must be Array");
+				}
+
+			} else {
+
+			AMQP_TRACE;
+
+				args.add(
+					 s_x_type,
+					 Variant("int"),
+					 true);
+			}
+			break;
 		
 		// case KindOfDouble: 
 		// 	message_bytes = amqp_cstring_bytes(message.toString
@@ -1337,7 +1379,6 @@ AMQP_TRACE;
 		Variant ts = Variant(arguments[s_timestamp]);
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 
-		Variant hd = Variant(arguments[s_headers]);
 
 		switch(hd.getType()) {
 			case KindOfNull: break;
@@ -1412,6 +1453,94 @@ AMQP_TRACE;
 
 		// Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
 AMQP_TRACE;
+
+	switch (message.getType()) {
+		case KindOfString:
+		case KindOfStaticString: {
+			message_bytes = amqp_cstring_bytes(message.toString().c_str());
+			break;
+		}
+		case KindOfInt64: 
+			message_bytes = amqp_cstring_bytes(message.toString().c_str());
+			if (arguments.size() && arguments[s_headers].toBoolean() ) {
+		
+				AMQP_TRACE;
+
+				Variant hd = Variant(arguments[s_headers]);
+				if( hd.getType() == KindOfArray) {
+
+					hd.toArray().add(
+						s_x_type,
+						Variant(s_int),
+						true);
+
+
+				} else {
+					raise_warning("error type of $this->arguments[header], must be Array");
+				}
+
+			} else {
+
+			AMQP_TRACE;
+
+				args.add(
+					 s_x_type,
+					 Variant("int"),
+					 true);
+			}
+			break;
+		
+		// case KindOfDouble: 
+		// 	message_bytes = amqp_cstring_bytes(message.toString
+		// 	if (arguments.size()) {
+		// 								 arguments.add(
+		// 										 s_x_type,
+		// 										 s_double,
+		// 										 true); 
+		// 	} else {
+		// 								 args.add(
+		// 										 s_x_type,
+		// 										 s_double,
+		// 										 true);
+		// 	}
+		// 	break;
+
+		// case KindOfNull: 
+		// 	message_bytes = amqp_cstring_bytes("0");
+			
+		// 	if (arguments.size()) {
+		// 								 arguments.add(
+		// 										 s_x_type,
+		// 										 s_null,
+		// 										 true); 
+		// 	} else {
+		// 								 args.add(
+		// 										 s_x_type,
+		// 										 s_null,
+		// 										 true);
+		// 	}
+		// 	break;
+
+		// case KindOfBoolean: 
+		// 	message_bytes = amqp_cstring_bytes(message.toBoolea
+		// 	if (arguments.size()) {
+		// 								 arguments.add(
+		// 										 s_x_type,
+		// 										 s_bool,
+		// 										 true); 
+		// 	} else {
+		// 								 args.add(
+		// 										 s_x_type,
+		// 										 s_bool,
+		// 										 true);
+		// 	}
+		// 	break;
+
+		default:
+			raise_warning("this type no implement");
+	}
+
+
 		Variant ct = Variant(args[s_content_type]);
 
 		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;

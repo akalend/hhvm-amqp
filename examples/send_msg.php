@@ -24,7 +24,7 @@
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish(true,
+	$ex->publish(123456,
 			'scan', 
 			AMQP::NOPARAM,
 			['content_type'=> 'text/xml', 	'headers' => $headers]);
@@ -32,6 +32,7 @@
 // $testExchange->publish($msg, 'scan', AMQP_NOPARAM, 
 // 	['headers' => ['x-model'=>'object', 'x-type' => 123]]);
 
+var_dump($ex);
 
 	echo "------  publish Ok  --------\n";
 
