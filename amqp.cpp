@@ -1235,95 +1235,6 @@ bool HHVM_METHOD(AMQPExchange, publish,
 	if (arguments.size()) {
 
 	AMQP_TRACE;
-	Variant hd = Variant(arguments[s_headers]);
-
-	switch (message.getType()) {
-		case KindOfString:
-		case KindOfStaticString: {
-			message_bytes = amqp_cstring_bytes(message.toString().c_str());
-			break;
-		}
-		case KindOfInt64: 
-			message_bytes = amqp_cstring_bytes(message.toString().c_str());
-			AMQP_TRACE;
-			
-			if (arguments.size() && arguments[s_headers].toBoolean() ) {
-		
-				AMQP_TRACE;
-					Array tmp;
-					if( hd.getType() == KindOfArray) {
-					AMQP_TRACE;
-					tmp.add(
-						s_x_type,
-						Variant(s_int),
-						true);
-					hd.attach(tmp.get());
-
-
-				} else {
-					raise_warning("error type of $this->arguments[header], must be Array");
-				}
-
-			} else {
-
-			AMQP_TRACE;
-
-				args.add(
-					 s_x_type,
-					 Variant("int"),
-					 true);
-			}
-			break;
-		
-		// case KindOfDouble: 
-		// 	message_bytes = amqp_cstring_bytes(message.toString
-		// 	if (arguments.size()) {
-		// 								 arguments.add(
-		// 										 s_x_type,
-		// 										 s_double,
-		// 										 true); 
-		// 	} else {
-		// 								 args.add(
-		// 										 s_x_type,
-		// 										 s_double,
-		// 										 true);
-		// 	}
-		// 	break;
-
-		// case KindOfNull: 
-		// 	message_bytes = amqp_cstring_bytes("0");
-			
-		// 	if (arguments.size()) {
-		// 								 arguments.add(
-		// 										 s_x_type,
-		// 										 s_null,
-		// 										 true); 
-		// 	} else {
-		// 								 args.add(
-		// 										 s_x_type,
-		// 										 s_null,
-		// 										 true);
-		// 	}
-		// 	break;
-
-		// case KindOfBoolean: 
-		// 	message_bytes = amqp_cstring_bytes(message.toBoolea
-		// 	if (arguments.size()) {
-		// 								 arguments.add(
-		// 										 s_x_type,
-		// 										 s_bool,
-		// 										 true); 
-		// 	} else {
-		// 								 args.add(
-		// 										 s_x_type,
-		// 										 s_bool,
-		// 										 true);
-		// 	}
-		// 	break;
-
-		default:
-			raise_warning("this type no implement");
-	}
 
 
 		Variant ct = args[s_content_type];
@@ -1379,7 +1290,7 @@ bool HHVM_METHOD(AMQPExchange, publish,
 		Variant ts = Variant(arguments[s_timestamp]);
 		ADD_AMQP_LONG_PROPERTY(ts, timestamp, AMQP_BASIC_TIMESTAMP_FLAG );
 
-
+		Variant hd = Variant(arguments[s_headers]);
 		switch(hd.getType()) {
 			case KindOfNull: break;
 			case KindOfArray : {
@@ -1388,17 +1299,17 @@ bool HHVM_METHOD(AMQPExchange, publish,
 		// ??????	
 				amqp_table_t *headers = (amqp_table_t *) malloc(sizeof(amqp_table_t));
 				char type[16];
-				headers->entries = (amqp_table_entry_t *) calloc( hd.toArray().size(), sizeof(amqp_table_entry_t));
+				int size = hd.toArray().size() + static_cast<int>(message.getType() == KindOfString);
+
+				headers->entries = (amqp_table_entry_t *) calloc( size, sizeof(amqp_table_entry_t));
+				amqp_table_entry_t *table;
+				amqp_field_value_t *field;
 
 				ArrayData* hdata = hd.toArray().get();
 				for (ssize_t pos = hdata->iter_begin(); pos != hdata->iter_end();
 							pos = hdata->iter_advance(pos)){
 					const char* key = hdata->getKey(pos).toString().c_str();
 					const Variant val = hdata->getValue(pos);
-					amqp_table_entry_t *table;
-					amqp_field_value_t *field;
-
-					AMQP_TRACE
 			
 					table = &headers->entries[headers->num_entries++];
 					field = &table->value;
@@ -1438,7 +1349,76 @@ bool HHVM_METHOD(AMQPExchange, publish,
 				table->key = amqp_cstring_bytes(key);
 
 
+				} //for
+
+				switch (message.getType()) {
+					case KindOfString:
+					case KindOfStaticString: {
+						message_bytes = amqp_cstring_bytes(message.toString().c_str());
+						break;
+					}
+					case KindOfInt64: 
+						message_bytes = amqp_cstring_bytes(message.toString().c_str());
+						AMQP_TRACE;
+					
+						table = &headers->entries[headers->num_entries++];
+						field = &table->value;
+						table->key = amqp_cstring_bytes("x-type");
+						field->value.bytes = amqp_cstring_bytes("int");
+
+						// -----------------------
+						break;
+					
+					// case KindOfDouble: 
+					// 	message_bytes = amqp_cstring_bytes(message.toString
+					// 	if (arguments.size()) {
+					// 								 arguments.add(
+					// 										 s_x_type,
+					// 										 s_double,
+					// 										 true); 
+					// 	} else {
+					// 								 args.add(
+					// 										 s_x_type,
+					// 										 s_double,
+					// 										 true);
+					// 	}
+					// 	break;
+
+					// case KindOfNull: 
+					// 	message_bytes = amqp_cstring_bytes("0");
+						
+					// 	if (arguments.size()) {
+					// 								 arguments.add(
+					// 										 s_x_type,
+					// 										 s_null,
+					// 										 true); 
+					// 	} else {
+					// 								 args.add(
+					// 										 s_x_type,
+					// 										 s_null,
+					// 										 true);
+					// 	}
+					// 	break;
+
+					// case KindOfBoolean: 
+					// 	message_bytes = amqp_cstring_bytes(message.toBoolea
+					// 	if (arguments.size()) {
+					// 								 arguments.add(
+					// 										 s_x_type,
+					// 										 s_bool,
+					// 										 true); 
+					// 	} else {
+					// 								 args.add(
+					// 										 s_x_type,
+					// 										 s_bool,
+					// 										 true);
+					// 	}
+					// 	break;
+
+					default:
+						raise_warning("this type no implement");
 				}
+
 
 				props.headers = *headers;
 				props._flags |= AMQP_BASIC_HEADERS_FLAG;

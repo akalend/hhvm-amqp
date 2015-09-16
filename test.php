@@ -4,7 +4,7 @@
 
 printf("--------- %d  ---------\n", __LINE__);
 
-	$cnn = new AMQPConnection(['port'=>5677]);
+	$cnn = new AMQPConnection(['port'=>5672]);
 
 printf("--------- %d  ---------\n", __LINE__);
 

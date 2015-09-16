@@ -1,6 +1,7 @@
+#! /usr/bin/hhvm
 <?php
 // print_r( get_loaded_extensions() );
-	$cnn = new AMQPConnection(['port'=>5677]);
+	$cnn = new AMQPConnection(['port'=>5672]);
 	// $cnn = new AMQPConnection();
 	echo "------  connect ...  --------\n";
 
