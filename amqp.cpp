@@ -1407,6 +1407,7 @@ bool HHVM_METHOD(AMQPExchange, publish,
 
 						break;}
 
+					case KindOfObject: 
 					case KindOfArray: {
 
 						VariableSerializer vs(VariableSerializer::Type::Serialize);
@@ -1416,14 +1417,13 @@ bool HHVM_METHOD(AMQPExchange, publish,
 						field = &table->value;
 						field->kind = AMQP_FIELD_KIND_UTF8;
 						table->key = amqp_cstring_bytes("x-type");
-						field->value.bytes = amqp_cstring_bytes("array");
+						field->value.bytes = amqp_cstring_bytes("serialize");
 
 						break;
 					}
 					default:
 						raise_warning("this type no implement");
 				}
-
 
 				props.headers = *headers;
 				props._flags |= AMQP_BASIC_HEADERS_FLAG;
