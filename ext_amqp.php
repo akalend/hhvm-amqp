@@ -229,8 +229,24 @@ class AMQPEnvelope  {
 		return $this->app_id;
 	}
 
-	public function getBody ( ) {
-		$this->body;
+	public function getBody () {
+
+		if (isset($this->headers['x-type'])){
+
+			if ($this->headers['x-type'] == 'int')
+				return (int) $this->body;
+
+			if ($this->headers['x-type'] == 'double')
+				return (float) $this->body;
+
+			if ($this->headers['x-type'] == 'serialize')
+				return unserialize($this->body);
+
+			if ($this->headers['x-type'] == 'null')
+				return null;
+
+		} else
+			return $this->body;
 	}
 
 	public function getContentEncoding () {
