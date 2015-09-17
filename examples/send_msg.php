@@ -1,5 +1,29 @@
 #! /usr/bin/hhvm
 <?php
+
+class User {
+ 	private $name = '';
+	private $login = '';
+ 	private $password = 12345;
+
+ 	function __construct($name,$login){
+ 		$this->name = $name;
+ 		$this->login = $login;
+ 	}
+ 	
+ 	function getPswd() {
+ 		return $this->password;
+ 	}
+
+ 	function setPswd($password) {
+ 		return $this->password = $password;
+ 	}
+
+}
+
+$user = new User('Sasha' ,'kalendarev');
+$user->setPswd(777);
+
 // print_r( get_loaded_extensions() );
 	// $cnn = new AMQPConnection(['port'=>5677]);
 	$cnn = new AMQPConnection();
@@ -25,7 +49,7 @@
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish($headers ,
+	$ex->publish( $headers ,
 			'scan', 
 			AMQP::NOPARAM,
 			['headers' =>[]]);

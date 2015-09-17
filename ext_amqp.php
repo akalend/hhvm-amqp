@@ -240,10 +240,13 @@ class AMQPEnvelope  {
 				return (float) $this->body;
 
 			if ($this->headers['x-type'] == 'serialize')
-				return unserialize($this->body);
+				return json_decode($this->body);
 
 			if ($this->headers['x-type'] == 'null')
 				return null;
+
+			if ($this->headers['x-type'] == 'bool')
+				return (bool) $this->body;;
 
 		} else
 			return $this->body;

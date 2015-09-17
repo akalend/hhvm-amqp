@@ -2,6 +2,28 @@
 <?php
 	// print_r( get_loaded_extensions() );
 
+class User {
+ 	private $name = '';
+	private $login = '';
+ 	private $password = 12345;
+
+ 	function __construct($name,$login){
+ 		$this->name = $name;
+ 		$this->login = $login;
+ 	}
+ 	
+ 	function getPswd() {
+ 		return $this->password;
+ 	}
+
+ 	function setPswd($password) {
+ 		return $this->password = $password;
+ 	}
+
+}
+
+// $user = new User('Sasha' ,'kalendarev');
+
 printf("--------- %d  ---------\n", __LINE__);
 
 	$cnn = new AMQPConnection(['port'=>5672]);
@@ -25,9 +47,14 @@ printf("--------- %d  ---------\n", __LINE__);
 
 printf("--------- %d  ---------\n", __LINE__);
 	var_dump($message);
-printf("--------- %d  ---------\n", __LINE__);
+// printf("--------- %d  ---------\n", __LINE__);
 
-	var_dump($queue->cancel(NULL));
+// 	var_dump($queue->cancel(NULL));
+	if ($message){
+		printf("--------- %d  ---------\n", __LINE__);
+		$res = $message->getBody();
+		var_dump($res);
+	}
 
 	$cnn->disconnect();
 	exit();

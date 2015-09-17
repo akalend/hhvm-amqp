@@ -1368,8 +1368,6 @@ bool HHVM_METHOD(AMQPExchange, publish,
 					}
 					case KindOfInt64: {
 						message_bytes = amqp_cstring_bytes(message.toString().c_str());
-						AMQP_TRACE;
-					
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
 						field->kind = AMQP_FIELD_KIND_UTF8;
@@ -1410,7 +1408,7 @@ bool HHVM_METHOD(AMQPExchange, publish,
 					case KindOfObject: 
 					case KindOfArray: {
 
-						VariableSerializer vs(VariableSerializer::Type::Serialize);
+						VariableSerializer vs(VariableSerializer::Type::JSON);
   						String str_json = vs.serialize(message, true);
   						message_bytes = amqp_cstring_bytes(str_json.c_str());
 						table = &headers->entries[headers->num_entries++];
