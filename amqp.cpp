@@ -29,6 +29,9 @@
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/execution-context.h"  // g_context
 #include "hphp/runtime/base/type-object.h"  // Object
+#include "hphp/runtime/base/builtin-functions.h"
+#include "hphp/runtime/base/variable-serializer.h"
+#include "hphp/runtime/base/variable-unserializer.h"
 
 #include "hphp/runtime/vm/native-data.h"
 
@@ -1234,6 +1237,9 @@ bool HHVM_METHOD(AMQPExchange, publish,
 	
 	if (arguments.size()) {
 
+
+
+
 	AMQP_TRACE;
 
 
@@ -1360,7 +1366,7 @@ bool HHVM_METHOD(AMQPExchange, publish,
 						message_bytes = amqp_cstring_bytes(message.toString().c_str());
 						break;
 					}
-					case KindOfInt64: 
+					case KindOfInt64: {
 						message_bytes = amqp_cstring_bytes(message.toString().c_str());
 						AMQP_TRACE;
 					
@@ -1369,9 +1375,9 @@ bool HHVM_METHOD(AMQPExchange, publish,
 						field->kind = AMQP_FIELD_KIND_UTF8;
 						table->key = amqp_cstring_bytes("x-type");
 						field->value.bytes = amqp_cstring_bytes("int");
-						break;
+						break;}
 					
-					case KindOfDouble: 
+					case KindOfDouble: {
 						message_bytes = amqp_cstring_bytes(message.toString().c_str());
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
@@ -1379,9 +1385,9 @@ bool HHVM_METHOD(AMQPExchange, publish,
 						table->key = amqp_cstring_bytes("x-type");
 						field->value.bytes = amqp_cstring_bytes("double");
 						
-						break;
+						break;}
 
-					case KindOfNull: 
+					case KindOfNull: {
 						message_bytes = amqp_cstring_bytes("");
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
@@ -1389,18 +1395,31 @@ bool HHVM_METHOD(AMQPExchange, publish,
 						table->key = amqp_cstring_bytes("x-type");
 						field->value.bytes = amqp_cstring_bytes("null");
 						
-						break;
+						break;}
 
-					case KindOfBoolean: 
-						message_bytes = amqp_cstring_bytes(message.toBoolean().c_str());
+					case KindOfBoolean: {
+						message_bytes = amqp_cstring_bytes(message.toString().c_str());
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
 						field->kind = AMQP_FIELD_KIND_UTF8;
 						table->key = amqp_cstring_bytes("x-type");
 						field->value.bytes = amqp_cstring_bytes("bool");
 
-						break;
+						break;}
 
+					case KindOfArray: {
+
+						VariableSerializer vs(VariableSerializer::Type::Serialize);
+  						String str_json = vs.serialize(message, true);
+  						message_bytes = amqp_cstring_bytes(str_json.c_str());
+						table = &headers->entries[headers->num_entries++];
+						field = &table->value;
+						field->kind = AMQP_FIELD_KIND_UTF8;
+						table->key = amqp_cstring_bytes("x-type");
+						field->value.bytes = amqp_cstring_bytes("array");
+
+						break;
+					}
 					default:
 						raise_warning("this type no implement");
 				}
@@ -1429,8 +1448,6 @@ AMQP_TRACE;
 		case KindOfInt64: 
 			message_bytes = amqp_cstring_bytes(message.toString().c_str());
 			if (arguments.size() && arguments[s_headers].toBoolean() ) {
-		
-				AMQP_TRACE;
 
 				Variant hd = Variant(arguments[s_headers]);
 				if( hd.getType() == KindOfArray) {

@@ -1,8 +1,8 @@
 #! /usr/bin/hhvm
 <?php
 // print_r( get_loaded_extensions() );
-	$cnn = new AMQPConnection(['port'=>5677]);
-	// $cnn = new AMQPConnection();
+	// $cnn = new AMQPConnection(['port'=>5677]);
+	$cnn = new AMQPConnection();
 	echo "------  connect ...  --------\n";
 
 	$ret = $cnn->connect();
@@ -25,10 +25,10 @@
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish(null,
+	$ex->publish($headers ,
 			'scan', 
 			AMQP::NOPARAM,
-			['headers'=> []]);
+			['headers' =>[]]);
 
 	// $ex->publish(null,
 	// 		'scan', 
