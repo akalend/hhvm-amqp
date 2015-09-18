@@ -1408,9 +1408,16 @@ bool HHVM_METHOD(AMQPExchange, publish,
 					case KindOfObject: 
 					case KindOfArray: {
 
-						VariableSerializer vs(VariableSerializer::Type::JSON);
-  						String str_json = vs.serialize(message, true);
-  						message_bytes = amqp_cstring_bytes(str_json.c_str());
+						VariableSerializer vs(VariableSerializer::Type::Serialize);
+  						String str_json (vs.serialize(message, true));
+
+  						printf("serialize[len=%d]: %s\n", str_json.size(),str_json.c_str());
+
+  						message_bytes.bytes = (void*)str_json.c_str();
+						message_bytes.len =  str_json.size();
+
+
+  						printf("len in bytes=%d\n",(int) message_bytes.len);
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
 						field->kind = AMQP_FIELD_KIND_UTF8;

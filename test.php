@@ -54,6 +54,9 @@ printf("--------- %d  ---------\n", __LINE__);
 		printf("--------- %d  ---------\n", __LINE__);
 		$res = $message->getBody();
 		var_dump($res);
+
+		if (is_object($res))
+			var_dump($res->getPswd());
 	}
 
 	$cnn->disconnect();

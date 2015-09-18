@@ -24,6 +24,8 @@ class User {
 $user = new User('Sasha' ,'kalendarev');
 $user->setPswd(777);
 
+print serialize($user);
+
 // print_r( get_loaded_extensions() );
 	// $cnn = new AMQPConnection(['port'=>5677]);
 	$cnn = new AMQPConnection();
@@ -43,13 +45,13 @@ $user->setPswd(777);
 	
 	define('PLAIN', 'text/plain');
 
-	$ex->setArgument('content_type', 'text/json');
+	// $ex->setArgument('content_type', 'text/json');
 	// $ex->setArgument('headers', ['xxx'=>123]);
 	$headers = ['sss'=> 'asd', 'xxx'=> 321];
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish( $headers ,
+	$ex->publish( $user ,
 			'scan', 
 			AMQP::NOPARAM,
 			['headers' =>[]]);
