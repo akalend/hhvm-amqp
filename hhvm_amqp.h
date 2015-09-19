@@ -39,7 +39,7 @@ namespace HPHP {
 #define AMQP_PORT  5672
 #define AMQP_MAX_CHANNELS 65535 
 
-
+void HHVM_METHOD(AMQPConnection, __destruct);
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
 bool HHVM_METHOD(AMQPConnection, reconnect);
@@ -47,6 +47,8 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm);
 
 
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect);
+void HHVM_METHOD(AMQPChannel, __destruct);
+
 bool HHVM_METHOD(AMQPChannel, isConnected);
 
 void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
@@ -137,6 +139,7 @@ class AMQPChannel {
 	
 	int used_slots = 0;
 	int prefetch_count = 0;
+	int is_open = 0;
 
 	amqp_channel_t channel_id = 1;
 	amqp_channel_t *slots;

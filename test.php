@@ -34,29 +34,6 @@ printf("--------- %d  ---------\n", __LINE__);
 	echo "-------- connect Ok ------\n";
 
 
-	$ch = new AMQPChannel($cnn);
-	$queue = new AMQPQueue($ch);
-
-// $cnn->disconnect(AMQP_NOPARAM);
-
-	$queue->setName("test_q");
-
-	$queue->setFlags(AMQP::AUTOACK);//| ); AMQP::AUTODELETE
-	$message = $queue->get( );
-
-
-printf("--------- %d  ---------\n", __LINE__);
-	var_dump($message);
-// printf("--------- %d  ---------\n", __LINE__);
-
-// 	var_dump($queue->cancel(NULL));
-	if ($message){
-		printf("--------- %d  ---------\n", __LINE__);
-		$res = $message->getBody();
-		var_dump($res);
-
-		if (is_object($res))
-			var_dump($res->getPswd());
 	}
 
 	$cnn->disconnect();

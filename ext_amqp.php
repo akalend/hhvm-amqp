@@ -109,6 +109,9 @@ class AMQPConnection {
 
 	}
 
+	<<__Native>>
+	public  function __destruct () : void;
+
 	public function  setHost ( string $host ){
 		$this->host = $host;
 	}
@@ -163,7 +166,7 @@ class AMQPConnection {
 
 }
 
-<<__NativeData("AMQPConnection")>>
+<<__NativeData("AMQPChannel")>>
 class AMQPChannel {
 
  	/* Properties  */
@@ -173,6 +176,9 @@ class AMQPChannel {
 	<<__Native>>
 	public  function __construct ( AMQPConnection $amqp_connection ) : void;
 	
+	<<__Native>>
+	public  function __destruct () : void;
+
 	<<__Native>>
 	public function isConnected (): bool;
 
