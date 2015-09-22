@@ -44,6 +44,7 @@ bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
 bool HHVM_METHOD(AMQPConnection, reconnect);
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm);
+void HHVM_METHOD(AMQPConnection, init);
 
 
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect);
@@ -72,7 +73,14 @@ enum amqp_error_code {
 	AMQP_ERROR_LOGIN
 };
 
+
+enum amqp_channel_status {
+	AMQP_CHANNEL_CLOSED = 0,
+	AMQP_CHANNEL_OPENED = 1,
+	AMQP_CHANNEL_RECLOSED = 2,
+};
  
+
 enum amqp_param {
 	AMQP_NOPARAM 	= 0,
 	AMQP_NOACK 		= 1,
@@ -106,7 +114,8 @@ class AMQPConnection {
 	short port = AMQP_PORT;
 	short err = 0;
 	short channel_id = 0;
-
+	short channel_use = 0;
+	std::map<int, int> channel_open;
 
 	AMQPConnection() { /* new AMQPConnection */ }
 	AMQPConnection(const AMQPConnection&) = delete;
@@ -141,8 +150,7 @@ class AMQPChannel {
 	int prefetch_count = 0;
 	int is_open = 0;
 
-	amqp_channel_t channel_id = 1;
-	amqp_channel_t *slots;
+	amqp_channel_t channel_id = 1;	
 	AMQPConnection* amqpCnn = NULL;
 };
 

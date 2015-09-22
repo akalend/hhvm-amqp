@@ -184,7 +184,7 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPConnection, isConnected);
 	HHVM_ME(AMQPConnection, disconnect);
 	HHVM_ME(AMQPConnection, __destruct);
-
+	HHVM_ME(AMQPConnection, init);
 
 	HHVM_ME(AMQPChannel, __construct);
 	HHVM_ME(AMQPChannel, isConnected);
@@ -255,18 +255,21 @@ static AmqpExtension  s_amqp_extension;
 
 // ------------------------------------------------------
 
-bool amqpConnect( ObjectData* this_) {
+bool hhvm_amqp_connect( ObjectData* this_) {
 	
 	// conn = amqp_new_connection();
-	
+	printf( "%s:%d\n", __FUNCTION__, __LINE__);
+
 	auto *data = Native::data<AMQPConnection>(this_);
 
-	// printf( "connect to %s:%d\n", data->host, data->port);
+	printf( "connect to %s:%d\n", data->host, data->port);
 
 	data->conn = amqp_new_connection();
 	int channel_MAX = 0;
 	int frame_MAX = 131072;
 	int heartbeat = 0;
+
+	data->is_connected =false;
 
 	amqp_socket_t *socket =  amqp_tcp_socket_new(data->conn);
 	if (!socket) {
@@ -302,7 +305,8 @@ bool amqpConnect( ObjectData* this_) {
 	client_properties.entries[1].key.len = 16;
 	client_properties.entries[1].key.bytes = (amqp_bytes_t*) author;
 
-	
+
+printf( "%s:%d\n", __FUNCTION__, __LINE__);
 	amqp_rpc_reply_t res = amqp_login_with_properties(
 			data->conn, 
 			data->vhost, 
@@ -314,8 +318,11 @@ bool amqpConnect( ObjectData* this_) {
 			data->login, 
 			data->password);
 
+printf( "%s:%d\n", __FUNCTION__, __LINE__);
+
 	free(client_properties.entries);
 
+printf( "%s:%d\n", __FUNCTION__, __LINE__);
 
 	if ( res.reply_type == AMQP_RESPONSE_NORMAL) {
 		return data->is_connected = true;
@@ -327,20 +334,51 @@ bool amqpConnect( ObjectData* this_) {
 }
 
 
-amqp_channel_t getChannelSlot(AMQPChannel *channel) {
+bool hhvm_amqp_connection_close(AMQPConnection* data) {
+	amqp_rpc_reply_t res;
+	bool ret = true;
 
-	if (channel->used_slots >= AMQP_MAX_CHANNELS + 1) {
-		return 0;
+	if (!data->is_connected)
+		return true;
+	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
+	data->is_connected = false;
+
+	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		raise_warning( "connection close error" );
+		ret = false;
 	}
 
-	amqp_channel_t slot;
-
-	for (slot = 1; slot < AMQP_MAX_CHANNELS + 1; slot++) {
-		if (channel->slots[slot] == 0) {
-			return slot;
-		}
-	}
+	return ret;
 }
+
+void hhvm_amqp_channels_close(AMQPConnection* data) {
+
+	amqp_rpc_reply_t res;
+	// for (int i=0; i<AMQP_MAX_CHANNELS; i++) {
+	// 	if (data->channel_os[i]) {
+	// 		res = amqp_channel_close(data->conn, i, AMQP_REPLY_SUCCESS);
+	// 		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+	// 			raise_warning( "channel %d close error", i );				
+	// 		}
+	// 		data->channels[i]= AMQP_CHANNEL_CLOSED;
+	// 	}
+	// }
+}
+
+// amqp_channel_t getChannelSlot(AMQPChannel *channel) {
+
+// 	if (channel->used_slots >= AMQP_MAX_CHANNELS + 1) {
+// 		return 0;
+// 	}
+
+// 	amqp_channel_t slot;
+
+// 	for (slot = 1; slot < AMQP_MAX_CHANNELS + 1; slot++) {
+// 		if (channel->slots[slot] == 0) {
+// 			return slot;
+// 		}
+// 	}
+// }
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -348,125 +386,29 @@ amqp_channel_t getChannelSlot(AMQPChannel *channel) {
 
 // ------------------------------  AMQPConnect ------------------------------------------
 
-void HHVM_METHOD(AMQPConnection, __destruct) {
-	
-	auto *data = Native::data<AMQPConnection>(this_);
-	
-	if (data->is_connected)
-		printf("%s cnn=%d\n", __FUNCTION__, data->is_connected);
+void HHVM_METHOD(AMQPConnection, init){
 
-	return;
-}
-
-
-bool HHVM_METHOD(AMQPConnection, isConnected) {
-	
-	auto *data = Native::data<AMQPConnection>(this_);
-	return data->is_connected;
-}
-
-bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
-
-	amqp_rpc_reply_t res;
 
 	auto *data = Native::data<AMQPConnection>(this_);
-	assert(data);
-	assert(data->conn);
-	assert(data->channel_id);
-		//TODO amqp_close_channel
-
-
-	// printf("%s:%d\n channel ", __FUNCTION__,__LINE__), data->amqpCh->is_open;
-
-	//@TODO сделать статик массив пула каналов 
-
-	// if (data->amqpCh && data->amqpCh->is_open) {
-		res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);
-		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-			raise_warning( "channel close error" );
-			return false;
-		}
-	// 	data->amqpCh->is_open = 0;
-	// }
-
-
-	res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
 	data->is_connected = false;
+	
+	printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
 
-	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-		raise_warning( "connection close error" );
-		return false;
-	}
-
-	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
-
-	data->channel_id = 0;
-
-	if (res.reply_type) return true;
-
-	// if (parm == AMQP_NOACK)
-	// 	raise_warning("Failing to send the ack to the broker");
-
-	amqp_destroy_connection(data->conn);
-	data->conn = NULL;
-
-	return false;
+	// printf( "finish %s:%d\n", __FUNCTION__, __LINE__);
 }
 
-bool HHVM_METHOD(AMQPConnection, reconnect) {
-	amqp_rpc_reply_t res;
-	auto *data = Native::data<AMQPConnection>(this_);
-
-	if (data->is_connected) {
-		data->is_connected = false;
-		
-
-		auto *channel_data = Native::data<AMQPChannel>(this_);
-
-		if (channel_data && channel_data->is_open) {
-			res = amqp_channel_close(data->conn, data->channel_id, AMQP_REPLY_SUCCESS);		
-			if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-				raise_warning( "connection close error" );
-				return false;
-			}
-
-			channel_data->is_open = 0;
-		}
-
-		res = amqp_connection_close(data->conn, AMQP_REPLY_SUCCESS);
-		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-			raise_warning( "connection close error" );
-			return false;
-		}
-		
-		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
-		data->channel_id = 0;
-	}
-
-	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
-	data->port = static_cast<short>(this_->o_get(s_port, false, s_AMQPConnection).toInt64());
-	data->vhost = const_cast<char* >(this_->o_get(s_vhost, false, s_AMQPConnection).toString().c_str());
-	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
-	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
-
-
-	if (!amqpConnect(this_)) {
-
-		if (data->err == AMQP_ERR_CANNOT_OPEN_SOCKET) { 
-				raise_warning("Can'not open socket");}
-
-		if (data->err == AMQP_ERR_CANNOT_CREATE_SOCKET) { 
-				raise_warning("Can'not create socket");}
-
-		return false;
-	}
-
-	return true;
-}
 
 bool HHVM_METHOD(AMQPConnection, connect) {
-  
+
+  	printf( "%s:%d\n", __FUNCTION__, __LINE__);
+
+	return false;
+
+	printf( "%s:%d\n", __FUNCTION__, __LINE__);
+	
 	auto *data = Native::data<AMQPConnection>(this_);
+	printf( "%s:%d\n", __FUNCTION__, __LINE__);
+
 
 	/* not implement */
 	// bool is_persisten = this_->o_get(s_is_persisten, false, s_AMQPConnection).toBoolean();
@@ -498,7 +440,118 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
 	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
 
-	if (!amqpConnect(this_)) {
+	AMQP_TRACE;
+	if (!hhvm_amqp_connect(this_)) {
+
+		if (data->err == AMQP_ERR_CANNOT_OPEN_SOCKET) { 
+				raise_warning("Can'not open socket");}
+
+		if (data->err == AMQP_ERR_CANNOT_CREATE_SOCKET) { 
+				raise_warning("Can'not create socket");}
+
+		return false;
+	}
+
+	AMQP_TRACE;
+
+	return true;
+}
+
+
+
+void HHVM_METHOD(AMQPConnection, __destruct) {
+	
+	AMQP_TRACE;
+	auto *data = Native::data<AMQPConnection>(this_);
+	
+	
+	printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
+
+	hhvm_amqp_connection_close(data);
+
+AMQP_TRACE;
+	// amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+	data->channel_id = 0;
+
+	amqp_destroy_connection(data->conn);
+AMQP_TRACE;
+
+	data->conn = NULL;
+	return;
+}
+
+
+bool HHVM_METHOD(AMQPConnection, isConnected) {
+	
+	auto *data = Native::data<AMQPConnection>(this_);
+
+		printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
+
+	return data->is_connected;
+}
+
+bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
+
+	amqp_rpc_reply_t res;
+
+
+	auto *data = Native::data<AMQPConnection>(this_);
+	assert(data);
+	assert(data->conn);
+	assert(data->channel_id);
+		//TODO amqp_close_channel
+
+	hhvm_amqp_channels_close(data);
+
+	bool ret = hhvm_amqp_connection_close(data);
+	if (!ret){
+		raise_warning( "connection close error" );
+		return false;
+	}
+
+	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+
+	data->channel_id = 0;
+
+	// if (ret) return true; ////????
+
+	// if (parm == AMQP_NOACK)
+	// 	raise_warning("Failing to send the ack to the broker");
+
+	amqp_destroy_connection(data->conn);
+	data->conn = NULL;
+
+	return false;
+}
+
+bool HHVM_METHOD(AMQPConnection, reconnect) {
+	amqp_rpc_reply_t res;
+	auto *data = Native::data<AMQPConnection>(this_);
+
+	if (data->is_connected) {
+		data->is_connected = false;
+		
+
+		hhvm_amqp_channels_close(data);
+
+		bool ret = hhvm_amqp_connection_close(data);
+		if (!ret) {
+			raise_warning( "connection close error" );
+		}
+		
+		// тутнадо пройтись по всем каналам
+		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+		data->channel_id = 0;
+	}
+
+	data->host = const_cast<char* >(this_->o_get(s_host, false, s_AMQPConnection).toString().c_str());
+	data->port = static_cast<short>(this_->o_get(s_port, false, s_AMQPConnection).toInt64());
+	data->vhost = const_cast<char* >(this_->o_get(s_vhost, false, s_AMQPConnection).toString().c_str());
+	data->password = const_cast<char* >(this_->o_get(s_password, false, s_AMQPConnection).toString().c_str());
+	data->login = const_cast<char* >(this_->o_get(s_login, false, s_AMQPConnection).toString().c_str());
+
+
+	if (!hhvm_amqp_connect(this_)) {
 
 		if (data->err == AMQP_ERR_CANNOT_OPEN_SOCKET) { 
 				raise_warning("Can'not open socket");}
@@ -512,6 +565,7 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	return true;
 }
 
+
 // ------------------------------  AMQPChannel ------------------------------------------
 
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
@@ -521,9 +575,11 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (!src_data)
 		raise_error( "Error input data");
 
-	data->channel_id = 1; // init first channel
-	data->amqpCnn = src_data;
+	// data->channel_id = 1; // init first channel
+	data->amqpCnn = src_data;	
 	src_data->channel_id = static_cast<short>(data->channel_id);
+
+	data->channel_id = ++ src_data->channel_use; // init first channel
 
 	// if (!data->slots) {
 	// 	data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
@@ -537,17 +593,20 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	// 	return;
 	// }
 
-	printf("channel opening %d cnn=%x\n", data->channel_id, (int64_t) data->amqpCnn->conn );
+	printf("channel opening %d\n", data->channel_id);
 
 	// channel_id 
 	amqp_channel_open(src_data->conn, data->channel_id );
 	amqp_rpc_reply_t r = amqp_get_rpc_reply(src_data->conn);
 	if (r.reply_type != AMQP_RESPONSE_NORMAL) {
 		raise_warning("The AMQPChannel class: open channel error");
+		return;
 	}
 	
 
 	data->is_open = 1;
+	src_data->channel_open[data->channel_id] = 1;
+
 	// printf("channel_id=%d\n", data->channel_id);
 
 	// if (data->prefetch_count) {
@@ -572,20 +631,27 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 void HHVM_METHOD(AMQPChannel, __destruct){
 
 	auto *data = Native::data<AMQPChannel>(this_);
-	if (!data->amqpCnn)
-		raise_warning("The AMQPConnection class is`nt binding whith connection");
-
-
-	printf("channel closing %d cnn is open %d\n", data->channel_id, data->is_open);
-
-	if (data->is_open) {
-		amqp_rpc_reply_t res = amqp_channel_close(data->amqpCnn->conn, data->channel_id, AMQP_REPLY_SUCCESS);
-		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-			raise_warning( "channel close error" );
-			return;
-		}
-		data->is_open = 0;
+	if (!data->amqpCnn) {
+		// raise_warning("The AMQPConnection class is`nt binding whith connection");
+		return;
 	}
+
+
+	for(std::map<int,int>::iterator it=data->amqpCnn->channel_open.begin(); it != data->amqpCnn->channel_open.end(); ++it ){
+		if (it->second) {
+			int channel_id = it->first;
+			printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
+
+			amqp_rpc_reply_t res = amqp_channel_close(data->amqpCnn->conn, channel_id, AMQP_REPLY_SUCCESS);
+			if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+				raise_warning( "channel close error" );
+			}
+		}
+	}
+
+	// if (data->is_open) {
+	// 	data->is_open = 0;
+	// }
 }
 
 

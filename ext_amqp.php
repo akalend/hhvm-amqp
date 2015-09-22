@@ -107,7 +107,11 @@ class AMQPConnection {
 		if (isset($parms['connect_timeout']))
 			$this->connect_timeout = $parms['connect_timeout'];
 
+		$this->init();
 	}
+
+	<<__Native>>
+	private  function init () : void;
 
 	<<__Native>>
 	public  function __destruct () : void;

@@ -3,9 +3,19 @@
 $rabbit = new AMQPConnection(
 	// array('host' => '127.0.0.1', 'port' => '5672', 'login' => 'guest', 'password' => 'guest')
 	);
-$rabbit->connect();
+printf("--------- %d  ---------\n", __LINE__);
+$res = $rabbit->connect();
+printf("--------- %d  ---------\n", __LINE__);
+
+var_dump($res);
+if (!$res) {
+	die("connection false\n");
+}
+printf("--------- %d  ---------\n", __LINE__);
+
 
 $testChannel = new AMQPChannel($rabbit);
+printf("--------- %d  ---------\n", __LINE__);
 $testExchange = new AMQPExchange($testChannel);
 
 $testExchange->setName('test_e');
