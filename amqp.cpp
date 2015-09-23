@@ -44,8 +44,6 @@
 
 #define NOPARAM -1
 
-#define AMQP_TRACE printf("%s:%d\n", __FUNCTION__, __LINE__);
-
 #define GET_CLASS_DATA_AND_CHECK( class_name ) 			\
 	auto *data = Native::data<class_name>(this_);		\
 	if (!data)											\
@@ -354,25 +352,10 @@ AMQP_TRACE;
 }
 
 void hhvm_amqp_channels_close(AMQPConnection* data) {
-
-	amqp_rpc_reply_t res;
+	AMQP_TRACE;
+	// amqp_rpc_reply_t res;
 	data->closeAllChannels();
 }
-
-// amqp_channel_t getChannelSlot(AMQPChannel *channel) {
-
-// 	if (channel->used_slots >= AMQP_MAX_CHANNELS + 1) {
-// 		return 0;
-// 	}
-
-// 	amqp_channel_t slot;
-
-// 	for (slot = 1; slot < AMQP_MAX_CHANNELS + 1; slot++) {
-// 		if (channel->slots[slot] == 0) {
-// 			return slot;
-// 		}
-// 	}
-// }
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -388,7 +371,8 @@ void HHVM_METHOD(AMQPConnection, init){
 	data->conn = NULL;
 	
 	printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
-	// data->channel_open.clear();
+	
+	data->initChannels();
 	AMQP_TRACE;
 	// printf( "map %d\n", data->channel_open.size());
 }
@@ -493,17 +477,17 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 	assert(data);
 	assert(data->conn);
 		//TODO amqp_close_channel
-
+AMQP_TRACE;
 	hhvm_amqp_channels_close(data);
-
+AMQP_TRACE;
 	bool ret = hhvm_amqp_connection_close(data);
 	if (!ret){
 		raise_warning( "connection close error" );
 		return false;
 	}
-
+AMQP_TRACE;
 	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
-
+AMQP_TRACE;
 	data->channel_id = 0;
 
 	// if (ret) return true; ////????
@@ -513,7 +497,7 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
 	amqp_destroy_connection(data->conn);
 	data->conn = NULL;
-
+AMQP_TRACE;
 	return false;
 }
 

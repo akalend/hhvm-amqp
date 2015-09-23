@@ -36,6 +36,9 @@
 
 namespace HPHP {
 
+#define AMQP_TRACE printf("%s:%d\n", __FUNCTION__, __LINE__);
+
+
 #define AMQP_PORT  5672
 #define AMQP_MAX_CHANNELS 65535 
 
@@ -128,24 +131,33 @@ class AMQPConnection {
 
   ~AMQPConnection() {};
 
+  	void initChannels() {
+  		AMQP_TRACE;
+  		std::map<int,int> tmp;
+  		channel_open = &tmp;
+  	}
+
   	int getChannel(int num) {
-  		return channel_open[num];
+  		return (*channel_open)[num];
   	}
 
   	void setChannel(int num) {
-  		channel_open[num] = 1;
+  		(*channel_open)[num] = 1;
   	}
 
   	void resetChannel(int num) {
-  		channel_open[num] = 0;
+  		(*channel_open)[num] = 0;
   	}
 
   	int closeAllChannels() {
-
+  		AMQP_TRACE;
 	  	int ret = AMQP_ERR_NONE;
-		for(std::map<int,int>::iterator it=channel_open.begin(); it != channel_open.end(); ++it ){
+		
+		for(auto it=channel_open->begin(); it != channel_open->end(); it++ ){
+			AMQP_TRACE;
+			printf("iterator %d -> %d\n", (*it).first, (*it).second);
 			if (it->second) {
-				int channel_id = it->first;
+				int channel_id = (*it).first;
 				printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
 
 				amqp_rpc_reply_t res = amqp_channel_close(conn, channel_id, AMQP_REPLY_SUCCESS);
@@ -161,7 +173,7 @@ class AMQPConnection {
 
 
  private:
-	std::map<int, int> channel_open;
+	std::map<int, int> *channel_open;
 
 };
 
