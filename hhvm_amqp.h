@@ -115,7 +115,6 @@ class AMQPConnection {
 	short err = 0;
 	short channel_id = 0;
 	short channel_use = 0;
-	std::map<int, int> channel_open;
 
 	AMQPConnection() { /* new AMQPConnection */ }
 	AMQPConnection(const AMQPConnection&) = delete;
@@ -127,6 +126,25 @@ class AMQPConnection {
   }
 
   ~AMQPConnection() {};
+
+  	int getChannel(int num) {
+  		return channel_open[num];
+  	}
+
+  	void setChannel(int num) {
+  		channel_open[num] = 1;
+  	}
+
+  	void resetChannel(int num) {
+  		channel_open[num] = 0;
+  	}
+
+  	void closeAll() {
+
+  	}
+  	
+ private:
+	std::map<int, int> channel_open;
 
 };
 
