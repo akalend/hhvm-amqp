@@ -70,7 +70,8 @@ enum amqp_error_code {
 	AMQP_ERR_NONE = 0,
 	AMQP_ERR_CANNOT_OPEN_SOCKET,
 	AMQP_ERR_CANNOT_CREATE_SOCKET,
-	AMQP_ERROR_LOGIN
+	AMQP_ERROR_LOGIN,
+	AMQP_ERR_CHANNEL_CLOSE
 };
 
 
@@ -139,10 +140,26 @@ class AMQPConnection {
   		channel_open[num] = 0;
   	}
 
-  	void closeAll() {
+  	int closeAllChannels() {
 
-  	}
-  	
+	  	int ret = AMQP_ERR_NONE;
+		for(std::map<int,int>::iterator it=channel_open.begin(); it != channel_open.end(); ++it ){
+			if (it->second) {
+				int channel_id = it->first;
+				printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
+
+				amqp_rpc_reply_t res = amqp_channel_close(conn, channel_id, AMQP_REPLY_SUCCESS);
+				if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+					ret = AMQP_ERR_CHANNEL_CLOSE;
+					continue; 
+				}
+			}
+	  	}
+
+	  	return ret;
+	}
+
+
  private:
 	std::map<int, int> channel_open;
 

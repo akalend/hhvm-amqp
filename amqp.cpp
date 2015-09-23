@@ -356,23 +356,7 @@ AMQP_TRACE;
 void hhvm_amqp_channels_close(AMQPConnection* data) {
 
 	amqp_rpc_reply_t res;
-	
-	// printf("%s:channel closing [%d]\n",__FUNCTION__, data->channel_open.size());
-	// int i=0;
-	// for(std::map<int,int>::iterator it=data->channel_open.begin(); it != data->channel_open.end(); ++it ){
-	// 	printf("iterator:%d\n",i++ );
-	// 	if (it->second) {
-	// 		int channel_id = it->first;
-	// 		printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
-
-	// 		amqp_rpc_reply_t res = amqp_channel_close(data->conn, channel_id, AMQP_REPLY_SUCCESS);
-	// 		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-	// 			raise_warning( "channel close error" );
-	// 		}
-	// 	}
-	// }
-
-
+	data->closeAllChannels();
 }
 
 // amqp_channel_t getChannelSlot(AMQPChannel *channel) {
