@@ -34,6 +34,7 @@
 #include <amqp.h>
 #include <amqp_framing.h>
 
+
 namespace HPHP {
 
 #define AMQP_TRACE printf("%s:%d\n", __FUNCTION__, __LINE__);
@@ -86,6 +87,7 @@ enum amqp_channel_status {
  
 
 enum amqp_param {
+	AMQP_ERROR 		= -1,
 	AMQP_NOPARAM 	= 0,
 	AMQP_NOACK 		= 1,
 	AMQP_PASSIVE 	= 2,		// passive
@@ -131,49 +133,59 @@ class AMQPConnection {
 
   ~AMQPConnection() {};
 
-  	void initChannels() {
-  		AMQP_TRACE;
-  		std::map<int,int> tmp;
-  		channel_open = &tmp;
-  	}
+	void initChannels() {
+		AMQP_TRACE;
+		channel_open = static_cast<int8_t*>(calloc(AMQP_MAX_CHANNELS, sizeof(int8_t)));
+		// channel_open.clear();
+		// printf("%s map.size=%d\n", __FUNCTION__, channel_open.size());
+	}
 
-  	int getChannel(int num) {
-  		return (*channel_open)[num];
-  	}
+	void deinitChannel() {
+		AMQP_TRACE;
+		free(channel_open);
+	}
 
-  	void setChannel(int num) {
-  		(*channel_open)[num] = 1;
-  	}
+	bool getChannel(int num) {
+		AMQP_TRACE;
+		if (num >= AMQP_MAX_CHANNELS) return AMQP_ERROR;		
+		return  (bool)*(channel_open + num);
+	}
 
-  	void resetChannel(int num) {
-  		(*channel_open)[num] = 0;
-  	}
+	void setChannel(int num) {
+		if (num >= AMQP_MAX_CHANNELS) return;
+		*(channel_open + num) = 1;
+	}
 
-  	int closeAllChannels() {
-  		AMQP_TRACE;
-	  	int ret = AMQP_ERR_NONE;
+	void resetChannel(int num) {
+		if (num >= AMQP_MAX_CHANNELS) return;
+		*(channel_open + num) = 0;
+	}
+
+	int closeAllChannels() {
+		AMQP_TRACE;
+		// int ret = AMQP_ERR_NONE;
 		
-		for(auto it=channel_open->begin(); it != channel_open->end(); it++ ){
-			AMQP_TRACE;
-			printf("iterator %d -> %d\n", (*it).first, (*it).second);
-			if (it->second) {
-				int channel_id = (*it).first;
-				printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
+		// for(auto it=channel_open->begin(); it != channel_open->end(); it++ ){
+		// 	AMQP_TRACE;
+		// 	printf("iterator %d -> %d\n", (*it).first, (*it).second);
+		// 	if (it->second) {
+		// 		int channel_id = (*it).first;
+		// 		printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
 
-				amqp_rpc_reply_t res = amqp_channel_close(conn, channel_id, AMQP_REPLY_SUCCESS);
-				if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-					ret = AMQP_ERR_CHANNEL_CLOSE;
-					continue; 
-				}
-			}
-	  	}
+		// 		amqp_rpc_reply_t res = amqp_channel_close(conn, channel_id, AMQP_REPLY_SUCCESS);
+		// 		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
+		// 			ret = AMQP_ERR_CHANNEL_CLOSE;
+		// 			continue; 
+		// 		}
+		// 	}
+	 //  	}
 
-	  	return ret;
+		return 0;
 	}
 
 
  private:
-	std::map<int, int> *channel_open;
+	int8_t* channel_open;
 
 };
 

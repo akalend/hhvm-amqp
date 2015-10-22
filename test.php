@@ -32,15 +32,20 @@ printf("--------- %d  ---------\n", __LINE__);
 	$cnn = new AMQPConnection();
 	printf("--------- %d  ---------\n", __LINE__);
 	var_dump($cnn->isConnected());
+//exit;
 
-
-printf("--------- %d  ---------\n", __LINE__);
+	printf("--------- %d  ---------\n", __LINE__);
 
 	$ret = $cnn->connect();
 	echo "-------- connect Ok ------\n";
 	var_dump($cnn->isConnected());
 
 	printf("--------- %d  ---------\n", __LINE__);
+	$channel = new AMQPChannel($cnn);
+
+
+	printf("--------- %d  ---------\n", __LINE__);
+	$channel2 = new AMQPChannel($cnn);
 
 	$cnn->disconnect();
 

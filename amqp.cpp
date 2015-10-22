@@ -373,7 +373,8 @@ void HHVM_METHOD(AMQPConnection, init){
 	printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
 	
 	data->initChannels();
-	AMQP_TRACE;
+	// AMQP_TRACE;
+	
 	// printf( "map %d\n", data->channel_open.size());
 }
 
@@ -453,6 +454,10 @@ AMQP_TRACE;
 	if (data->conn)
 		amqp_destroy_connection(data->conn);
 AMQP_TRACE;
+
+	data->deinitChannel();
+
+	AMQP_TRACE;
 
 	data->conn = NULL;
 	return;
@@ -552,16 +557,34 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	if (!src_data)
 		raise_error( "Error input data");
 
+
 	// data->channel_id = 1; // init first channel
 	data->amqpCnn = src_data;	
 	src_data->channel_id = static_cast<short>(data->channel_id);
 
 	data->channel_id = ++ src_data->channel_use; // init first channel
 
-	// if (!data->slots) {
-	// 	data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
-	// }
 
+	if (!src_data->is_connected) {
+		raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
+		return;
+	}
+
+	bool is_channel_open = false;
+	if (is_channel_open = src_data->getChannel(data->channel_id) == AMQP_ERROR)  {
+		raise_warning("The AMQPChannel class: the number channel more that max opening");
+		return;
+	}
+
+
+
+	if (!src_data)  {
+		raise_warning("The AMQPChannel class: the number channel more that max opening");
+		return;
+	}
+
+
+//		data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
 	//	amqp_channel_t slot = getChannelSlot(data);	
 
 	/* Check that we got a valid channel */
@@ -570,7 +593,8 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	// 	return;
 	// }
 
-	printf("channel opening %d\n", data->channel_id);
+	printf("channel %d is %s  \n", data->channel_id, is_channel_open ? "opening" : "closing");
+
 
 	// channel_id 
 	amqp_channel_open(src_data->conn, data->channel_id );
