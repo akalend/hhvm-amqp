@@ -121,6 +121,7 @@ class AMQPConnection {
 	short err = 0;
 	short channel_id = 0;
 	short channel_use = 0;
+	short max_id = 0;
 
 	AMQPConnection() { /* new AMQPConnection */ }
 	AMQPConnection(const AMQPConnection&) = delete;
@@ -132,6 +133,15 @@ class AMQPConnection {
   }
 
   ~AMQPConnection() {};
+
+
+  	void incChannel() {
+  		channel_id++;
+
+  		if (channel_id > max_id) 
+  			max_id = channel_id;
+  	}
+
 
 	void initChannels() {
 		AMQP_TRACE;
@@ -163,6 +173,7 @@ class AMQPConnection {
 
 	int closeAllChannels() {
 		AMQP_TRACE;
+		printf("all code comment\n");
 		// int ret = AMQP_ERR_NONE;
 		
 		// for(auto it=channel_open->begin(); it != channel_open->end(); it++ ){

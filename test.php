@@ -47,6 +47,60 @@ printf("--------- %d  ---------\n", __LINE__);
 	printf("--------- %d  ---------\n", __LINE__);
 	$channel2 = new AMQPChannel($cnn);
 
+	printf("--------- %d  ---------\n", __LINE__);
+
+	$queue = new AMQPQueue($channel2);
+
+	printf("--------- %d  ---------\n", __LINE__);
+
+	$queue->setName("test_q");
+
+
+	printf("--------- %d  ---------\n", __LINE__);
+
+	$queue->declare();
+	printf("--------- %d  ---------\n", __LINE__);
+
+
+printf("--------- %d  ---------\n, __LINE__");
+$testExchange = new AMQPExchange($channel2);
+
+$testExchange->setName('test_e');
+// $testExchange->delete();
+
+$testExchange->setType('direct');
+printf("--------- %d  ---------\n", __LINE__);
+$testExchange->declare();
+printf("--------- %d  ---------\n", __LINE__);
+
+	$cnn->disconnect();
+
+	printf("--------- %d  ---------\n", __LINE__);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	$cnn->disconnect();
 
 	exit();

@@ -345,17 +345,37 @@ bool hhvm_amqp_connection_close(AMQPConnection* data) {
 AMQP_TRACE;
 	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
 		raise_warning( "connection close error" );
-		ret = false;
+	int	ret = false;
 	}
 
 	return ret;
 }
 
+void hhvm_amqp_channel_close(AMQPConnection* data, int channel_id) {
+	AMQP_TRACE;
+
+	if (data->getChannel(channel_id)){
+		AMQP_TRACE;
+
+		data->resetChannel(channel_id);
+		AMQP_TRACE;
+
+		if (channel_id >= data->max_id) data->max_id--;
+	}
+
+
+}
+
 void hhvm_amqp_channels_close(AMQPConnection* data) {
 	AMQP_TRACE;
-	// amqp_rpc_reply_t res;
-	data->closeAllChannels();
+	
+	for (int i=1; i <= data->max_id; ++i) {
+		hhvm_amqp_channel_close(data, i);
+		amqp_maybe_release_buffers_on_channel(data->conn, i);		
+	}
 }
+
+
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -448,6 +468,13 @@ void HHVM_METHOD(AMQPConnection, __destruct) {
 	hhvm_amqp_connection_close(data);
 
 AMQP_TRACE;
+
+	for (int i = 1; i <= data->max_id; ++i) {
+		printf("channel close %d", i);
+		amqp_channel_close(data->conn, i, AMQP_REPLY_SUCCESS);
+		printf(" Ok\n");
+	}
+
 	// amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
 	data->channel_id = 0;
 	
@@ -483,15 +510,19 @@ bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 	assert(data->conn);
 		//TODO amqp_close_channel
 AMQP_TRACE;
+		
 	hhvm_amqp_channels_close(data);
 AMQP_TRACE;
+
+
 	bool ret = hhvm_amqp_connection_close(data);
 	if (!ret){
 		raise_warning( "connection close error" );
 		return false;
 	}
-AMQP_TRACE;
-	amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+
+// AMQP_TRACE;
+	
 AMQP_TRACE;
 	data->channel_id = 0;
 
@@ -507,7 +538,7 @@ AMQP_TRACE;
 }
 
 bool HHVM_METHOD(AMQPConnection, reconnect) {
-	amqp_rpc_reply_t res;
+
 	auto *data = Native::data<AMQPConnection>(this_);
 
 	if (data->is_connected) {
@@ -577,7 +608,6 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	}
 
 
-
 	if (!src_data)  {
 		raise_warning("The AMQPChannel class: the number channel more that max opening");
 		return;
@@ -604,6 +634,8 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 		return;
 	}
 	
+
+	printf("opening channel %d\n", data->channel_id);
 
 	data->is_open = 1;
 	// src_data->channel_open[data->channel_id] = 1;
@@ -639,8 +671,9 @@ void HHVM_METHOD(AMQPChannel, __destruct){
 	}
 
 
-	hhvm_amqp_channels_close(data->amqpCnn);
 
+	hhvm_amqp_channel_close(data->amqpCnn, data->channel_id);
+	// hhvm_amqp_channels_close(data->amqpCnn);
 
 	// if (data->is_open) {
 	// 	data->is_open = 0;
@@ -707,6 +740,10 @@ int64_t HHVM_METHOD(AMQPQueue, declare){
 
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
 
+
+	printf("use channel_id=%d\n", data->amqpCh->channel_id);
+
+
 	amqp_queue_declare_ok_t *r = amqp_queue_declare(data->amqpCh->amqpCnn->conn,
 								data->amqpCh->channel_id,
 								amqp_cstring_bytes(queue), 	// queue name
@@ -717,6 +754,7 @@ int64_t HHVM_METHOD(AMQPQueue, declare){
 								amqp_empty_table);								// arguments
 								
 
+	printf("declare responce\n");
 	if (!r) {
 		if  (AMQP_RESPONSE_NORMAL != (amqp_get_rpc_reply(data->amqpCh->amqpCnn->conn)).reply_type)
 			raise_warning("The AMQPQueue class: declare error");
@@ -724,15 +762,12 @@ int64_t HHVM_METHOD(AMQPQueue, declare){
 		return 0;
 	} 
 
+	printf("use channel_id=%d declare OK\n", data->amqpCh->channel_id);
+
 
 	data->message_count = r->message_count;
 	data->consumer_count = r->consumer_count;
 		
-	// data-queue_name = amqp_bytes_malloc_dup(r->queue);
-	// if (queue_name.bytes == NULL) {
-	//   fprintf(stderr, "The AMQPQueue class: Out of memory while copying queue name");
-	// }
-
 	return data->message_count;
 };
 
