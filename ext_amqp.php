@@ -205,7 +205,6 @@ class AMQPEnvelope  {
 	private $routing_key = NULL;
 	private $message = NULL;
 	private $channel = NULL;
-	//private $content_type = NULL;
 	private $redelivered = NULL;
 	private $app_id = NULL;
 	private $cluster_id = NULL;

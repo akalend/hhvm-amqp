@@ -24,11 +24,11 @@ class User {
 $user = new User('Sasha' ,'kalendarev');
 $user->setPswd(777);
 
-print serialize($user);
+//print serialize($user);
 
 // print_r( get_loaded_extensions() );
-	// $cnn = new AMQPConnection(['port'=>5677]);
-	$cnn = new AMQPConnection();
+	$cnn = new AMQPConnection(['port'=>5677]);
+	// $cnn = new AMQPConnection();
 	echo "------  connect ...  --------\n";
 
 	$ret = $cnn->connect();
@@ -45,16 +45,21 @@ print serialize($user);
 	
 	define('PLAIN', 'text/plain');
 
-	// $ex->setArgument('content_type', 'text/json');
-	// $ex->setArgument('headers', ['xxx'=>123]);
+	$ex->setArgument('content_type', 'text/json');
+	
+	$ex->setArgument('user_id', 'guest');
+	$ex->setArgument('timestamp', time());
+
+
 	$headers = ['sss'=> 'asd', 'xxx'=> 321];
 
 	echo "------  publish ...  --------\n";
 
-	$ex->publish( $user ,
-			'scan', 
-			AMQP::NOPARAM,
-			['headers' =>[]]);
+	$ex->publish( "*******" ,
+			'kkk');
+	// , 
+	// 		AMQP::NOPARAM,
+	// 		['headers' =>[]]);
 
 	// $ex->publish(null,
 	// 		'scan', 
@@ -65,7 +70,7 @@ print serialize($user);
 // $testExchange->publish($msg, 'scan', AMQP_NOPARAM, 
 // 	['headers' => ['x-model'=>'object', 'x-type' => 123]]);
 
-var_dump($ex);
+//var_dump($ex);
 
 	echo "------  publish Ok  --------\n";
 

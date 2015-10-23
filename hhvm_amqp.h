@@ -43,6 +43,27 @@ namespace HPHP {
 #define AMQP_PORT  5672
 #define AMQP_MAX_CHANNELS 65535 
 
+enum amqp_param {
+	AMQP_ERROR 		= -1,
+	AMQP_NOPARAM 	= 0,
+	AMQP_NOACK 		= 1,
+	AMQP_PASSIVE 	= 2,		// passive
+	AMQP_DURABLE 	= 4,		// durable 
+	AMQP_EXCLUSIVE 	= 8,		// exclusive
+	AMQP_AUTODELETE = 16,	// autodelete
+	AMQP_IFUNUSED 	= 32,
+	AMQP_IFEMPTY 	= 64,
+	AMQP_AUTOACK 	= 128,
+	AMQP_MULTIPLE 	= 256,
+	AMQP_INTERNAL 	= 512,
+	AMQP_MANDATORY 	= 1024,
+	AMQP_IMMEDIATE	= 2048,
+	AMQP_NOWAIT 	= 4096,
+	AMQP_REQUEUE 	= 8192,
+	AMQP_NOLOCAL 	= 16384
+};
+
+
 void HHVM_METHOD(AMQPConnection, __destruct);
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
@@ -60,7 +81,7 @@ void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpQueue);
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey);
 int64_t HHVM_METHOD(AMQPQueue, declare);
 int64_t HHVM_METHOD(AMQPQueue, delete);
-Variant HHVM_METHOD(AMQPQueue, get);
+Variant HHVM_METHOD(AMQPQueue, get, int64_t flag = AMQP_NOPARAM);
 bool HHVM_METHOD(AMQPQueue, ack, int64_t delivery_tag, int64_t flags);
 bool HHVM_METHOD(AMQPQueue, cancel, const String& consumer_tag);
 
@@ -86,25 +107,6 @@ enum amqp_channel_status {
 };
  
 
-enum amqp_param {
-	AMQP_ERROR 		= -1,
-	AMQP_NOPARAM 	= 0,
-	AMQP_NOACK 		= 1,
-	AMQP_PASSIVE 	= 2,		// passive
-	AMQP_DURABLE 	= 4,		// durable 
-	AMQP_EXCLUSIVE 	= 8,		// exclusive
-	AMQP_AUTODELETE = 16,	// autodelete
-	AMQP_IFUNUSED 	= 32,
-	AMQP_IFEMPTY 	= 64,
-	AMQP_AUTOACK 	= 128,
-	AMQP_MULTIPLE 	= 256,
-	AMQP_INTERNAL 	= 512,
-	AMQP_MANDATORY 	= 1024,
-	AMQP_IMMEDIATE	= 2048,
-	AMQP_NOWAIT 	= 4096,
-	AMQP_REQUEUE 	= 8192,
-	AMQP_NOLOCAL 	= 16384
-};
 
 
 class AMQPConnection {
@@ -156,7 +158,7 @@ class AMQPConnection {
 	}
 
 	bool getChannel(int num) {
-		AMQP_TRACE;
+		// AMQP_TRACE;
 		if (num >= AMQP_MAX_CHANNELS) return AMQP_ERROR;		
 		return  (bool)*(channel_open + num);
 	}

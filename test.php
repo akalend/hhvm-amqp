@@ -26,10 +26,10 @@ class User {
 
 printf("--------- %d  ---------\n", __LINE__);
 
-// 	$cnn = new AMQPConnection(['port'=>5672]);
+	$cnn = new AMQPConnection(['port'=>5677]);
 // printf("--------- %d  ---------\n", __LINE__);
 
-	$cnn = new AMQPConnection();
+	// $cnn = new AMQPConnection();
 	printf("--------- %d  ---------\n", __LINE__);
 	var_dump($cnn->isConnected());
 //exit;
@@ -40,8 +40,8 @@ printf("--------- %d  ---------\n", __LINE__);
 	echo "-------- connect Ok ------\n";
 	var_dump($cnn->isConnected());
 
-	printf("--------- %d  ---------\n", __LINE__);
-	$channel = new AMQPChannel($cnn);
+	// printf("--------- %d  ---------\n", __LINE__);
+	// $channel = new AMQPChannel($cnn);
 
 
 	printf("--------- %d  ---------\n", __LINE__);
@@ -61,21 +61,30 @@ printf("--------- %d  ---------\n", __LINE__);
 	$queue->declare();
 	printf("--------- %d  ---------\n", __LINE__);
 
-
-printf("--------- %d  ---------\n, __LINE__");
-$testExchange = new AMQPExchange($channel2);
-
-$testExchange->setName('test_e');
-// $testExchange->delete();
-
-$testExchange->setType('direct');
-printf("--------- %d  ---------\n", __LINE__);
-$testExchange->declare();
-printf("--------- %d  ---------\n", __LINE__);
-
-	$cnn->disconnect();
+	// $queue->setFlags(AMQP::AUTOACK);
+	$res = $queue->get(AMQP::AUTOACK); // AMQP::AUTOACK ????
 
 	printf("--------- %d  ---------\n", __LINE__);
+	
+	var_dump($res);
+	printf("--------- %d  ---------\n", __LINE__);
+
+	// $queue->ack();
+
+// printf("--------- %d  ---------\n, __LINE__");
+// $testExchange = new AMQPExchange($channel2);
+
+// $testExchange->setName('test_e');
+// // $testExchange->delete();
+
+// $testExchange->setType('direct');
+// printf("--------- %d  ---------\n", __LINE__);
+// $testExchange->declare();
+// printf("--------- %d  ---------\n", __LINE__);
+
+	// $cnn->disconnect();
+
+// 	printf("--------- %d  ---------\n", __LINE__);
 
 
 
