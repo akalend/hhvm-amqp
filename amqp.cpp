@@ -496,17 +496,23 @@ void HHVM_METHOD(AMQPConnection, __destruct) {
 AMQP_TRACE;
 
 	for (int i = 1; i <= data->max_id; ++i) {
+		if (!data->getChannel(i)) continue;
+		data->resetChannel(i);
 		printf("channel close %d", i);
 		amqp_channel_close(data->conn, i, AMQP_REPLY_SUCCESS);
+		amqp_maybe_release_buffers_on_channel(data->conn, i);
 		printf(" Ok\n");
 	}
 
-	// amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
+	data->max_id = 0;
 	data->channel_id = 0;
 	
-	if (data->conn)
+	if (data->conn) {
 		amqp_destroy_connection(data->conn);
-AMQP_TRACE;
+		data->conn = NULL;
+	}
+
+	AMQP_TRACE;
 
 	data->deinitChannel();
 
@@ -542,10 +548,10 @@ AMQP_TRACE;
 
 
 	bool ret = hhvm_amqp_connection_close(data);
-	if (!ret){
-		raise_warning( "connection close error" );
-		return false;
-	}
+	// if (!ret){
+	// 	raise_warning( "connection close error" );
+	// 	return false;
+	// }
 
 // AMQP_TRACE;
 	
@@ -1260,23 +1266,23 @@ bool HHVM_METHOD(AMQPExchange, publish,
 				const Array& arguments = Array{}) {
 
 
-	auto *data = Native::data<AMQPExchange>(this_);		
-	if (!data)											
-		raise_error( "Error input data");				
-	if (!data->amqpCh)									
-		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");	
-	if (!data->amqpCh->amqpCnn)							
-		raise_error( "Unbind AMQPConnection class");	
-	if (data->amqpCh->amqpCnn->is_connected == false) {	
-		raise_warning("AMQP disconnect");				
-		return false;									
-	}													
-	if (!data->amqpCh->amqpCnn->conn){					
-		raise_error( "Error connection");				
-	}
+	// auto *data = Native::data<AMQPExchange>(this_);		
+	// if (!data)											
+	// 	raise_error( "Error input data");				
+	// if (!data->amqpCh)									
+	// 	raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");	
+	// if (!data->amqpCh->amqpCnn)							
+	// 	raise_error( "Unbind AMQPConnection class");	
+	// if (data->amqpCh->amqpCnn->is_connected == false) {	
+	// 	raise_warning("AMQP disconnect");				
+	// 	return false;									
+	// }													
+	// if (!data->amqpCh->amqpCnn->conn){					
+	// 	raise_error( "Error connection");				
+	// }
 
 
-	// GET_CLASS_DATA_AND_CHECK( AMQPExchange );
+	 GET_CLASS_DATA_AND_CHECK( AMQPExchange );
 
 	int64_t _flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
 

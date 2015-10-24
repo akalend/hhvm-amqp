@@ -27,8 +27,8 @@ $user->setPswd(777);
 //print serialize($user);
 
 // print_r( get_loaded_extensions() );
-	$cnn = new AMQPConnection(['port'=>5677]);
-	// $cnn = new AMQPConnection();
+	// $cnn = new AMQPConnection(['port'=>5677]);
+	$cnn = new AMQPConnection();
 	echo "------  connect ...  --------\n";
 
 	$ret = $cnn->connect();
@@ -56,10 +56,8 @@ $user->setPswd(777);
 	echo "------  publish ...  --------\n";
 
 	$ex->publish( "*******" ,
-			'kkk');
-	// , 
-	// 		AMQP::NOPARAM,
-	// 		['headers' =>[]]);
+	 'kkk', 
+			AMQP::IMMEDIATE);
 
 	// $ex->publish(null,
 	// 		'scan', 

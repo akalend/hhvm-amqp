@@ -26,10 +26,10 @@ class User {
 
 printf("--------- %d  ---------\n", __LINE__);
 
-	$cnn = new AMQPConnection(['port'=>5677]);
-// printf("--------- %d  ---------\n", __LINE__);
+	// $cnn = new AMQPConnection(['port'=>5677]);
+ printf("--------- %d  ---------\n", __LINE__);
 
-	// $cnn = new AMQPConnection();
+	 $cnn = new AMQPConnection();
 	printf("--------- %d  ---------\n", __LINE__);
 	var_dump($cnn->isConnected());
 //exit;
