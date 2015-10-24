@@ -370,8 +370,8 @@ bool hhvm_amqp_connection_close(AMQPConnection* data) {
 
 AMQP_TRACE;
 	if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-		raise_warning( "connection close error" );
-	int	ret = false;
+//		raise_warning( "connection close error" );
+		ret = false;
 	}
 
 	return ret;
@@ -580,9 +580,9 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 		hhvm_amqp_channels_close(data);
 
 		bool ret = hhvm_amqp_connection_close(data);
-		if (!ret) {
-			raise_warning( "connection close error" );
-		}
+		// if (!ret) {
+		// 	raise_warning( "connection close error" );
+		// }
 		
 		// тутнадо пройтись по всем каналам
 		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
@@ -1505,7 +1505,7 @@ bool HHVM_METHOD(AMQPExchange, publish,
 	} else {
 
 		// Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
-AMQP_TRACE;
+	AMQP_TRACE;
 
 	switch (message.getType()) {
 		case KindOfString:
@@ -1649,12 +1649,16 @@ AMQP_TRACE;
 
 	const char* exchange = const_cast<char* >(this_->o_get(s_name, false, s_AMQPExchange).toString().c_str());
 
+	//hack, 
+	int mandatory_flag = (flags & AMQP_MANDATORY)  ? 1 : 0,
+		immediate_flag = (flags & AMQP_IMMEDIATE)  ? 1 : 0;
+
 	amqp_basic_publish(data->amqpCh->amqpCnn->conn,
 			data->amqpCh->channel_id,
 			amqp_cstring_bytes(exchange),
 			amqp_cstring_bytes(routing_key.c_str()),
-			(flags & AMQP_MANDATORY)  ? 1 : 0, 		// mandatory
-			(flags & AMQP_IMMEDIATE)  ? 1 : 0,			// immediate
+			mandatory_flag, 							// mandatory
+			immediate_flag,								// immediate
 			&props,
 			message_bytes);
 

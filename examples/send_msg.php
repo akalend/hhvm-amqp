@@ -57,10 +57,7 @@ $user->setPswd(777);
 
 	$ex->publish( "*******" ,
 	 'kkk', 
-			AMQP::IMMEDIATE);
-
-	// $ex->publish(null,
-	// 		'scan', 
+			AMQP::IMMEDIATE);	// 		'scan', 
 	// 		AMQP::NOPARAM);
 
 	
