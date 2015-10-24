@@ -44,8 +44,10 @@ $user->setPswd(777);
 	$ex->setName('test_e');
 	
 	define('PLAIN', 'text/plain');
+	define('JSON', 'text/json');
+	
 
-	$ex->setArgument('content_type', 'text/json');
+	$ex->setArgument('content_type', PLAIN);
 	
 	$ex->setArgument('user_id', 'guest');
 	$ex->setArgument('timestamp', time());
@@ -56,9 +58,11 @@ $user->setPswd(777);
 	echo "------  publish ...  --------\n";
 
 	$ex->publish( "*******" ,
-	 'kkk', 
-			AMQP::IMMEDIATE);	// 		'scan', 
-	// 		AMQP::NOPARAM);
+	 'kkk',
+			// AMQP::IMMEDIATE);	// 		'scan', 
+			AMQP::NOPARAM,
+			['content_type' => 'text/xml',]
+			);
 
 	
 

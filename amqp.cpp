@@ -1302,11 +1302,24 @@ bool HHVM_METHOD(AMQPExchange, publish,
 		printf("arguments size=%d\n",arguments.size() );
 
 
-	if (arguments.size()) {
+
+	bool has_arguments	= arguments.size() ? true : false;	// from parameters
+	bool has_args		= args.size() ? true : false;		// from property
 
 
+// ------------- begin refactoring ---------------
 
-		Variant ct = args[s_content_type];
+
+		//  first: get from parameters 
+		//	next:  from property
+
+		Variant ct;
+		if (has_arguments)
+			ct= Variant(args[s_content_type]);
+		
+
+		if (ct.getType() == KindOfNull)
+			ct= Variant(arguments[s_content_type]);
 
 		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
 		switch (ct.getType()) {
@@ -1320,6 +1333,29 @@ bool HHVM_METHOD(AMQPExchange, publish,
 			default:
 				raise_warning("arguments value key error");			
 		}
+
+
+
+
+// ------------------------------------------------
+	if (arguments.size()) {
+
+
+
+		// Variant ct = args[s_content_type];
+
+		// props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
+		// switch (ct.getType()) {
+		// 	case KindOfNull : 
+		// 		props.content_type = amqp_cstring_bytes("text/plain");
+		// 		break;
+		// 	case KindOfString :
+		// 	case KindOfStaticString :
+		// 		props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
+		// 		break;
+		// 	default:
+		// 		raise_warning("arguments value key error");			
+		// }
 
 
 		Variant ce = Variant(arguments[s_content_encoding]);
@@ -1505,107 +1541,107 @@ bool HHVM_METHOD(AMQPExchange, publish,
 	} else {
 
 		// Array args = this_->o_get(s_arguments, false, s_AMQPExchange).toArray();
-	AMQP_TRACE;
+		AMQP_TRACE;
 
-	switch (message.getType()) {
-		case KindOfString:
-		case KindOfStaticString: {
-			message_bytes = amqp_cstring_bytes(message.toString().c_str());
-			break;
-		}
-		case KindOfInt64: 
-			message_bytes = amqp_cstring_bytes(message.toString().c_str());
-			if (arguments.size() && arguments[s_headers].toBoolean() ) {
+		switch (message.getType()) {
+			case KindOfString:
+			case KindOfStaticString: {
+				message_bytes = amqp_cstring_bytes(message.toString().c_str());
+				break;
+			}
+			case KindOfInt64: 
+				message_bytes = amqp_cstring_bytes(message.toString().c_str());
+				if (arguments.size() && arguments[s_headers].toBoolean() ) {
 
-				Variant hd = Variant(arguments[s_headers]);
-				if( hd.getType() == KindOfArray) {
+					Variant hd = Variant(arguments[s_headers]);
+					if( hd.getType() == KindOfArray) {
 
-					hd.toArray().add(
-						s_x_type,
-						Variant(s_int),
-						true);
+						hd.toArray().add(
+							s_x_type,
+							Variant(s_int),
+							true);
 
+
+					} else {
+						raise_warning("error type of $this->arguments[header], must be Array");
+					}
 
 				} else {
-					raise_warning("error type of $this->arguments[header], must be Array");
+
+				AMQP_TRACE;
+
+					args.add(
+						 s_x_type,
+						 Variant("int"),
+						 true);
 				}
-
-			} else {
-
-			AMQP_TRACE;
-
-				args.add(
-					 s_x_type,
-					 Variant("int"),
-					 true);
-			}
-			break;
-		
-		// case KindOfDouble: 
-		// 	message_bytes = amqp_cstring_bytes(message.toString
-		// 	if (arguments.size()) {
-		// 								 arguments.add(
-		// 										 s_x_type,
-		// 										 s_double,
-		// 										 true); 
-		// 	} else {
-		// 								 args.add(
-		// 										 s_x_type,
-		// 										 s_double,
-		// 										 true);
-		// 	}
-		// 	break;
-
-		// case KindOfNull: 
-		// 	message_bytes = amqp_cstring_bytes("0");
+				break;
 			
-		// 	if (arguments.size()) {
-		// 								 arguments.add(
-		// 										 s_x_type,
-		// 										 s_null,
-		// 										 true); 
-		// 	} else {
-		// 								 args.add(
-		// 										 s_x_type,
-		// 										 s_null,
-		// 										 true);
-		// 	}
-		// 	break;
+			// case KindOfDouble: 
+			// 	message_bytes = amqp_cstring_bytes(message.toString
+			// 	if (arguments.size()) {
+			// 								 arguments.add(
+			// 										 s_x_type,
+			// 										 s_double,
+			// 										 true); 
+			// 	} else {
+			// 								 args.add(
+			// 										 s_x_type,
+			// 										 s_double,
+			// 										 true);
+			// 	}
+			// 	break;
 
-		// case KindOfBoolean: 
-		// 	message_bytes = amqp_cstring_bytes(message.toBoolea
-		// 	if (arguments.size()) {
-		// 								 arguments.add(
-		// 										 s_x_type,
-		// 										 s_bool,
-		// 										 true); 
-		// 	} else {
-		// 								 args.add(
-		// 										 s_x_type,
-		// 										 s_bool,
-		// 										 true);
-		// 	}
-		// 	break;
+			// case KindOfNull: 
+			// 	message_bytes = amqp_cstring_bytes("0");
+				
+			// 	if (arguments.size()) {
+			// 								 arguments.add(
+			// 										 s_x_type,
+			// 										 s_null,
+			// 										 true); 
+			// 	} else {
+			// 								 args.add(
+			// 										 s_x_type,
+			// 										 s_null,
+			// 										 true);
+			// 	}
+			// 	break;
 
-		default:
-			raise_warning("this type no implement");
-	}
+			// case KindOfBoolean: 
+			// 	message_bytes = amqp_cstring_bytes(message.toBoolea
+			// 	if (arguments.size()) {
+			// 								 arguments.add(
+			// 										 s_x_type,
+			// 										 s_bool,
+			// 										 true); 
+			// 	} else {
+			// 								 args.add(
+			// 										 s_x_type,
+			// 										 s_bool,
+			// 										 true);
+			// 	}
+			// 	break;
 
-
-		Variant ct = Variant(args[s_content_type]);
-
-		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
-		switch (ct.getType()) {
-			case KindOfNull : 
-				props.content_type = amqp_cstring_bytes("text/plain");
-				break;
-			case KindOfString :
-			case KindOfStaticString :
-				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
-				break;
 			default:
-				raise_warning("arguments value key error");			
+				raise_warning("this type no implement");
 		}
+
+
+		// Variant ct = Variant(args[s_content_type]);
+
+		// props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
+		// switch (ct.getType()) {
+		// 	case KindOfNull : 
+		// 		props.content_type = amqp_cstring_bytes("text/plain");
+		// 		break;
+		// 	case KindOfString :
+		// 	case KindOfStaticString :
+		// 		props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
+		// 		break;
+		// 	default:
+		// 		raise_warning("arguments value key error");			
+		// }
 
 		Variant ep = Variant(args[s_expiration]);
 		ADD_AMQP_STRING_PROPERTY(ep, expiration, AMQP_BASIC_EXPIRATION_FLAG );
@@ -1652,6 +1688,8 @@ bool HHVM_METHOD(AMQPExchange, publish,
 	//hack, 
 	int mandatory_flag = (flags & AMQP_MANDATORY)  ? 1 : 0,
 		immediate_flag = (flags & AMQP_IMMEDIATE)  ? 1 : 0;
+
+printf("flags imm %d, man %d \n", immediate_flag, mandatory_flag);
 
 	amqp_basic_publish(data->amqpCh->amqpCnn->conn,
 			data->amqpCh->channel_id,

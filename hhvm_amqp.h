@@ -41,7 +41,7 @@ namespace HPHP {
 
 
 #define AMQP_PORT  5672
-#define AMQP_MAX_CHANNELS 65535 
+#define AMQP_MAX_CHANNELS 64    //max 65535 
 
 enum amqp_param {
 	AMQP_ERROR 		= -1,
@@ -251,43 +251,6 @@ class AMQPQueue {
 	Object envelope; 
 };
 
-
-// class AMQPEnvelope {
-// private:
-// 	amqp_envelope_t _envelope;
-
-// public:
-
-// 	int refCount=0;
-
-// 	AMQPEnvelope(){};	
-
-// 	AMQPEnvelope(const AMQPEnvelope&) = delete;	
-
-// 	AMQPEnvelope(const amqp_envelope_t envelope) {
-// 		refCount = 0;
-// 		_envelope = envelope;
-// 	}
-
-// 	AMQPEnvelope& operator=(const AMQPEnvelope& src) {
-// 	 clone $instanceOfAMQPConnection 
-// 		throw Object(SystemLib::AllocExceptionObject(
-// 			  "Cloning AMQPConnection is not allowed"
-// 		));
-//   	}
-
-//   int incRefCount() {
-//   	return ++refCount;
-//   }
-
-//   int decRefAndRelease() {
-//   	--refCount;
-//   	if (refCount == 0) {
-//   		// release
-//   	}
-//   	return refCount;
-//   }
-// };
 
 class AMQPExchange {
  public:
