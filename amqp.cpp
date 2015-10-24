@@ -381,20 +381,20 @@ void hhvm_amqp_channel_close(AMQPConnection* data, int channel_id) {
 	// AMQP_TRACE;
 
 	if (data->getChannel(channel_id)){
-		AMQP_TRACE;
 
 		data->resetChannel(channel_id);
-		AMQP_TRACE;
 
-		if (channel_id >= data->max_id) data->max_id--;
+		if (channel_id == data->max_id)
+			data->max_id--;
+			printf("max_id=%d\n", data->max_id);	
 	}
-
-
 }
+
 
 void hhvm_amqp_channels_close(AMQPConnection* data) {
 	AMQP_TRACE;
-	
+
+	printf("max_id=%d\n", data->max_id);
 	for (int i=1; i <= data->max_id; ++i) {
 		hhvm_amqp_channel_close(data, i);
 		amqp_maybe_release_buffers_on_channel(data->conn, i);		
@@ -413,8 +413,7 @@ void HHVM_METHOD(AMQPConnection, init){
 
 
 	auto *data = Native::data<AMQPConnection>(this_);
-	data->is_connected = false;
-	data->conn = NULL;
+	data->init();
 	
 	printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
 	
@@ -491,10 +490,11 @@ void HHVM_METHOD(AMQPConnection, __destruct) {
 	
 	printf("%s connected=%s\n", __FUNCTION__, data->is_connected ? "yes" : "no");
 
-	hhvm_amqp_connection_close(data);
+
 
 AMQP_TRACE;
 
+	printf("max_id=%d\n", data->max_id );
 	for (int i = 1; i <= data->max_id; ++i) {
 		if (!data->getChannel(i)) continue;
 		data->resetChannel(i);
@@ -506,6 +506,8 @@ AMQP_TRACE;
 
 	data->max_id = 0;
 	data->channel_id = 0;
+
+	hhvm_amqp_connection_close(data);
 	
 	if (data->conn) {
 		amqp_destroy_connection(data->conn);
@@ -548,20 +550,9 @@ AMQP_TRACE;
 
 
 	bool ret = hhvm_amqp_connection_close(data);
-	// if (!ret){
-	// 	raise_warning( "connection close error" );
-	// 	return false;
-	// }
-
-// AMQP_TRACE;
 	
 AMQP_TRACE;
 	data->channel_id = 0;
-
-	// if (ret) return true; ////????
-
-	// if (parm == AMQP_NOACK)
-	// 	raise_warning("Failing to send the ack to the broker");
 
 	amqp_destroy_connection(data->conn);
 	data->conn = NULL;
@@ -622,10 +613,9 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 
 
 	// data->channel_id = 1; // init first channel
-	data->amqpCnn = src_data;	
-	src_data->channel_id = static_cast<short>(data->channel_id);
+	data->amqpCnn = src_data;
+	data->channel_id = src_data->incChannel();
 
-	data->channel_id = ++ src_data->channel_use; // init first channel
 
 
 	if (!src_data->is_connected) {
@@ -646,14 +636,8 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	}
 
 
-//		data->slots = cmalloc(AMQP_MAX_CHANNELS+1, sizeof(amqp_channel_t));
-	//	amqp_channel_t slot = getChannelSlot(data);	
 
-	/* Check that we got a valid channel */
-	// if (!slot) {
-	// 	raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
-	// 	return;
-	// }
+
 
 	printf("channel %d is %s  \n", data->channel_id, is_channel_open ? "opening" : "closing");
 
@@ -667,13 +651,11 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	}
 	
 
-	printf("opening channel %d\n", data->channel_id);
+	printf("open channel %d\n", data->channel_id);
 
 	data->is_open = 1;
-	// src_data->channel_open[data->channel_id] = 1;
 	src_data->setChannel(data->channel_id);
 
-	// printf("channel_id=%d\n", data->channel_id);
 
 	// if (data->prefetch_count) {
 	// 	amqp_basic_qos(
@@ -1313,6 +1295,8 @@ bool HHVM_METHOD(AMQPExchange, publish,
 		//  first: get from parameters 
 		//	next:  from property
 
+AMQP_TRACE
+
 		Variant ct;
 		if (has_arguments)
 			ct= Variant(args[s_content_type]);
@@ -1335,7 +1319,7 @@ bool HHVM_METHOD(AMQPExchange, publish,
 		}
 
 
-
+AMQP_TRACE
 
 // ------------------------------------------------
 	if (arguments.size()) {

@@ -33,9 +33,11 @@ $user->setPswd(777);
 
 	$ret = $cnn->connect();
 
-	echo "------  connect Ok  --------\n";
+	echo "------  open Channel  --------\n";
 
 	$ch = new AMQPChannel($cnn);
+	echo "------  open Ok  --------\n";
+
 	$ex = new AMQPExchange($ch);
 
 	echo "------  exchange Ok  --------\n";
@@ -61,7 +63,7 @@ $user->setPswd(777);
 	 'kkk',
 			// AMQP::IMMEDIATE);	// 		'scan', 
 			AMQP::NOPARAM,
-			['content_type' => 'text/xml',]
+			['content_type'=>'text/xml']
 			);
 
 	

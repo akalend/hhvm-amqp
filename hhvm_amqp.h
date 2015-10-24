@@ -122,7 +122,6 @@ class AMQPConnection {
 	short port = AMQP_PORT;
 	short err = 0;
 	short channel_id = 0;
-	short channel_use = 0;
 	short max_id = 0;
 
 	AMQPConnection() { /* new AMQPConnection */ }
@@ -136,20 +135,30 @@ class AMQPConnection {
 
   ~AMQPConnection() {};
 
+  	void init() {
+		amqp_socket_t *socket = NULL;
+		amqp_connection_state_t conn = NULL;
+		is_connected = false;
+		conn = NULL;
+		max_id = 0;
+		channel_id = 0;
+  	}
 
-  	void incChannel() {
+  	int incChannel() {
   		channel_id++;
+
+  			printf("channel_id=%d max_id=%d\n", channel_id,max_id);
 
   		if (channel_id > max_id) 
   			max_id = channel_id;
-  	}
+  		  	printf("max_id=%d\n", max_id);
 
+  		return channel_id;
+  	}
 
 	void initChannels() {
 		AMQP_TRACE;
 		channel_open = static_cast<int8_t*>(calloc(AMQP_MAX_CHANNELS, sizeof(int8_t)));
-		// channel_open.clear();
-		// printf("%s map.size=%d\n", __FUNCTION__, channel_open.size());
 	}
 
 	void deinitChannel() {
@@ -158,42 +167,18 @@ class AMQPConnection {
 	}
 
 	bool getChannel(int num) {
-		// AMQP_TRACE;
 		if (num >= AMQP_MAX_CHANNELS) return AMQP_ERROR;		
-		return  (bool)*(channel_open + num);
+		return  static_cast<bool>(*(channel_open + num));
 	}
 
 	void setChannel(int num) {
 		if (num >= AMQP_MAX_CHANNELS) return;
-		*(channel_open + num) = 1;
+		*(channel_open + num) = 1;		
 	}
 
 	void resetChannel(int num) {
 		if (num >= AMQP_MAX_CHANNELS) return;
 		*(channel_open + num) = 0;
-	}
-
-	int closeAllChannels() {
-		AMQP_TRACE;
-		printf("all code comment\n");
-		// int ret = AMQP_ERR_NONE;
-		
-		// for(auto it=channel_open->begin(); it != channel_open->end(); it++ ){
-		// 	AMQP_TRACE;
-		// 	printf("iterator %d -> %d\n", (*it).first, (*it).second);
-		// 	if (it->second) {
-		// 		int channel_id = (*it).first;
-		// 		printf("%s : channel #%d closing\n", __FUNCTION__,channel_id);
-
-		// 		amqp_rpc_reply_t res = amqp_channel_close(conn, channel_id, AMQP_REPLY_SUCCESS);
-		// 		if (res.reply_type != AMQP_RESPONSE_NORMAL) {
-		// 			ret = AMQP_ERR_CHANNEL_CLOSE;
-		// 			continue; 
-		// 		}
-		// 	}
-	 //  	}
-
-		return 0;
 	}
 
 
