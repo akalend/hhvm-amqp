@@ -536,8 +536,6 @@ bool HHVM_METHOD(AMQPConnection, isConnected) {
 
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm) {
 
-	amqp_rpc_reply_t res;
-
 
 	auto *data = Native::data<AMQPConnection>(this_);
 	assert(data);
@@ -549,7 +547,7 @@ AMQP_TRACE;
 AMQP_TRACE;
 
 
-	bool ret = hhvm_amqp_connection_close(data);
+	hhvm_amqp_connection_close(data);
 	
 AMQP_TRACE;
 	data->channel_id = 0;
@@ -570,11 +568,10 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 
 		hhvm_amqp_channels_close(data);
 
-		bool ret = hhvm_amqp_connection_close(data);
-		// if (!ret) {
-		// 	raise_warning( "connection close error" );
-		// }
+		hhvm_amqp_connection_close(data);
 		
+
+
 		// тутнадо пройтись по всем каналам
 		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
 		data->channel_id = 0;
@@ -608,15 +605,14 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
 	auto src_data = Native::data<AMQPConnection>(amqpConnect.toObject());
 	auto *data = Native::data<AMQPChannel>(this_);
-	if (!src_data)
+	if (!data)
 		raise_error( "Error input data");
+
+	if (!src_data)
+		raise_error( "Error connection 	 data");
 
 
 	// data->channel_id = 1; // init first channel
-	data->amqpCnn = src_data;
-	data->channel_id = src_data->incChannel();
-
-
 
 	if (!src_data->is_connected) {
 		raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
@@ -636,8 +632,12 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	}
 
 
+	data->amqpCnn = src_data;
+	data->channels_open = src_data->getChannels();
+	data->is_connected = &(src_data->is_connected);
+	data->pconn = &src_data->conn;
 
-
+	printf("connect->channel_open %X is=%d\n", src_data->getChannels(), data->amqpCnn->is_connected);
 
 	printf("channel %d is %s  \n", data->channel_id, is_channel_open ? "opening" : "closing");
 
@@ -683,6 +683,9 @@ void HHVM_METHOD(AMQPChannel, __destruct){
 		// raise_warning("The AMQPConnection class is`nt binding whith connection");
 		return;
 	}
+
+
+
 
 
 
@@ -1167,11 +1170,25 @@ void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpChannel) {
 	auto src_data = Native::data<AMQPChannel>(amqpChannel.toObject());
 	auto *data = Native::data<AMQPExchange>(this_);
 
+
+
+	// auto cnn_data = Native::data<AMQPConnection>(  src_data->cnn.toObject());
+	// printf("Connection %d\n", cnn_data.is_connected);
+
+
+
 	if (!src_data)
+		raise_error( "Error connection data");
+
+
+	printf("channel # %d\n",src_data->channel_id );
+
+
+	if (!data)
 		raise_error( "Error input data");
 
-	data->amqpCh = src_data;
 
+	data->amqpCh = src_data;	// AMQPExchange->AMQPChannel
 }
 
 
@@ -1248,24 +1265,40 @@ bool HHVM_METHOD(AMQPExchange, publish,
 				const Array& arguments = Array{}) {
 
 
-	// auto *data = Native::data<AMQPExchange>(this_);		
-	// if (!data)											
-	// 	raise_error( "Error input data");				
-	// if (!data->amqpCh)									
-	// 	raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");	
-	// if (!data->amqpCh->amqpCnn)							
-	// 	raise_error( "Unbind AMQPConnection class");	
-	// if (data->amqpCh->amqpCnn->is_connected == false) {	
-	// 	raise_warning("AMQP disconnect");				
-	// 	return false;									
-	// }													
-	// if (!data->amqpCh->amqpCnn->conn){					
-	// 	raise_error( "Error connection");				
-	// }
+	auto *data = Native::data<AMQPExchange>(this_);		
+	// auto *src_data = Native::data<AMQPExchange>(this_);
+AMQP_TRACE
+	if (!data)											
+		raise_error( "Error input data");				
+AMQP_TRACE
+	if (!data->amqpCh)									
+		raise_warning("The AMQPExchange class is`nt binding with AMQPChannel");	
+AMQP_TRACE	
+	if (!data->amqpCh->amqpCnn)							
+		raise_error( "Unbind AMQPConnection class");	
+
+AMQP_TRACE	
 
 
-	 GET_CLASS_DATA_AND_CHECK( AMQPExchange );
+	printf("connect %X is=%d\n", data->amqpCh->amqpCnn, -1);
+// AMQP_TRACE	
 
+// 	printf("is connected %d\n",data->amqpCh->amqpCnn->is_connected );
+AMQP_TRACE
+	if ( false == data->amqpCh->amqpCnn->is_connected ) {	
+		raise_warning("AMQP disconnect");				
+		return false;									
+	}			
+
+AMQP_TRACE	
+	if (NULL == data->amqpCh->amqpCnn->conn){					
+		raise_error( "Error connection");				
+	}
+
+
+	 // GET_CLASS_DATA_AND_CHECK( AMQPExchange );
+
+AMQP_TRACE
 	int64_t _flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
 
 	if ( flags == NOPARAM)
@@ -1297,36 +1330,13 @@ bool HHVM_METHOD(AMQPExchange, publish,
 
 AMQP_TRACE
 
-		Variant ct;
-		if (has_arguments)
-			ct= Variant(args[s_content_type]);
+		// Variant ct;
+		// if (has_arguments)
+		// 	ct= Variant(args[s_content_type]);
 		
 
-		if (ct.getType() == KindOfNull)
-			ct= Variant(arguments[s_content_type]);
-
-		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
-		switch (ct.getType()) {
-			case KindOfNull : 
-				props.content_type = amqp_cstring_bytes("text/plain");
-				break;
-			case KindOfString :
-			case KindOfStaticString :
-				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
-				break;
-			default:
-				raise_warning("arguments value key error");			
-		}
-
-
-AMQP_TRACE
-
-// ------------------------------------------------
-	if (arguments.size()) {
-
-
-
-		// Variant ct = args[s_content_type];
+		// if (ct.getType() == KindOfNull)
+		// 	ct= Variant(arguments[s_content_type]);
 
 		// props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
 		// switch (ct.getType()) {
@@ -1340,6 +1350,29 @@ AMQP_TRACE
 		// 	default:
 		// 		raise_warning("arguments value key error");			
 		// }
+
+
+AMQP_TRACE
+
+// ------------------------------------------------
+	if (arguments.size()) {
+
+AMQP_TRACE
+
+		Variant ct = args[s_content_type];
+
+		props._flags = AMQP_BASIC_CONTENT_TYPE_FLAG;
+		switch (ct.getType()) {
+			case KindOfNull : 
+				props.content_type = amqp_cstring_bytes("text/plain");
+				break;
+			case KindOfString :
+			case KindOfStaticString :
+				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
+				break;
+			default:
+				raise_warning("arguments value key error");			
+		}
 
 
 		Variant ce = Variant(arguments[s_content_encoding]);

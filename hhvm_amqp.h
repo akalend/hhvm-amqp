@@ -136,8 +136,6 @@ class AMQPConnection {
   ~AMQPConnection() {};
 
   	void init() {
-		amqp_socket_t *socket = NULL;
-		amqp_connection_state_t conn = NULL;
 		is_connected = false;
 		conn = NULL;
 		max_id = 0;
@@ -182,6 +180,10 @@ class AMQPConnection {
 	}
 
 
+	int8_t* getChannels() {
+		return channel_open;
+	}
+
  private:
 	int8_t* channel_open;
 
@@ -203,12 +205,13 @@ class AMQPChannel {
 
   ~AMQPChannel() {};
 	
-	int used_slots = 0;
-	int prefetch_count = 0;
 	int is_open = 0;
-
-	amqp_channel_t channel_id = 1;	
+	amqp_channel_t channel_id = 1;
 	AMQPConnection* amqpCnn = NULL;
+
+	amqp_connection_state_t* pconn = NULL;
+	bool*   is_connected = NULL;
+	int8_t* channels_open = NULL;
 };
 
 
