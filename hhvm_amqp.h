@@ -64,13 +64,17 @@ enum amqp_param {
 };
 
 
+bool HHVM_METHOD(AMQPContext, connect);
+void HHVM_METHOD(AMQPContext, init);
+
+
+
 void HHVM_METHOD(AMQPConnection, __destruct);
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
 bool HHVM_METHOD(AMQPConnection, reconnect);
 bool HHVM_METHOD(AMQPConnection, disconnect, int64_t parm);
 void HHVM_METHOD(AMQPConnection, init);
-
 
 void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect);
 void HHVM_METHOD(AMQPChannel, __destruct);
@@ -106,6 +110,69 @@ enum amqp_channel_status {
 	AMQP_CHANNEL_RECLOSED = 2,
 };
  
+
+
+class AMQPContext  {
+public:
+
+	amqp_socket_t *socket{nullptr};
+	amqp_connection_state_t conn = NULL;
+	
+	std::shared_ptr<amqp_connection_state_t> m_conn;
+
+	bool is_connected = false;
+	char* host = NULL;
+	char* vhost = NULL;
+	char* password = NULL;
+	char* login = NULL;
+	short port = AMQP_PORT;
+	short err = 0;
+	short channel_id = 0;
+	short max_id = 0;
+	
+  static AMQPContext *GetPersistent(int64_t io_threads);
+  static void SetPersistent(int64_t io_threads, AMQPContext *context);
+
+private:
+	int8_t* opened_channels{nullptr};
+
+	static std::string GetHash(const char *name, int64_t io_threads);
+    static AMQPContext *GetCachedImpl(const char *name, int64_t io_threads);
+    static void SetCachedImpl(const char *name, int64_t io_threads, AMQPContext *context);
+
+
+	void initChannels() {
+		AMQP_TRACE;
+		opened_channels = static_cast<int8_t*>(calloc(AMQP_MAX_CHANNELS, sizeof(int8_t)));
+		channel_id = 0;	
+	}
+
+	void deinitChannels() {
+		AMQP_TRACE;
+		free(opened_channels);
+	}
+
+	void sweep() { deinitChannels(); }
+
+public:
+  AMQPContext(int64_t io_threads);
+  ~AMQPContext() {
+  	sweep();
+  };
+
+  CLASSNAME_IS("AMQPContext")
+
+  // overriding ResourceData
+  virtual const String& o_getClassNameHook() const { return classnameof(); }
+  virtual bool isInvalid() const { return m_context == nullptr; }
+
+  void *get() { return m_context; }
+
+private:
+  void *m_context;
+
+};
+
 
 
 
@@ -157,11 +224,13 @@ class AMQPConnection {
 	void initChannels() {
 		AMQP_TRACE;
 		channel_open = static_cast<int8_t*>(calloc(AMQP_MAX_CHANNELS, sizeof(int8_t)));
+		channel_id = 0;	
 	}
 
 	void deinitChannel() {
 		AMQP_TRACE;
 		free(channel_open);
+		channel_open = NULL;
 	}
 
 	bool getChannel(int num) {
@@ -180,9 +249,17 @@ class AMQPConnection {
 	}
 
 
-	int8_t* getChannels() {
-		return channel_open;
+	void channelClose(int channel_id) {
+
+		if (getChannel(channel_id)){
+			resetChannel(channel_id);
+
+			if (channel_id == max_id)
+				max_id--;
+				printf("max_id=%d\n", max_id);
+		}
 	}
+
 
  private:
 	int8_t* channel_open;
@@ -209,10 +286,39 @@ class AMQPChannel {
 	amqp_channel_t channel_id = 1;
 	AMQPConnection* amqpCnn = NULL;
 
-	amqp_connection_state_t* pconn = NULL;
-	bool*   is_connected = NULL;
-	int8_t* channels_open = NULL;
 };
+
+
+class AMQPCannelContext  {
+public:
+  static AMQPCannelContext *GetPersistent(int64_t io_threads);
+  static void SetPersistent(int64_t io_threads, AMQPCannelContext *context);
+
+private:
+  static std::string GetHash(const char *name, int64_t io_threads);
+  static AMQPCannelContext *GetCachedImpl(const char *name, int64_t io_threads);
+  static void SetCachedImpl(const char *name, int64_t io_threads, AMQPCannelContext *context);
+
+public:
+  AMQPCannelContext(int64_t io_threads);
+  ~AMQPCannelContext();
+
+  CLASSNAME_IS("AMQPChannelContext")
+
+  // overriding ResourceData
+  virtual const String& o_getClassNameHook() const { return classnameof(); }
+  virtual bool isInvalid() const { return m_context == nullptr; }
+
+  void *get() { return m_context; }
+
+private:
+  void *m_context;
+
+};
+
+
+
+//AMQPContext *get_context(Object obj);
 
 
 

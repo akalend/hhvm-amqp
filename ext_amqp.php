@@ -61,6 +61,127 @@ final class AMQP {
 }
 
 
+/**
+*  AMQPContext class
+*/
+class AMQPContext {
+
+	private $cnn;
+	/* internal */
+	private $host = 'localhost';
+	private $port = 5672; // `
+	private $login = 'guest';
+	private $vhost = '/';
+	private $password = 'guest';
+
+	private $timeout = 15;
+	private $connect_timeout = 1;	
+	private $is_persisten = 1;
+	private $is_connected = 0;
+
+
+
+	/* Methods */
+	public  function __construct (array $parms = []){ 
+		if (isset($parms['host']))
+			$this->host = $parms['host'];
+		
+		if (isset($parms['port']))
+			$this->port = $parms['port'];
+		
+		if (isset($parms['login']))
+			$this->login = $parms['login'];
+		
+		if (isset($parms['vhost']))
+			$this->vhost = $parms['vhost'];
+		
+		if (isset($parms['password']))
+			$this->password = $parms['password'];
+
+		if (isset($parms['is_persisten']))
+			$this->is_persisten = $parms['is_persisten'];
+
+		if (isset($parms['timeout']))
+			$this->timeout = $parms['timeout'];
+
+		if (isset($parms['connect_timeout']))
+			$this->connect_timeout = $parms['connect_timeout'];
+
+		$this->init();
+	}
+
+
+	<<__Native>>
+	private  function init () : void;
+
+	// <<__Native>>
+	// public  function __destruct () : void;
+
+	public function  setHost ( string $host ){
+		$this->host = $host;
+	}
+
+	public function  setLogin ( string $login ){
+		$this->login = $login;
+	}
+
+	public function  setPassword ( string $password ){
+		$this->password = $password;
+	}
+
+	public function  setPort ( int $port ){
+		$this->port = $port;
+	}
+
+	public function  setVhost ( string $vhost ){
+		$this->vhost = $vhost;
+	}
+	
+	public function  getHost (){
+		return $this->host;
+	}
+
+	public function  getLogin (){
+		return $this->login;
+	}
+
+	public function  getPassword (){
+		return $this->password;
+	}
+
+	public function  getPort ( ){
+		return $this->port;
+	}
+
+	public function  getVhost (){
+		return $this->vhost;
+	}
+
+	// <<__Native>>
+	// public function  disconnect(int $parm = 0 ): bool;
+	
+	// <<__Native>>
+	// public function  reconnect(): bool;
+	
+	// <<__Native>>
+	// public function  isConnected(): bool;	
+
+	  <<__Native>>
+	public function  connect(): bool;
+
+
+	public function isConnected () {
+	
+		if (is_object($this->cnn) ){
+			return $this->cnn->isConnected();
+		}
+
+		return false;	
+	}
+
+}
+
+
 
 /**
 *	AMQPConnection class
@@ -194,6 +315,19 @@ class AMQPChannel {
 	// public function setPrefetchSize ( int $size ) {}
 	// public function startTransaction ( void ) {}
 }
+
+
+class AMQPCannelContext {
+
+	private $ctx;
+
+	public function __construct (AMQPContext $amqp_context ) {
+		$this->ctx = $amqp_context;
+	}
+
+}
+
+
 
 
 class AMQPEnvelope  {
@@ -382,7 +516,7 @@ class AMQPQueue {
 
 	/* Methods */
 	<<__Native>>
-	public function __construct (AMQPChannel $amqp_channel );
+	public function __construct (AMQPChannel $amqp_channel ) : void;
 
 	
  	public function getName (){
@@ -458,7 +592,7 @@ class AMQPExchange {
 
 	/* Methods */
 	<<__Native>>
-	public function __construct ( AMQPChannel $amqp_channel );
+	public function __construct ( AMQPChannel $amqp_channel ): void;
 
 
 	public function setName ( string $exchange_name ) {
@@ -526,4 +660,8 @@ class AMQPExchange {
 
 
 class AMQPException extends Exception {
+}
+
+
+class AMQPConnectException extends AMQPException {
 }

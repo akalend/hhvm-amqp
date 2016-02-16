@@ -29,6 +29,10 @@ $user->setPswd(777);
 // print_r( get_loaded_extensions() );
 	$cnn = new AMQPConnection(['port'=>5677]);
 	// $cnn = new AMQPConnection();
+
+
+	if (! $cnn)
+		die("AMQP connection fail");
 	echo "------  connect ...  --------\n";
 
 	$ret = $cnn->connect();

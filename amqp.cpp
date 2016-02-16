@@ -27,12 +27,13 @@
  */
 
 #include "hphp/runtime/ext/extension.h"
-#include "hphp/runtime/base/execution-context.h"  // g_context
-#include "hphp/runtime/base/type-object.h"  // Object
+#include "hphp/runtime/base/execution-context.h"  	// g_context
+#include "hphp/runtime/base/type-object.h"  		// Object
 #include "hphp/runtime/base/builtin-functions.h"
 #include "hphp/runtime/base/variable-serializer.h"
 #include "hphp/runtime/base/variable-unserializer.h"
-
+#include "hphp/runtime/base/type-resource.h"
+#include "hphp/runtime/base/datatype.h"
 #include "hphp/runtime/vm/native-data.h"
 
 #include "hphp/system/systemlib.h"
@@ -48,8 +49,10 @@
 	auto *data = Native::data<class_name>(this_);		\
 	if (!data)											\
 		raise_error( "Error input data");				\
-	if (!data->amqpCh)									\
+	if (!data->amqpCh){									\
 		raise_warning("The ##class_name## class is`nt binding with AMQPChannel");	\
+		return false;											\
+	}													\
 	if (!data->amqpCh->amqpCnn)							\
 		raise_error( "Unbind AMQPConnection class");	\
 	if (data->amqpCh->amqpCnn->is_connected == false) {	\
@@ -107,7 +110,6 @@
 		case KindOfUninit : 							\
 			break;										\
 		case KindOfString :								\
-		case KindOfStaticString :						\
 			props._flags |= flag;						\
 			props.field = amqp_cstring_bytes( var.toString().c_str() );\
 			break;										\
@@ -126,6 +128,7 @@
 namespace HPHP {
 
 const StaticString
+	s_AMQPContext("AMQPContext"),
 	s_AMQPConnection("AMQPConnection"),
 	s_AMQPChannel("AMQPChannel"),
 	s_AMQPQueue("AMQPQueue"),
@@ -140,6 +143,7 @@ const StaticString
 	s_password("password"),
 	s_timeout("timeout"),
 	s_channel("channel"),
+	s_connect("conn"),
 	s_connect_timeout("connect_timeout"),
 	s_is_persisten("is_persisten"),
 	s_port("port"),
@@ -203,6 +207,10 @@ const StaticString
 
 
 void AmqpExtension::moduleInit() {
+
+	HHVM_ME(AMQPContext, connect);
+	HHVM_ME(AMQPContext, init);
+
 		
 	HHVM_ME(AMQPConnection, connect);
 	HHVM_ME(AMQPConnection, isConnected);
@@ -213,7 +221,6 @@ void AmqpExtension::moduleInit() {
 	HHVM_ME(AMQPChannel, __construct);
 	HHVM_ME(AMQPChannel, isConnected);
 	HHVM_ME(AMQPChannel, __destruct);
-
 
 
 	HHVM_ME(AMQPQueue, __construct);
@@ -251,30 +258,20 @@ void AmqpExtension::moduleInit() {
 	Native::registerConstant<KindOfInt64>(s_AMQP_NOWAIT.get(), 		AMQP_NOWAIT);
 	Native::registerConstant<KindOfInt64>(s_AMQP_REQUEUE.get(), 	AMQP_REQUEUE);
 
-	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_HEADERS.get(), s_headers.get());
-	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_DIRECT.get(), s_direct.get());
-	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_FANOUT.get(), s_fanout.get());
-	Native::registerConstant<KindOfStaticString>(s_AMQP_EX_TYPE_TOPIC.get(), s_topic.get());
+	Native::registerConstant<KindOfString>(s_AMQP_EX_TYPE_HEADERS.get(), s_headers.get());
+	Native::registerConstant<KindOfString>(s_AMQP_EX_TYPE_DIRECT.get(), s_direct.get());
+	Native::registerConstant<KindOfString>(s_AMQP_EX_TYPE_FANOUT.get(), s_fanout.get());
+	Native::registerConstant<KindOfString>(s_AMQP_EX_TYPE_TOPIC.get(), s_topic.get());
 
 
 	loadSystemlib();
 }
 
-void AmqpExtension::moduleShutdown() {
+void AmqpExtension::moduleShutdown() {}
 	
-	// auto *data = Native::data<AMQPConnection>(this_);
-	// if (data->conn) {
-	// 	amqp_connection_close(conn->conn);
-	// 	amqp_destroy_connection(data->conn);
-	// 	data->conn = NULL;
-	// }
-}
 
-	
 //////////////////    static    /////////////////////////
 static AmqpExtension  s_amqp_extension;
-
-
 
 
 // ------------------------------------------------------
@@ -315,19 +312,26 @@ bool hhvm_amqp_connect( ObjectData* this_) {
 	const char client_type[11] = {'c','l','i','e','n','t','-','t','y','p','e'}; 
 
 	const char author[16] = {'h','h','v','m','_','a','m','q','p',' ','a','u','t','h','o','r'}; 
-	const char name[10] = {'K','a','l','e','n','d','a','r','e','v'};
+	const char name[12] = {'A','.','K','a','l','e','n','d','a','r','e','v'};
+	const char copyright[19] = {'h','h','v','m','_','a','m','q','p',' ','C','o','p','y','r','i','g','h','t'};
+	const char year2015[8] = {'(','C',')',' ','2','0','1','5'};
 
-	client_properties.num_entries=2;
+	client_properties.num_entries=3;
 	client_properties.entries[0].value.kind = AMQP_FIELD_KIND_UTF8;
 	client_properties.entries[0].value.value.bytes.len = 9;
 	client_properties.entries[0].value.value.bytes.bytes = (amqp_bytes_t*)hhvm_amqp;
 	client_properties.entries[0].key.len = 11;
 	client_properties.entries[0].key.bytes = (amqp_bytes_t*)client_type;
 	client_properties.entries[1].value.kind = AMQP_FIELD_KIND_UTF8;
-	client_properties.entries[1].value.value.bytes.len = 10;
+	client_properties.entries[1].value.value.bytes.len = 12;
 	client_properties.entries[1].value.value.bytes.bytes = (amqp_bytes_t*) name;
 	client_properties.entries[1].key.len = 16;
 	client_properties.entries[1].key.bytes = (amqp_bytes_t*) author;
+	client_properties.entries[2].value.kind = AMQP_FIELD_KIND_UTF8;
+	client_properties.entries[2].value.value.bytes.len = 8;
+	client_properties.entries[2].value.value.bytes.bytes = (amqp_bytes_t*) year2015;
+	client_properties.entries[2].key.len = 19;
+	client_properties.entries[2].key.bytes = (amqp_bytes_t*) copyright;
 
 
 printf( "%s:%d\n", __FUNCTION__, __LINE__);
@@ -377,34 +381,66 @@ AMQP_TRACE;
 	return ret;
 }
 
-void hhvm_amqp_channel_close(AMQPConnection* data, int channel_id) {
-	// AMQP_TRACE;
-
-	if (data->getChannel(channel_id)){
-
-		data->resetChannel(channel_id);
-
-		if (channel_id == data->max_id)
-			data->max_id--;
-			printf("max_id=%d\n", data->max_id);	
-	}
-}
-
 
 void hhvm_amqp_channels_close(AMQPConnection* data) {
 	AMQP_TRACE;
 
 	printf("max_id=%d\n", data->max_id);
 	for (int i=1; i <= data->max_id; ++i) {
-		hhvm_amqp_channel_close(data, i);
+
+		data->channelClose(i);
 		amqp_maybe_release_buffers_on_channel(data->conn, i);		
 	}
 }
 
 
 
+Resource get_resource(Object ob) {
+	
+	auto res = ob->o_get(s_connect, false, s_AMQPContext);
+
+	// auto res = ob->o_get(s_connect, ObjectData::RealPropUnchecked, s_AMQPContext);
+
+	// if (!res->isResource()) {// || 
+	// 		return null_resource;
+	//  }
+	return res->toResource();
+}
+
 // ---------------------------------------------------------------------------------------------------
 
+
+// ------------------------------  AMQPContex ------------------------------------------
+
+
+
+void HHVM_METHOD(AMQPContext, init){
+
+ // auto context = get_resource(this_->asObject());
+	
+
+//   Resource rr = 
+
+
+
+ //  auto amqp_connect = newres<AMQPContext>(context->get(), type);
+
+  // setVariable(this_, "socket", Resource(amqp_connect));
+
+	printf("%s connected=%s\n", __FUNCTION__, true ? "yes" : "no");
+	
+}
+
+
+bool HHVM_METHOD(AMQPContext, connect) {
+
+	// auto f = fp.getTyped<AMQPContext>();
+	// f->close();
+
+	printf("cnn %s \n", __FUNCTION__);
+
+	return true;
+}
 
 
 // ------------------------------  AMQPConnect ------------------------------------------
@@ -426,7 +462,7 @@ void HHVM_METHOD(AMQPConnection, init){
 
 bool HHVM_METHOD(AMQPConnection, connect) {
 
-  	printf( "%s:%d\n", __FUNCTION__, __LINE__);
+	printf( "%s:%d\n", __FUNCTION__, __LINE__);
 
 	
 	auto *data = Native::data<AMQPConnection>(this_);
@@ -476,6 +512,8 @@ bool HHVM_METHOD(AMQPConnection, connect) {
 	}
 
 	AMQP_TRACE;
+
+	// printf("cnn %X \n", data->conn);
 
 	return true;
 }
@@ -558,6 +596,8 @@ AMQP_TRACE;
 	return false;
 }
 
+
+/// этот метод в последствии надо будет переписать
 bool HHVM_METHOD(AMQPConnection, reconnect) {
 
 	auto *data = Native::data<AMQPConnection>(this_);
@@ -569,8 +609,6 @@ bool HHVM_METHOD(AMQPConnection, reconnect) {
 		hhvm_amqp_channels_close(data);
 
 		hhvm_amqp_connection_close(data);
-		
-
 
 		// тутнадо пройтись по всем каналам
 		amqp_maybe_release_buffers_on_channel(data->conn, data->channel_id);
@@ -605,25 +643,27 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	
 	auto src_data = Native::data<AMQPConnection>(amqpConnect.toObject());
 	auto *data = Native::data<AMQPChannel>(this_);
+
 	if (!data)
 		raise_error( "Error input data");
 
 	if (!src_data)
 		raise_error( "Error connection 	 data");
 
-
-	// data->channel_id = 1; // init first channel
-
 	if (!src_data->is_connected) {
 		raise_warning( "Could not create channel. Connection has no open channel slots remaining.");
 		return;
 	}
 
+	data->channel_id = src_data->incChannel();
+
 	bool is_channel_open = false;
-	if (is_channel_open = src_data->getChannel(data->channel_id) == AMQP_ERROR)  {
-		raise_warning("The AMQPChannel class: the number channel more that max opening");
-		return;
-	}
+
+	// TODO errrors
+	// if (is_channel_open = src_data->getChannel(data->channel_id) == AMQP_ERROR)  {
+	// 	raise_warning("The AMQPChannel class: the number channel more that max opening");
+	// 	return;
+	// }
 
 
 	if (!src_data)  {
@@ -631,13 +671,7 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 		return;
 	}
 
-
-	data->amqpCnn = src_data;
-	data->channels_open = src_data->getChannels();
-	data->is_connected = &(src_data->is_connected);
-	data->pconn = &src_data->conn;
-
-	printf("connect->channel_open %X is=%d\n", src_data->getChannels(), data->amqpCnn->is_connected);
+	data->amqpCnn = static_cast<AMQPConnection*>(src_data);
 
 	printf("channel %d is %s  \n", data->channel_id, is_channel_open ? "opening" : "closing");
 
@@ -651,7 +685,7 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 	}
 	
 
-	printf("open channel %d\n", data->channel_id);
+	//printf("open channel %d cnn=%X/%X\n", data->channel_id, src_data->conn, data->amqpCnn->conn);
 
 	data->is_open = 1;
 	src_data->setChannel(data->channel_id);
@@ -679,17 +713,21 @@ void HHVM_METHOD(AMQPChannel, __construct, const Variant& amqpConnect) {
 void HHVM_METHOD(AMQPChannel, __destruct){
 
 	auto *data = Native::data<AMQPChannel>(this_);
-	if (!data->amqpCnn) {
-		// raise_warning("The AMQPConnection class is`nt binding whith connection");
+	if (!data) {
+		 raise_error("The AMQPConnection class internal error data");
 		return;
 	}
 
+	// data->channels_open = src_data->getChannels();
+	// data->is_connected = &(src_data->is_connected);
+	// data->pconn = &src_data->conn;
+
+	if (data->amqpCnn->is_connected == false) // disconnect
+		return;
+
+	data->amqpCnn->channelClose(data->channel_id);
 
 
-
-
-
-	hhvm_amqp_channel_close(data->amqpCnn, data->channel_id);
 	// hhvm_amqp_channels_close(data->amqpCnn);
 
 	// if (data->is_open) {
@@ -711,13 +749,17 @@ bool HHVM_METHOD(AMQPChannel, isConnected) {
 // ------------------------------  AMQPQueue ------------------------------------------
 
 void HHVM_METHOD(AMQPQueue, __construct, const Variant& amqpChannel) {
-	auto src_data = Native::data<AMQPChannel>(amqpChannel.toObject());
+	
+
 	auto *data = Native::data<AMQPQueue>(this_);
+	data->amqpCh = Native::data<AMQPChannel>(amqpChannel.toObject());
 
-	if (!src_data)
-		raise_error( "Error input data");
 
-	data->amqpCh = src_data;
+	if (!data->amqpCh)
+		raise_error( "Error internal AMQPChannel data");
+
+	// printf("Connection %X\n", data->amqpCh->amqpCnn->conn);
+
 };
 
 void HHVM_METHOD(AMQPQueue, bind, const String& exchangeName, const String& routingKey) {
@@ -758,17 +800,23 @@ int64_t HHVM_METHOD(AMQPQueue, declare){
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPQueue).toInt64();
 
 
-	printf("use channel_id=%d\n", data->amqpCh->channel_id);
+	// printf("use channel_id=%d queue->declare(cnn=%X)\n", data->amqpCh->channel_id, data->amqpCh->amqpCnn->conn);
 
 
-	amqp_queue_declare_ok_t *r = amqp_queue_declare(data->amqpCh->amqpCnn->conn,
+	int passive 	= (flags & AMQP_PASSIVE)    ? 1 : 0;
+	int durable 	= (flags & AMQP_DURABLE)    ? 1 : 0;
+	int exclusive 	= (flags & AMQP_EXCLUSIVE)  ? 1 : 0;
+	int autodelete 	= (flags & AMQP_AUTODELETE) ? 1 : 0;
+
+	amqp_queue_declare_ok_t *r = amqp_queue_declare(
+								data->amqpCh->amqpCnn->conn,
 								data->amqpCh->channel_id,
 								amqp_cstring_bytes(queue), 	// queue name
-								(flags & AMQP_PASSIVE)    ? 1 : 0,				// passive
-								(flags & AMQP_DURABLE)    ? 1 : 0, 				// durable 
-								(flags & AMQP_EXCLUSIVE)  ? 1 : 0,				// exclusive
-								(flags & AMQP_AUTODELETE) ? 1 : 0,				// autodelete
-								amqp_empty_table);								// arguments
+								passive,					// passive
+								durable, 					// durable 
+								exclusive,					// exclusive
+								autodelete,					// autodelete
+								amqp_empty_table);			// arguments
 								
 
 	printf("declare responce\n");
@@ -1173,7 +1221,8 @@ void HHVM_METHOD(AMQPExchange, __construct, const Variant& amqpChannel) {
 
 
 	// auto cnn_data = Native::data<AMQPConnection>(  src_data->cnn.toObject());
-	// printf("Connection %d\n", cnn_data.is_connected);
+
+	// printf("Connection %X\n", src_data->amqpCnn->conn);
 
 
 
@@ -1225,15 +1274,24 @@ bool HHVM_METHOD(AMQPExchange, declare){
 
 	int64_t flags = this_->o_get(s_flags, false, s_AMQPExchange).toInt64();
 
+
+	// printf("Connection %X\n", data->amqpCh-> amqpCnn->conn);
+
+		int passive = 	(flags & AMQP_PASSIVE)  ? 1 : 0; 		// passive flag
+		int durable = 	(flags & AMQP_DURABLE)  ? 1 : 0; 		// durable flag
+		int autodelete =(flags & AMQP_AUTODELETE)  ? 1 : 0; 	// autodelete flag
+		int internal = 	(flags & AMQP_INTERNAL)  ? 1 : 0;	 	// internal flag
+
+
 	amqp_exchange_declare(
 		data->amqpCh->amqpCnn->conn,		// state connection state
 		data->amqpCh->channel_id, 			// channel the channel to do the RPC on
 		amqp_cstring_bytes(exchange), 		// exchange name
 		amqp_cstring_bytes(type), 			// type
-		(flags & AMQP_PASSIVE)  ? 1 : 0, 	// passive flag
-		(flags & AMQP_DURABLE)  ? 1 : 0, 	// durable flag
-		(flags & AMQP_AUTODELETE)  ? 1 : 0, // autodelete flag
-		(flags & AMQP_INTERNAL)  ? 1 : 0, 	// internal flag
+		passive,						 	// passive flag
+		durable, 							// durable flag
+		autodelete, 						// autodelete flag
+		internal, 							// internal flag
 		amqp_empty_table); 					// arguments
 
 
@@ -1280,7 +1338,7 @@ AMQP_TRACE
 AMQP_TRACE	
 
 
-	printf("connect %X is=%d\n", data->amqpCh->amqpCnn, -1);
+	// printf("connect %X is=%d\n", data->amqpCh->amqpCnn, -1);
 // AMQP_TRACE	
 
 // 	printf("is connected %d\n",data->amqpCh->amqpCnn->is_connected );
@@ -1314,7 +1372,7 @@ AMQP_TRACE
 	
 	AMQP_TRACE;
 
-		printf("arguments size=%d\n",arguments.size() );
+		// printf("arguments size=%d\n",arguments.size() );
 
 
 
@@ -1344,7 +1402,7 @@ AMQP_TRACE
 		// 		props.content_type = amqp_cstring_bytes("text/plain");
 		// 		break;
 		// 	case KindOfString :
-		// 	case KindOfStaticString :
+		// 	case KindOfString :
 		// 		props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
 		// 		break;
 		// 	default:
@@ -1367,7 +1425,6 @@ AMQP_TRACE
 				props.content_type = amqp_cstring_bytes("text/plain");
 				break;
 			case KindOfString :
-			case KindOfStaticString :
 				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
 				break;
 			default:
@@ -1452,7 +1509,6 @@ AMQP_TRACE
 							field->value.i64 		= val.toInt64();
 							break;
 						case KindOfString:
-						case KindOfStaticString:
 							field->kind        		= AMQP_FIELD_KIND_UTF8;
 							// strValue           = ; // strndup()
 							field->value.bytes 		= amqp_cstring_bytes(  val.toString().c_str());
@@ -1477,8 +1533,7 @@ AMQP_TRACE
 				} //for
 
 				switch (message.getType()) {
-					case KindOfString:
-					case KindOfStaticString: {
+					case KindOfString: {
 						message_bytes = amqp_cstring_bytes(message.toString().c_str());
 						break;
 					}
@@ -1525,15 +1580,15 @@ AMQP_TRACE
 					case KindOfArray: {
 
 						VariableSerializer vs(VariableSerializer::Type::Serialize);
-  						String str_json (vs.serialize(message, true));
+						String str_json (vs.serialize(message, true));
 
-  						printf("serialize[len=%d]: %s\n", str_json.size(),str_json.c_str());
+						printf("serialize[len=%d]: %s\n", str_json.size(),str_json.c_str());
 
-  						message_bytes.bytes = (void*)str_json.c_str();
+						message_bytes.bytes = (void*)str_json.c_str();
 						message_bytes.len =  str_json.size();
 
 
-  						printf("len in bytes=%d\n",(int) message_bytes.len);
+						printf("len in bytes=%d\n",(int) message_bytes.len);
 						table = &headers->entries[headers->num_entries++];
 						field = &table->value;
 						field->kind = AMQP_FIELD_KIND_UTF8;
@@ -1561,8 +1616,7 @@ AMQP_TRACE
 		AMQP_TRACE;
 
 		switch (message.getType()) {
-			case KindOfString:
-			case KindOfStaticString: {
+			case KindOfString: {
 				message_bytes = amqp_cstring_bytes(message.toString().c_str());
 				break;
 			}
@@ -1653,7 +1707,7 @@ AMQP_TRACE
 		// 		props.content_type = amqp_cstring_bytes("text/plain");
 		// 		break;
 		// 	case KindOfString :
-		// 	case KindOfStaticString :
+		// 	case KindOfString :
 		// 		props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
 		// 		break;
 		// 	default:
@@ -1707,6 +1761,7 @@ AMQP_TRACE
 		immediate_flag = (flags & AMQP_IMMEDIATE)  ? 1 : 0;
 
 printf("flags imm %d, man %d \n", immediate_flag, mandatory_flag);
+// printf("cnn %X \n", data->amqpCh->amqpCnn->conn);
 
 	amqp_basic_publish(data->amqpCh->amqpCnn->conn,
 			data->amqpCh->channel_id,
@@ -1717,7 +1772,7 @@ printf("flags imm %d, man %d \n", immediate_flag, mandatory_flag);
 			&props,
 			message_bytes);
 
-
+AMQP_TRACE
 
 	ANALYZE_RESPONSE_AND_RETURN();
 }
