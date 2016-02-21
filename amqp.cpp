@@ -401,7 +401,6 @@ void deinitChannels() {
 
 printf("call %s \n", __FUNCTION__);
 
-// dd
 }
 
 
@@ -443,11 +442,6 @@ void HHVM_METHOD(AMQPContext, init){
 
 	auto is_connected  = this_->o_get(s_is_connected, false, s_AMQPContext);
 	
-
-	Resource r =  Resource(req::make<AMQPContext>());
-
-	// AMQPContext context = r.getTyped<AMQPContext>(false, false);
-	// context.is_connected = true;
 
 
   // setVariable(this_, "socket", Resource(amqp_connect));

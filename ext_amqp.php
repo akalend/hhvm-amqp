@@ -62,22 +62,22 @@ final class AMQP {
 
 
 /**
-*  AMQPContext class
+*  AMQPContext class (debug class)
 */
 class AMQPContext {
 
-	private $cnn;
+	private resource $conn;
 	/* internal */
-	private $host = 'localhost';
-	private $port = 5672; // `
-	private $login = 'guest';
-	private $vhost = '/';
-	private $password = 'guest';
+	private string 	$host = 'localhost';
+	private int 	$port = 5672; // `
+	private string 	$login = 'guest';
+	private string 	$vhost = '/';
+	private string 	$password = 'guest';
 
-	private $timeout = 15;
-	private $connect_timeout = 1;	
-	private $is_persisten = 1;
-	private $is_connected = 0;
+	private int 	$timeout = 15;
+	private string 	$connect_timeout = 1;	
+	private int 	$is_persisten = 1;
+	private int 	$is_connected = 0;
 
 
 
@@ -173,7 +173,7 @@ class AMQPContext {
 	public function isConnected () {
 	
 		if (is_object($this->cnn) ){
-			return $this->cnn->isConnected();
+			return $this->conn->isConnected();
 		}
 
 		return false;	

@@ -68,7 +68,6 @@ bool HHVM_METHOD(AMQPContext, connect);
 void HHVM_METHOD(AMQPContext, init);
 
 
-
 void HHVM_METHOD(AMQPConnection, __destruct);
 bool HHVM_METHOD(AMQPConnection, connect);
 bool HHVM_METHOD(AMQPConnection, isConnected);
@@ -112,14 +111,36 @@ enum amqp_channel_status {
  
 
 
-class AMQPContext  {
+// struct CurlMultiResource : SweepableResourceData {
+//   DECLARE_RESOURCE_ALLOCATION(CurlMultiResource)
+//   CLASSNAME_IS("curl_multi")
+//   const String& o_getClassNameHook() const override { return classnameof(); }
+//   bool isInvalid() const override { return !m_multi; }
+
+//   CurlMultiResource();
+//   ~CurlMultiResource() { close(); }
+//   void close();
+
+//   bool setOption(int option, const Variant& value);
+//   void add(const Resource& ch) { m_easyh.append(ch); }
+//   const Array& getEasyHandles() const { return m_easyh; }
+
+//   void remove(req::ptr<CurlResource> curle);
+//   Resource find(CURL *cp);
+
+//   CURLM* get();
+//   void check_exceptions();
+
+//  private:
+//   CURLM *m_multi;
+//   Array m_easyh;
+// };
+
+
+class AMQPContext {
+
 public:
-
-	amqp_socket_t *socket{nullptr};
-	amqp_connection_state_t conn = NULL;
 	
-	std::shared_ptr<amqp_connection_state_t> m_conn;
-
 	bool is_connected = false;
 	char* host = NULL;
 	char* vhost = NULL;
@@ -130,49 +151,63 @@ public:
 	short channel_id = 0;
 	short max_id = 0;
 	
-  static AMQPContext *GetPersistent(int64_t io_threads);
-  static void SetPersistent(int64_t io_threads, AMQPContext *context);
-
 private:
 	int8_t* opened_channels{nullptr};
 
-	static std::string GetHash(const char *name, int64_t io_threads);
-    static AMQPContext *GetCachedImpl(const char *name, int64_t io_threads);
-    static void SetCachedImpl(const char *name, int64_t io_threads, AMQPContext *context);
-
+	std::shared_ptr<amqp_connection_state_t> m_conn;
 
 	void initChannels() {
-		AMQP_TRACE;
 		opened_channels = static_cast<int8_t*>(calloc(AMQP_MAX_CHANNELS, sizeof(int8_t)));
 		channel_id = 0;	
 	}
 
 	void deinitChannels() {
-		AMQP_TRACE;
 		free(opened_channels);
 	}
 
-	void sweep() { deinitChannels(); }
-
 public:
-  AMQPContext(int64_t io_threads);
-  ~AMQPContext() {
-  	sweep();
-  };
-
-  CLASSNAME_IS("AMQPContext")
-
-  // overriding ResourceData
-  virtual const String& o_getClassNameHook() const { return classnameof(); }
-  virtual bool isInvalid() const { return m_context == nullptr; }
-
-  void *get() { return m_context; }
+  	AMQPContext(); 
+  	~AMQPContext();
 
 private:
   void *m_context;
 
+	amqp_socket_t *socket{nullptr};
+	amqp_connection_state_t conn = NULL;
+
 };
 
+class SocketData : public ResourceData {
+ public:
+  DECLARE_RESOURCE_ALLOCATION_NO_SWEEP(SocketData)
+ 
+  SocketData(void *context, int64_t type) {
+    m_socket = nullptr; //zmq_socket(context, type);
+  }
+  
+  ~SocketData() {
+    close();
+  }        
+          
+  CLASSNAME_IS("SocketData");
+  // overriding ResourceData
+  const String& o_getClassNameHook() const { return classnameof(); }
+
+  void close() {
+    if (!isValid())
+        return;
+    
+    //zmq_close(m_socket);
+    m_socket = nullptr;
+  }
+
+  bool isValid() { return m_socket != nullptr; }
+  
+  void *get() { return m_socket; }
+
+ private:
+  void *m_socket;
+};
 
 
 
