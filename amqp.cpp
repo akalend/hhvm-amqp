@@ -33,6 +33,7 @@
 #include "hphp/runtime/base/variable-serializer.h"
 #include "hphp/runtime/base/variable-unserializer.h"
 #include "hphp/runtime/base/type-resource.h"
+#include "hphp/runtime/base/req-ptr.h"
 #include "hphp/runtime/base/datatype.h"
 #include "hphp/runtime/vm/native-data.h"
 
@@ -110,6 +111,7 @@
 		case KindOfUninit : 							\
 			break;										\
 		case KindOfString :								\
+		case KindOfPersistentString:					\
 			props._flags |= flag;						\
 			props.field = amqp_cstring_bytes( var.toString().c_str() );\
 			break;										\
@@ -144,6 +146,7 @@ const StaticString
 	s_timeout("timeout"),
 	s_channel("channel"),
 	s_connect("conn"),
+	s_is_connected("is_connected"),
 	s_connect_timeout("connect_timeout"),
 	s_is_persisten("is_persisten"),
 	s_port("port"),
@@ -394,41 +397,65 @@ void hhvm_amqp_channels_close(AMQPConnection* data) {
 }
 
 
+void deinitChannels() {
 
-Resource get_resource(Object ob) {
-	
-	auto res = ob->o_get(s_connect, false, s_AMQPContext);
+printf("call %s \n", __FUNCTION__);
 
-	// auto res = ob->o_get(s_connect, ObjectData::RealPropUnchecked, s_AMQPContext);
-
-	// if (!res->isResource()) {// || 
-	// 		return null_resource;
-	//  }
-	return res->toResource();
+// dd
 }
+
+
+// Resource get_resource(Object ob) {
+	
+// 	auto res = ob->o_get(s_is_connect, false, s_AMQPContext);
+
+
+
+// 	// auto res = ob->o_get(s_connect, ObjectData::RealPropUnchecked, s_AMQPContext);
+
+// 	if (!res->isResource()) {// || 
+// 			return null_resource;
+// 	 }
+// 	return res->toResource();
+// }
 
 // ---------------------------------------------------------------------------------------------------
 
 
 // ------------------------------  AMQPContex ------------------------------------------
 
+AMQPContext::AMQPContext() {
+ 	conn = amqp_new_connection();	
+	socket =  amqp_tcp_socket_new(conn);
+}
+
+AMQPContext::~AMQPContext() {
+  
+ // close chanels
+  amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
+  
+
+}
 
 
 void HHVM_METHOD(AMQPContext, init){
 
- // auto context = get_resource(this_->asObject());
+
+	auto is_connected  = this_->o_get(s_is_connected, false, s_AMQPContext);
 	
 
-//   Resource rr = 
+	Resource r =  Resource(req::make<AMQPContext>());
 
+	// AMQPContext context = r.getTyped<AMQPContext>(false, false);
+	// context.is_connected = true;
 
-
- //  auto amqp_connect = newres<AMQPContext>(context->get(), type);
 
   // setVariable(this_, "socket", Resource(amqp_connect));
 
-	printf("%s connected=%s\n", __FUNCTION__, true ? "yes" : "no");
-	
+	printf("%s connected=%s\n", __FUNCTION__, is_connected.toBoolean() ? "yes" : "no");
+
+	this_->o_set(s_is_connected, Variant(true), s_AMQPContext);
+	// this_->o_set(s_connect, Variant(resource), s_AMQPContext);		
 }
 
 
@@ -437,10 +464,14 @@ bool HHVM_METHOD(AMQPContext, connect) {
 	// auto f = fp.getTyped<AMQPContext>();
 	// f->close();
 
+   // Variant(req::make<AMQPContext>(mysql_result));
+
 	printf("cnn %s \n", __FUNCTION__);
 
 	return true;
 }
+
+
 
 
 // ------------------------------  AMQPConnect ------------------------------------------
@@ -1425,6 +1456,7 @@ AMQP_TRACE
 				props.content_type = amqp_cstring_bytes("text/plain");
 				break;
 			case KindOfString :
+			case KindOfPersistentString :
 				props.content_type = amqp_cstring_bytes( ct.toString().c_str() );
 				break;
 			default:
@@ -1472,6 +1504,7 @@ AMQP_TRACE
 		Variant hd = Variant(arguments[s_headers]);
 		switch(hd.getType()) {
 			case KindOfNull: break;
+			case KindOfPersistentArray :
 			case KindOfArray : {
 				
 				AMQP_TRACE
@@ -1508,11 +1541,13 @@ AMQP_TRACE
 							field->kind 			= AMQP_FIELD_KIND_I64;
 							field->value.i64 		= val.toInt64();
 							break;
+						case KindOfPersistentString:
 						case KindOfString:
 							field->kind        		= AMQP_FIELD_KIND_UTF8;
 							// strValue           = ; // strndup()
 							field->value.bytes 		= amqp_cstring_bytes(  val.toString().c_str());
 							break;
+						case KindOfPersistentArray:
 						case KindOfArray:
 							// field->kind = AMQP_FIELD_KIND_TABLE;
 							raise_warning("the field array is not implement");
@@ -1533,6 +1568,7 @@ AMQP_TRACE
 				} //for
 
 				switch (message.getType()) {
+					case KindOfPersistentString:
 					case KindOfString: {
 						message_bytes = amqp_cstring_bytes(message.toString().c_str());
 						break;
@@ -1576,7 +1612,8 @@ AMQP_TRACE
 
 						break;}
 
-					case KindOfObject: 
+					case KindOfObject:
+					case KindOfPersistentArray: 
 					case KindOfArray: {
 
 						VariableSerializer vs(VariableSerializer::Type::Serialize);
@@ -1616,6 +1653,7 @@ AMQP_TRACE
 		AMQP_TRACE;
 
 		switch (message.getType()) {
+			case KindOfPersistentString:
 			case KindOfString: {
 				message_bytes = amqp_cstring_bytes(message.toString().c_str());
 				break;
